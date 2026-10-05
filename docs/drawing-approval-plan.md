@@ -271,7 +271,7 @@ Goal: replace estimates with measurements and de-risk real drawings.
 
 **"Opened" means delivered and rendered.** `serve` stamps the signer's `Fetched_At__c`; `markAttachmentViewed` is refused until then and is called once page 1 renders. A signer scripting the endpoints can still mark a file opened without looking at it. That's the same limit as scrolling a contract, and the register records it as such.
 
-**Measured on the dev box** (desktop Chrome, guest Site, files from §5.2): REST fetch of 13.6 MB took 2.6 s. Norwich (16.6 MB, 5 pp) was fetched, hashed and had page 1 drawn and recorded in 4.6 s. A 0.95 MB Gresham sheet took under 3 s. These are upper bounds: the test tab was hidden, so Chrome throttled its timers.
+**Measured on the dev box** (desktop Chrome, guest Site, files from §5.2): REST fetch of 13.6 MB took 2.6 s. A 16.6 MB, 5-page SOLIDWORKS set was fetched, hashed and had page 1 drawn and recorded in 4.6 s. A 0.95 MB single-sheet A1 took under 3 s. These are upper bounds: the test tab was hidden, so Chrome throttled its timers.
 
 **Real phones (2026-10-02):** Pixel 10 (Chrome) and iPhone (Safari) both render, pan and pinch-zoom the drawings, after a fix for a phone-only layout bug: the drawing box collapsed to 0 px once the PDF.js viewer went in.
 
