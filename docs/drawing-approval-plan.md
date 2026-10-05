@@ -217,7 +217,9 @@ Goal: replace estimates with measurements and de-risk real drawings.
 ### Sender LWC (`docGenSignatureSender`)
 
 - [x] Record-PDF picker (`getAttachableRecordPdfs`: USER*MODE, size, oversize flagged), **Select all**, Before/After. Order is the picker's (by title). \_Manual reordering not built.* Single-template sends only.
+- [x] **Opt-in per template** (added 2026-10-05, Nathan's call, in line with #373's "config belongs on the template"): `DocGen_Template__c.Attached_Documents__c` = Off (default) / Optional / Required. Off hides the picker, so current users see no change. The server enforces it for the Sender and Flow alike: Off refuses attachments, Required refuses none, Required can't go in a packet. It's in the Command Hub template editor and template export/import.
 - [ ] Warn when Decline is hidden on the template/org (not built).
+- [ ] Exclude Portwood's own signed copies from the picker. There's no reliable marker on a signed file (only a configurable title), so this isn't built; the opt-in confines the picker to approval templates.
 
 ### Tests & gates
 

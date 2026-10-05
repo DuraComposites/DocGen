@@ -25,6 +25,10 @@ public inherited sharing class DocGenSignatureAttachments {
     @TestVisible
     private static Boolean failCreateForTest = false; // proves a failed send commits nothing
 
+    public static final String MODE_OFF = 'Off';
+    public static final String MODE_OPTIONAL = 'Optional';
+    public static final String MODE_REQUIRED = 'Required';
+
     public static final String POSITION_BEFORE = 'Before';
     public static final String POSITION_AFTER = 'After';
 
@@ -65,6 +69,28 @@ public inherited sharing class DocGenSignatureAttachments {
     // =====================================================================
     // SEND SIDE
     // =====================================================================
+
+    /**
+     * The template decides whether a request may carry attached documents
+     * (DocGen_Template__c.Attached_Documents__c): Off (the default, also blank) refuses any,
+     * Required refuses none, Optional allows either. One rule for every entry point — the
+     * Signature Sender and the Create Signature Request Flow action both call it.
+     */
+    public static void assertTemplateAllows(String mode, Integer attachmentCount) {
+        String m = String.isBlank(mode) ? MODE_OFF : mode;
+        Integer count = attachmentCount == null ? 0 : attachmentCount;
+        if (m == MODE_OFF && count > 0) {
+            throw new DocGenException(
+                'This template does not take attached documents. To attach PDFs from the record, set ' +
+                'Attached Documents on the template to Optional or Required.'
+            );
+        }
+        if (m == MODE_REQUIRED && count == 0) {
+            throw new DocGenException(
+                'This template requires at least one attached document. Choose the PDFs from the record to attach.'
+            );
+        }
+    }
 
     /** The per-file size cap, for the sender's picker. */
     public static Long maxBytesPerFile() {

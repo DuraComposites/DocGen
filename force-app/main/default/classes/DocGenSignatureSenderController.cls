@@ -64,7 +64,8 @@ public with sharing class DocGenSignatureSenderController {
                 'Required_Permission_Sets__c',
                 'Record_Filter__c',
                 'Base_Object_API__c',
-                'Default_Email_Message__c'
+                'Default_Email_Message__c',
+                'Attached_Documents__c'
             }
         );
         /* code-analyzer-suppress ApexFlsViolation */
@@ -78,7 +79,8 @@ public with sharing class DocGenSignatureSenderController {
                 Required_Permission_Sets__c,
                 Record_Filter__c,
                 Base_Object_API__c,
-                Default_Email_Message__c
+                Default_Email_Message__c,
+                Attached_Documents__c
             FROM DocGen_Template__c
             WITH SYSTEM_MODE
             ORDER BY Sort_Order__c ASC NULLS LAST, Name ASC
@@ -1598,7 +1600,7 @@ public with sharing class DocGenSignatureSenderController {
         );
 
         List<DocGen_Template__c> tpls = [
-            SELECT Id, Name, Document_Title_Format__c
+            SELECT Id, Name, Document_Title_Format__c, Attached_Documents__c
             FROM DocGen_Template__c
             WHERE Id = :templateId
             WITH SYSTEM_MODE
@@ -1607,6 +1609,8 @@ public with sharing class DocGenSignatureSenderController {
         if (tpls.isEmpty()) {
             throw new AuraHandledException('Template not found.');
         }
+        // #412: the template decides whether attached documents are allowed or required.
+        DocGenSignatureAttachments.assertTemplateAllows(tpls[0].Attached_Documents__c, attachments.size());
 
         // Inherit the template's document-naming pattern so the SIGNED PDF follows the
         // same name the template uses for normal generation (e.g. "Waiver - {Name}
@@ -1915,12 +1919,12 @@ public with sharing class DocGenSignatureSenderController {
 
         DocGenFlsGuard.assertAccessible(
             DocGen_Template__c.sObjectType,
-            new Set<String>{ 'Name', 'Document_Title_Format__c' }
+            new Set<String>{ 'Name', 'Document_Title_Format__c', 'Attached_Documents__c' }
         );
         /* code-analyzer-suppress ApexFlsViolation */
         Map<Id, DocGen_Template__c> templateMap = new Map<Id, DocGen_Template__c>(
             [
-                SELECT Id, Name, Document_Title_Format__c
+                SELECT Id, Name, Document_Title_Format__c, Attached_Documents__c
                 FROM DocGen_Template__c
                 WHERE Id IN :templateIds
                 WITH SYSTEM_MODE
@@ -1929,6 +1933,17 @@ public with sharing class DocGenSignatureSenderController {
         for (Id tid : templateIds) {
             if (!templateMap.containsKey(tid)) {
                 throw new AuraHandledException('Template not found: ' + tid);
+            }
+            // #412: packets can't carry attached documents, so a template that requires them
+            // can't go out in one.
+            if (templateMap.get(tid).Attached_Documents__c == DocGenSignatureAttachments.MODE_REQUIRED) {
+                String packetError =
+                    '"' +
+                    templateMap.get(tid).Name +
+                    '" requires attached documents, so it must be sent on its own, not in a packet.';
+                AuraHandledException refusal = new AuraHandledException(packetError);
+                refusal.setMessage(packetError);
+                throw refusal;
             }
         }
         if (

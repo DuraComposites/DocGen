@@ -33,13 +33,19 @@ private class DocGenSignatureAttachmentsTest {
 
     // ---------------------------------------------------------------- helpers
 
+    // An approval template that takes attached documents (the template opts in).
     private static Id createTaggedTemplate() {
+        return createTaggedTemplate('Optional');
+    }
+
+    private static Id createTaggedTemplate(String attachedDocuments) {
         DocGen_Template__c tmpl = new DocGen_Template__c(
             Name = 'Drawing Approval ' + Datetime.now().getTime(),
             Type__c = 'HTML',
             Output_Format__c = 'PDF',
             Base_Object_API__c = 'Account',
-            Query_Config__c = 'Name'
+            Query_Config__c = 'Name',
+            Attached_Documents__c = attachedDocuments
         );
         insert tmpl;
         ContentVersion cv = new ContentVersion(
@@ -752,5 +758,101 @@ private class DocGenSignatureAttachmentsTest {
             'Unsafe chars'
         );
         Assert.areEqual('document', DocGenSignatureAttachmentRest.safeFileName(null), 'Default name');
+    }
+
+    // ------------------------------------------------------ template opt-in
+
+    @IsTest
+    static void template_offRefusesAttachments_requiredRefusesNone() {
+        Id offTpl = createTaggedTemplate('Off');
+        Id requiredTpl = createTaggedTemplate('Required');
+        DocGen_Template__c blank = new DocGen_Template__c(Id = createTaggedTemplate('Off'));
+        blank.Attached_Documents__c = null;
+        update blank;
+
+        Test.startTest();
+        String offMessage = expectSendError(offTpl, drawingIds(), 'Before');
+        String blankMessage = expectSendError(blank.Id, drawingIds(), 'Before');
+        String requiredMessage = expectSendError(requiredTpl, null, null);
+        send(requiredTpl, oneSigner(), drawingIds(), 'Before', false); // Required + attachments: fine
+        send(offTpl, oneSigner(), null, null, false); // Off + none: today's behaviour
+        Test.stopTest();
+
+        Assert.isTrue(offMessage.contains('does not take attached documents'), offMessage);
+        Assert.isTrue(blankMessage.contains('does not take attached documents'), 'Blank means Off: ' + blankMessage);
+        Assert.isTrue(requiredMessage.contains('requires at least one attached document'), requiredMessage);
+        Assert.areEqual(2, [SELECT COUNT() FROM DocGen_Signature_Request__c], 'Only the two valid sends');
+    }
+
+    @IsTest
+    static void template_ruleAppliesToFlowAndPackets() {
+        Id requiredTpl = createTaggedTemplate('Required');
+        Id offTpl = createTaggedTemplate('Off');
+        DocGenSigner s = new DocGenSigner();
+        s.name = 'Ada Approver';
+        s.email = 'ada@example.com';
+        s.role = 'Approver';
+        DocGenSignatureFlowAction.Request noDrawings = new DocGenSignatureFlowAction.Request();
+        noDrawings.templateId = requiredTpl;
+        noDrawings.relatedRecordId = account().Id;
+        noDrawings.signerRecords = new List<DocGenSigner>{ s };
+        noDrawings.sendEmails = false;
+        noDrawings.requireEmailVerification = false;
+
+        Test.startTest();
+        DocGenSignatureFlowAction.Result flowResult = DocGenSignatureFlowAction.generate(
+            new List<DocGenSignatureFlowAction.Request>{ noDrawings }
+        )[0];
+        String packetMessage;
+        try {
+            DocGenSignatureSenderController.createGuidedPacketSignatureRequest(
+                JSON.serialize(new List<Id>{ offTpl, requiredTpl }),
+                account().Id,
+                oneSigner(),
+                'Parallel',
+                null
+            );
+        } catch (AuraHandledException e) {
+            packetMessage = e.getMessage();
+        }
+        Test.stopTest();
+
+        Assert.isFalse(flowResult.success, 'Flow send of a Required template without attachments is refused');
+        Assert.isTrue(flowResult.errorMessage.contains('requires at least one'), flowResult.errorMessage);
+        Assert.isNotNull(packetMessage, 'A packet with a Required template is refused');
+        Assert.isTrue(packetMessage.contains('must be sent on its own'), packetMessage);
+        Assert.areEqual(0, [SELECT COUNT() FROM DocGen_Signature_Request__c], 'Nothing created');
+    }
+
+    @IsTest
+    static void templateEditor_savesAttachedDocuments_andListsIt() {
+        Id tplId = createTaggedTemplate('Off');
+        Test.startTest();
+        DocGenController.saveTemplate(
+            new Map<String, Object>{
+                'Id' => tplId,
+                'Name' => 'Drawing Approval',
+                'Type__c' => 'HTML',
+                'Base_Object_API__c' => 'Account',
+                'Query_Config__c' => 'Name',
+                'Attached_Documents__c' => 'Required'
+            },
+            false,
+            null
+        );
+        List<DocGen_Template__c> forSender = DocGenSignatureSenderController.getDocGenTemplatesForRecord(account().Id);
+        Test.stopTest();
+        Assert.areEqual(
+            'Required',
+            [SELECT Attached_Documents__c FROM DocGen_Template__c WHERE Id = :tplId].Attached_Documents__c,
+            'Editor save persists the setting'
+        );
+        Boolean listed = false;
+        for (DocGen_Template__c t : forSender) {
+            if (t.Id == tplId) {
+                listed = t.Attached_Documents__c == 'Required';
+            }
+        }
+        Assert.isTrue(listed, 'The sender reads the setting with the template list');
     }
 }

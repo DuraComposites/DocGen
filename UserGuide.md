@@ -2934,7 +2934,15 @@ Useful for contract bundles (MSA + SOW + NDA), onboarding packets, etc.
 
 Some approvals are about documents that already exist: a set of engineering drawings on an Issued Drawing record, a specification, a site survey. You can show those PDFs to signers **alongside** the signing template, without re-generating or merging them. The template becomes the approval form ("I approve the drawings listed below"), and each attached PDF is shown as its own document on the signing page.
 
-**Sending.** In the Signature Sender, pick a single template. If the record has PDFs, an **Attach PDFs from this record** list appears: tick the files (or **Select all**) and choose whether they come **Before** or **After** the template. From Flow, pass **Attached Documents** (ContentDocument or ContentVersion Ids) and, optionally, **Attached Documents Position** to **Portwood: Create Signature Request**.
+**Turning it on.** Attached documents are off until a template opts in. In Command Hub → My Templates, edit the approval template and set **Attached Documents (e-sign)**:
+
+- **Off** (the default): no attached documents. Senders see no change.
+- **Optional**: the sender may attach PDFs from the record.
+- **Required**: every send of this template must attach at least one. Use this for an approval form that means nothing without its drawings.
+
+The setting is enforced for the Signature Sender and the Flow action alike. A template set to Required can't be sent in a multi-template packet.
+
+**Sending.** In the Signature Sender, pick a template that takes attached documents. An **Attach PDFs from this record** list appears: tick the files (or **Select all**) and choose whether they come **Before** or **After** the template. For a Required template, **Send** stays disabled until at least one is ticked. From Flow, pass **Attached Documents** (ContentDocument or ContentVersion Ids) and, optionally, **Attached Documents Position** to **Portwood: Create Signature Request**.
 
 **Pinning.** Each file is pinned to the exact version it had at send time. Uploading a new version later doesn't change what the signer sees; to send the new revision, send a new request. If a pinned file is deleted, or its content no longer matches, the signer is told to contact the sender instead of being shown something else.
 

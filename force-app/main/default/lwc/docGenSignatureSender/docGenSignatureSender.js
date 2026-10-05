@@ -88,7 +88,9 @@ export default class DocGenSignatureSender extends NavigationMixin(LightningElem
                 label: t.Name,
                 value: t.Id,
                 // #208 — namespace-aware read: prefixed in subscriber orgs, bare in dev.
-                defaultMessage: t.Default_Email_Message__c || t.portwoodglobal__Default_Email_Message__c || ''
+                defaultMessage: t.Default_Email_Message__c || t.portwoodglobal__Default_Email_Message__c || '',
+                // #412 — Off (default) / Optional / Required; same namespace-aware read.
+                attachedDocuments: t.Attached_Documents__c || t.portwoodglobal__Attached_Documents__c || 'Off'
             }));
         } else if (error) {
             this.docGenTemplateOptions = [];
@@ -136,6 +138,7 @@ export default class DocGenSignatureSender extends NavigationMixin(LightningElem
 
     get isGenerateDisabled() {
         if (this.selectedTemplates.length === 0 || this.signers.length === 0) return true;
+        if (this.attachmentsRequired && !this.hasSelectedAttachments) return true; // #412
         return this.signers.some((s) => !s.signerName || !s.signerEmail || !s.roleName);
     }
 
@@ -233,8 +236,28 @@ export default class DocGenSignatureSender extends NavigationMixin(LightningElem
             }));
     }
 
+    // #412 — the selected template decides: Off hides the picker entirely (current users see
+    // no change); Optional and Required show it; Required also blocks sending with none ticked.
+    get attachedDocumentsMode() {
+        if (!this.isSingleTemplate) return 'Off';
+        const option = this.docGenTemplateOptions.find((o) => o.value === this.selectedTemplates[0].templateId);
+        return (option && option.attachedDocuments) || 'Off';
+    }
+
     get showAttachmentPicker() {
-        return this.isSingleTemplate && this.attachablePdfs.length > 0;
+        return this.attachedDocumentsMode !== 'Off';
+    }
+
+    get attachmentsRequired() {
+        return this.attachedDocumentsMode === 'Required';
+    }
+
+    get noAttachablePdfs() {
+        return this.attachmentOptions.length === 0;
+    }
+
+    get attachmentPickerHeading() {
+        return this.attachmentsRequired ? 'Attach PDFs from this record' : 'Attach PDFs from this record (optional)';
     }
 
     get oversizeAttachmentNote() {
@@ -730,14 +753,15 @@ export default class DocGenSignatureSender extends NavigationMixin(LightningElem
                     expirationDays: parseInt(this.expirationDays, 10) || null
                 };
                 // CxSAST: CSRF protection handled by Salesforce Aura/LWC framework
-                this.signerResults = this.hasSelectedAttachments
-                    ? await createGuidedPdfSignatureRequestWithAttachments({
-                          ...guidedArgs,
-                          sendEmails: null,
-                          attachedDocumentIds: this.selectedAttachmentIds,
-                          attachedDocumentPosition: this.attachmentPosition
-                      })
-                    : await createGuidedPdfSignatureRequest(guidedArgs);
+                this.signerResults =
+                    this.showAttachmentPicker && this.hasSelectedAttachments
+                        ? await createGuidedPdfSignatureRequestWithAttachments({
+                              ...guidedArgs,
+                              sendEmails: null,
+                              attachedDocumentIds: this.selectedAttachmentIds,
+                              attachedDocumentPosition: this.attachmentPosition
+                          })
+                        : await createGuidedPdfSignatureRequest(guidedArgs);
             } else {
                 const templateIds = this.selectedTemplates.map((t) => t.templateId);
                 // CxSAST: CSRF protection handled by Salesforce Aura/LWC framework

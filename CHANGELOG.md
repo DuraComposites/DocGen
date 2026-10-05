@@ -9,8 +9,13 @@
   issued drawing set, a specification), shown to signers alongside the template instead of
   being merged into it. The template is the approval form; each attachment is its own
   document on the signing page.
-    - **Send.** The Signature Sender lists the record's PDFs (single-template sends) with
-      Select all and a Before/After position. Flow gets the same through two new optional
+    - **Opt-in per template.** A new **Attached Documents** setting on the template:
+      _Off_ (default), _Optional_ or _Required_. Existing templates and senders see no change
+      until a template opts in. The rule is enforced for every entry point: Off refuses
+      attachments, Required refuses a send without any, and a Required template can't go in a
+      packet. Edited in Command Hub → My Templates, and carried by template export/import.
+    - **Send.** For a template that opts in, the Signature Sender lists the record's PDFs
+      with Select all and a Before/After position. Flow gets the same through two new optional
       inputs on **Portwood: Create Signature Request**: **Attached Documents** (file Ids) and
       **Attached Documents Position**. Each file is pinned to its version at send. Limits are
       100 files per request and 20 MB each, PDFs on the related record only, refused for

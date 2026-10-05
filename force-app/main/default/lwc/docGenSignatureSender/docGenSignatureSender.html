@@ -93,7 +93,7 @@
             <template if:true={showAttachmentPicker}>
                 <div class="slds-var-m-bottom_medium">
                     <div class="slds-grid slds-grid_vertical-align-center slds-var-m-bottom_xx-small">
-                        <h3 class="slds-col slds-text-heading_small">Attach PDFs from this record (optional)</h3>
+                        <h3 class="slds-col slds-text-heading_small">{attachmentPickerHeading}</h3>
                         <lightning-button
                             class="slds-col slds-no-flex"
                             variant="base"
@@ -105,6 +105,11 @@
                         Signers see each one alongside the template and must open every one before they can sign. The
                         signed copy lists them by version and fingerprint; the files stay on this record.
                     </p>
+                    <template if:true={noAttachablePdfs}>
+                        <p class="slds-text-body_small slds-text-color_error slds-var-m-bottom_x-small">
+                            This record has no PDFs that can be attached.
+                        </p>
+                    </template>
                     <lightning-checkbox-group
                         name="attachedDocuments"
                         label="PDFs on this record"
