@@ -660,6 +660,40 @@
                                 </div>
                             </template>
                         </div>
+
+                        <!-- #412 attached documents, in the order signers will see them -->
+                        <template if:true={hasPreviewAttachments}>
+                            <h3 class="slds-text-title_bold slds-var-m-top_medium slds-var-m-bottom_x-small">
+                                {previewAttachmentsHeading}
+                            </h3>
+                            <div
+                                class="slds-box"
+                                style="background: #fff; border: 1px solid #e5e5e5; border-radius: 6px"
+                            >
+                                <p class="slds-text-body_small slds-text-color_weak slds-var-m-bottom_x-small">
+                                    {previewAttachmentsPlacement} Each must be opened before the signer can sign.
+                                </p>
+                                <template for:each={previewAttachments} for:item="att">
+                                    <div key={att.id} class="slds-var-p-vertical_xx-small">
+                                        <lightning-icon
+                                            icon-name="doctype:pdf"
+                                            size="x-small"
+                                            class="slds-var-m-right_x-small"
+                                        ></lightning-icon>
+                                        <span>{att.label}</span>
+                                        <span class="slds-text-body_small slds-text-color_weak slds-var-m-left_x-small"
+                                            >{att.meta}</span
+                                        >
+                                    </div>
+                                </template>
+                                <lightning-button
+                                    label="View files"
+                                    icon-name="utility:preview"
+                                    onclick={handleViewAttachedFiles}
+                                    class="slds-var-m-top_small"
+                                ></lightning-button>
+                            </div>
+                        </template>
                     </div>
                     <footer class="slds-modal__footer">
                         <lightning-button
@@ -670,6 +704,7 @@
                         <lightning-button
                             label="Send for Signature"
                             variant="brand"
+                            disabled={isGenerateDisabled}
                             onclick={handleSendFromPreview}
                             class="slds-var-m-left_x-small"
                         ></lightning-button>

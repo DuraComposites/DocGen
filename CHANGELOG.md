@@ -15,7 +15,8 @@
       attachments, Required refuses a send without any, and a Required template can't go in a
       packet. Edited in Command Hub → My Templates, and carried by template export/import.
     - **Send.** For a template that opts in, the Signature Sender lists the record's PDFs
-      with Select all and a Before/After position. Flow gets the same through two new optional
+      with Select all and a Before/After position. The preview lists the ticked files in signing
+      order and opens them in Salesforce's file viewer. Flow gets the same through two new optional
       inputs on **Portwood: Create Signature Request**: **Attached Documents** (file Ids) and
       **Attached Documents Position**. Each file is pinned to its version at send. Limits are
       100 files per request and 20 MB each, PDFs on the related record only, refused for

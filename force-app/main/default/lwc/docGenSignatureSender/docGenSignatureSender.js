@@ -283,6 +283,49 @@ export default class DocGenSignatureSender extends NavigationMixin(LightningElem
         ];
     }
 
+    // The ticked files in picker order: what the preview lists and what the send carries, so
+    // the two always agree.
+    get orderedSelectedAttachments() {
+        if (!this.showAttachmentPicker || !this.hasSelectedAttachments) return [];
+        const selected = new Set(this.selectedAttachmentIds);
+        return this.attachablePdfs.filter((f) => !f.tooLarge && selected.has(f.contentDocumentId));
+    }
+
+    get previewAttachments() {
+        return this.orderedSelectedAttachments.map((f, i) => ({
+            id: f.contentDocumentId,
+            label: i + 1 + '. ' + f.title,
+            meta: [f.versionNumber ? 'v' + f.versionNumber : null, this._formatBytes(f.size)]
+                .filter(Boolean)
+                .join(' · ')
+        }));
+    }
+
+    get hasPreviewAttachments() {
+        return this.previewAttachments.length > 0;
+    }
+
+    get previewAttachmentsHeading() {
+        return 'Attached Documents (' + this.previewAttachments.length + ')';
+    }
+
+    get previewAttachmentsPlacement() {
+        return this.attachmentPosition === 'After'
+            ? 'Shown to signers after the template.'
+            : 'Shown to signers before the template.';
+    }
+
+    // Salesforce's own file viewer pages through every ticked PDF, at any size.
+    handleViewAttachedFiles() {
+        const ids = this.previewAttachments.map((a) => a.id);
+        if (!ids.length) return;
+        this[NavigationMixin.Navigate]({
+            type: 'standard__namedPage',
+            attributes: { pageName: 'filePreview' },
+            state: { recordIds: ids.join(','), selectedRecordId: ids[0] }
+        });
+    }
+
     handleAttachmentsChange(event) {
         this.selectedAttachmentIds = [...event.detail.value];
     }
@@ -754,11 +797,11 @@ export default class DocGenSignatureSender extends NavigationMixin(LightningElem
                 };
                 // CxSAST: CSRF protection handled by Salesforce Aura/LWC framework
                 this.signerResults =
-                    this.showAttachmentPicker && this.hasSelectedAttachments
+                    this.orderedSelectedAttachments.length > 0
                         ? await createGuidedPdfSignatureRequestWithAttachments({
                               ...guidedArgs,
                               sendEmails: null,
-                              attachedDocumentIds: this.selectedAttachmentIds,
+                              attachedDocumentIds: this.orderedSelectedAttachments.map((f) => f.contentDocumentId),
                               attachedDocumentPosition: this.attachmentPosition
                           })
                         : await createGuidedPdfSignatureRequest(guidedArgs);

@@ -2942,7 +2942,7 @@ Some approvals are about documents that already exist: a set of engineering draw
 
 The setting is enforced for the Signature Sender and the Flow action alike. A template set to Required can't be sent in a multi-template packet.
 
-**Sending.** In the Signature Sender, pick a template that takes attached documents. An **Attach PDFs from this record** list appears: tick the files (or **Select all**) and choose whether they come **Before** or **After** the template. For a Required template, **Send** stays disabled until at least one is ticked. From Flow, pass **Attached Documents** (ContentDocument or ContentVersion Ids) and, optionally, **Attached Documents Position** to **Portwood: Create Signature Request**.
+**Sending.** In the Signature Sender, pick a template that takes attached documents. An **Attach PDFs from this record** list appears: tick the files (or **Select all**) and choose whether they come **Before** or **After** the template. For a Required template, **Send** stays disabled until at least one is ticked. **Preview** lists the attached documents in the order signers will see them, and **View files** opens them in Salesforce's file viewer. From Flow, pass **Attached Documents** (ContentDocument or ContentVersion Ids) and, optionally, **Attached Documents Position** to **Portwood: Create Signature Request**.
 
 **Pinning.** Each file is pinned to the exact version it had at send time. Uploading a new version later doesn't change what the signer sees; to send the new revision, send a new request. If a pinned file is deleted, or its content no longer matches, the signer is told to contact the sender instead of being shown something else.
 
