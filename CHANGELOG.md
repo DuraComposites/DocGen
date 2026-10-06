@@ -37,8 +37,11 @@
       opened it when. The attachments themselves stay unchanged on the record.
     - New objects: `DocGen_Signature_Attachment__c` (the pinned file per request) and
       `DocGen_Signer_Attachment__c` (each signer's review of each file: opened now, markup
-      later). Permission sets updated; the guest set stays read-only and gains class access
-      to the REST endpoint.
+      later). They appear as related lists on the signature request and signer layouts.
+      Permission sets are updated; the guest set gets no access to the new objects, only
+      class access to the REST endpoint. Orgs on their own permission sets see no change
+      until they use the feature: the Sender reads the new template field through the
+      advisory FLS guard (like `Brand__c`), so its template list never fails on upgrade.
 
 ### Fixed
 

@@ -64,9 +64,15 @@ public with sharing class DocGenSignatureSenderController {
                 'Required_Permission_Sets__c',
                 'Record_Filter__c',
                 'Base_Object_API__c',
-                'Default_Email_Message__c',
-                'Attached_Documents__c'
+                'Default_Email_Message__c'
             }
+        );
+        // #412 — advisory, not strict: a non-sensitive template setting, added after senders'
+        // permission sets were built. An org on its own permission sets must not lose the
+        // template list on upgrade (same reasoning as Brand__c in DocGenBrandResolver).
+        DocGenFlsGuard.advisoryAssertAccessible(
+            DocGen_Template__c.sObjectType,
+            new Set<String>{ 'Attached_Documents__c' }
         );
         /* code-analyzer-suppress ApexFlsViolation */
         List<DocGen_Template__c> all = [
@@ -1919,7 +1925,14 @@ public with sharing class DocGenSignatureSenderController {
 
         DocGenFlsGuard.assertAccessible(
             DocGen_Template__c.sObjectType,
-            new Set<String>{ 'Name', 'Document_Title_Format__c', 'Attached_Documents__c' }
+            new Set<String>{ 'Name', 'Document_Title_Format__c' }
+        );
+        // #412 — advisory, not strict: a non-sensitive template setting, added after senders'
+        // permission sets were built. An org on its own permission sets must not lose the
+        // template list on upgrade (same reasoning as Brand__c in DocGenBrandResolver).
+        DocGenFlsGuard.advisoryAssertAccessible(
+            DocGen_Template__c.sObjectType,
+            new Set<String>{ 'Attached_Documents__c' }
         );
         /* code-analyzer-suppress ApexFlsViolation */
         Map<Id, DocGen_Template__c> templateMap = new Map<Id, DocGen_Template__c>(

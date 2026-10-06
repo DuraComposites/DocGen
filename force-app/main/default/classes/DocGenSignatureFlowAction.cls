@@ -172,7 +172,7 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
 
         @InvocableVariable(
             label='Attached Documents'
-            description='Optional (#412). File Ids (ContentDocument or ContentVersion) of PDFs on the related record — e.g. engineering drawings — to show signers alongside the template. Each is pinned to its current version; signers must open every one before they can approve, and the signed PDF lists them in an approval register. Requires a template with {@Signature_...} tags or no signature tags at all (not a {#Signatures} loop block). Up to 100 files, 20 MB each.'
+            description='Optional (#412). File Ids (ContentDocument or ContentVersion) of PDFs on the related record — e.g. engineering drawings — to show signers alongside the template. Each is pinned to its current version; signers must open every one before they can approve, and the signed PDF lists them in an approval register. The template must allow it: its Attached Documents setting must be Optional or Required (a Required template refuses a send without any). It also needs {@Signature_...} tags or no signature tags at all, not a {#Signatures} loop block. Up to 100 files, 20 MB each.'
         )
         global List<String> attachedDocumentIds;
 

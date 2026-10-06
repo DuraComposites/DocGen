@@ -2957,6 +2957,13 @@ The setting is enforced for the Signature Sender and the Flow action alike. A te
 - Single-template sends only (not packets). Not available for templates that sign through a `{#Signatures}` loop block; use `{@Signature_…}` tags, or no signature tags at all.
 - Requests with attached documents always finalize on the signing page itself; the server-side re-render fallback (§10.10) is not used for them.
 - Guest access to the attached documents goes through the Site's Apex REST endpoint (`/services/apexrest/…/signature-attachment`), keyed by the signer's own link token and gated by the same email PIN, expiry and status rules as the signing page. The **Portwood Guest Signature** permission set grants the class access it needs.
+- **Where to see it.** A signature request's **Signature Attachments** related list shows what was attached: title, version, position and SHA-256. Each signer's **Signer Attachments** related list shows when each document was delivered to them and when they opened it.
+- **Your own permission sets?** If you use your own permission sets instead of Portwood's:
+    - give senders create and read on Portwood Signature Attachment and Portwood Signer Attachment;
+    - give admins edit on the template's Attached Documents field;
+    - give the Site guest user access to the `DocGenSignatureAttachmentRest` Apex class.
+
+    Sends without attached documents need none of these.
 
 ### 10.4 Sequential vs parallel
 
