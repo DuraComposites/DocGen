@@ -27,4 +27,5 @@ This checkout is **DuraComposites/DocGen**, Dura Composites' fork of Portwood. T
 - **Running `sf` by hand:** use PowerShell, not Git Bash. Under Git Bash, `sf` exits 1 even when it succeeds.
 - **The QA shell scripts** (`setup-org.sh`, `fixtures/deploy.sh`) source `scripts/qa/lib/windows-shim.sh`, which fixes that and a missing `python3`. Run them from Git Bash, e.g. `./scripts/qa/setup-org.sh docgen-verify --create --days 7 --hub prod`.
 - **`npm run qa`** works on Windows: `scripts/qa/lib/sf.mjs` runs the CLI's `run.js` with node there.
+- **Testing signing by hand:** after `setup-org.sh`, run `./scripts/qa/setup-signing-site.sh <org>` (Site at /sign, guest permission set, settings URL, drawing-approval demo). It prints a guest signing link.
 - **Dura's Dev Hub** is the sf alias `prod`.

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Dura Composites Ltd. (new file): a public Site for the guest signing pages, test orgs only. -->
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>DocGen_Signing</members>
+        <name>CustomSite</name>
+    </types>
+    <version>62.0</version>
+</Package>

@@ -73,6 +73,26 @@ npm run qa                                                               # every
     - `scripts/qa/lib/windows-shim.sh` fixes the two things that used to stop it: `sf` returning exit code 1 under Git Bash, and `python3` being missing.
     - `npm run qa` works from any terminal.
 
+### Test signing by hand
+
+`setup-org.sh` gives you an org for the automated tests. Signing by hand needs a public Site too:
+
+```bash
+./scripts/qa/setup-signing-site.sh docgen-verify             # Site, guest access, and a drawing-approval demo
+./scripts/qa/setup-signing-site.sh docgen-verify --no-demo   # just the Site
+```
+
+The script:
+
+- deploys a Visualforce Site at `/sign` and gives its guest user `DocGen_Guest_Signature`;
+- points DocGen's settings at the Site, then checks that an anonymous visitor can reach the signing pages;
+- seeds a demo:
+    - a **Drawing Approval Demo** account with three made-up drawing PDFs;
+    - a **Drawing Approval (demo)** template with attached documents and markup switched on;
+    - a ready signature request.
+
+It prints the signing link: open it on your phone or in a private window. To send your own request, open the account and choose **Signatures → New signature request → Portwood template**. Re-run the script for a fresh link.
+
 ## Take a Portwood release
 
 Portwood releases arrive as a pull request, like any other change. Merge a release **tag**, not upstream `main`, so `main` only ever contains released Portwood code.
