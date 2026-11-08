@@ -1810,9 +1810,9 @@ Attached documents need **Decline** available, because the signer approves or de
 
     Sends without attached documents need none of these.
 
-_Template builders and senders · Dura Composites fork_
+_Template builders and senders · 6 min read · Reviewed for 3.63.0_
 
-**Next:** [Let signers mark up attached documents](#sign-markup) · [What a signer sees](#signer-experience)
+**Next:** [Let signers mark up attached documents](#sign-markup) · [What a signer sees](#signer-experience) · [Create signing requests with Flow](#flow-signatures)
 
 ---
 
@@ -1869,9 +1869,9 @@ On a touch screen, one finger draws and two fingers move and zoom the drawing, w
 - **A markup file is the signer's own content.** Portwood checks its size, that it comes from the signer's own link, and which copy it was built on. It doesn't check what the marks draw. Treat it like a file the signer emailed back.
 - **Your own permission sets?** Give admins edit on the template's Attached Document Markup field, and senders read on the Markup fields of Portwood Signer Attachment and on Marked-Up Documents. The Site guest user needs nothing beyond what [Attach record PDFs for approval](#sign-attached-documents) lists.
 
-_Template builders, senders and admins · Dura Composites fork_
+_Template builders, senders and admins · 6 min read · Reviewed for 3.63.0_
 
-**Next:** [What a signer sees](#signer-experience) · [Create signing requests with Flow](#flow-signatures)
+**Next:** [Attach record PDFs for approval](#sign-attached-documents) · [What a signer sees](#signer-experience) · [Create signing requests with Flow](#flow-signatures)
 
 ---
 
@@ -5149,18 +5149,6 @@ global static Map<String, Object> generatePdfBlobFromData(Id templateId, Map<Str
 global static Id generateAndSaveFromData( Id templateId, Id attachmentRecordId, Map<String, Object> dataMap, String outputFormatOverride )
 global static Id generateAndSaveFromData( Id templateId, Id attachmentRecordId, Map<String, Object> dataMap, String outputFormatOverride, String documentTitle )
 global static Id generateAndSaveFromData( Id templateId, Id attachmentRecordId, Map<String, Object> dataMap, String outputFormatOverride, String documentTitle, Id fileAttachmentTarget )
-```
-
-#### DocGenSignatureAttachmentRest
-
-Core · Dura Composites fork · Guest Apex REST resource for attached documents and markups
-
-```apex
-@RestResource(urlMapping='/signature-attachment/*')
-global without sharing class DocGenSignatureAttachmentRest
-global static void fetchAttachment()   // @HttpGet
-global static void saveMarkup()        // @HttpPost
-global static void withdrawMarkup()    // @HttpDelete
 ```
 
 #### DocGenSignatureFinalizer

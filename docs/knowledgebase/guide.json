@@ -746,6 +746,47 @@
             }
         },
         {
+            "slug": "sign-attached-documents",
+            "title": "Attach record PDFs for approval",
+            "group": "sign",
+            "audience": "Template builders and senders",
+            "minutes": 6,
+            "summary": "Send drawings or other PDFs on the record alongside an approval template, with a review register in the signed PDF.",
+            "sources": [
+                "force-app/main/default/classes/DocGenSignatureAttachments.cls",
+                "force-app/main/default/classes/DocGenSignatureAttachmentRest.cls",
+                "force-app/main/default/lwc/docGenTemplateSignatureSender",
+                "force-app/main/default/pages/DocGenSignaturePdf.page"
+            ],
+            "related": ["sign-markup", "signer-experience", "flow-signatures"],
+            "aliases": ["1031-attaching-existing-pdfs-from-the-record-drawing-approval"],
+            "review": {
+                "version": "3.63.0",
+                "date": "2026-11-08",
+                "method": "source"
+            }
+        },
+        {
+            "slug": "sign-markup",
+            "title": "Let signers mark up attached documents",
+            "group": "sign",
+            "audience": "Template builders, senders and admins",
+            "minutes": 6,
+            "summary": "Signers draw, highlight and annotate attached drawings; markups are saved to the record and can make an approval \"approved with comments\".",
+            "sources": [
+                "force-app/main/default/classes/DocGenSignatureAttachments.cls",
+                "force-app/main/default/classes/DocGenSignatureAttachmentRest.cls",
+                "force-app/main/default/pages/DocGenSignaturePdf.page"
+            ],
+            "related": ["sign-attached-documents", "signer-experience", "flow-signatures"],
+            "aliases": ["1032-marking-up-attached-documents"],
+            "review": {
+                "version": "3.63.0",
+                "date": "2026-11-08",
+                "method": "source"
+            }
+        },
+        {
             "slug": "signer-experience",
             "title": "What a signer sees",
             "group": "sign",
