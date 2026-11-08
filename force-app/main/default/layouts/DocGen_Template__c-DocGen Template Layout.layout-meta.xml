@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Layout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <layoutSections>
         <customLabel>true</customLabel>
         <detailHeading>true</detailHeading>
@@ -87,6 +88,18 @@
             <layoutItems>
                 <behavior>Edit</behavior>
                 <field>Signer_Verification__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>Signature_Expiry_Days__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>Signature_Reminder_Every_Days__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>Signature_Reminder_For_Days__c</field>
             </layoutItems>
         </layoutColumns>
         <layoutColumns>

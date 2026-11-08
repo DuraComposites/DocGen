@@ -65,6 +65,22 @@ public without sharing class DocGenSignatureEvents {
         }
     }
 
+    /**
+     * A user changed the request after sending, e.g. extended the link (DocGenSignatureReminderRules).
+     * Called only after that change was allowed (the Change Sent Signature Requests permission), so
+     * the row is written as the system: sales users have no create on events, so that they can't
+     * add timeline entries of their own.
+     */
+    public static void logChange(Id requestId, String type, String detail) {
+        try {
+            if (requestId != null) {
+                insertRows(new List<DocGen_Signature_Event__c>{ build(requestId, null, type, detail, true) });
+            }
+        } catch (Exception e) {
+            System.debug(LoggingLevel.WARN, 'DocGen: change event not recorded: ' + e.getMessage());
+        }
+    }
+
     /** A signer opened their link after it expired. At most once per signer per gap. */
     public static void logExpiredOpen(Id requestId, Id signerId) {
         try {
@@ -112,6 +128,10 @@ public without sharing class DocGenSignatureEvents {
             return;
         }
         DocGenFlsGuard.guestAssertCreateable(events, FIELDS);
+        insertRows(events);
+    }
+
+    private static void insertRows(List<DocGen_Signature_Event__c> events) {
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
         Database.insert(events, false, AccessLevel.SYSTEM_MODE);
     }

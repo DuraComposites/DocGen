@@ -4,7 +4,8 @@
  * record as a timeline of what happened, oldest first. Merges:
  *   - sent: the request's CreatedDate;
  *   - opened: DocGen_Signer_Visit__c (automated visits left out), with device and page loads;
- *   - reminder sent, link resent, revoked, expired link opened: DocGen_Signature_Event__c;
+ *   - reminder sent, link resent, revoked, expired link opened, and a user changing the link's
+ *     expiry or the reminders after sending: DocGen_Signature_Event__c;
  *   - signed and declined: DocGen_Signature_Audit__c (Portwood writes one for both), with the
  *     decline reason from the signer;
  *   - link expired: the expiry time, when the request is still open (DocGenSignatureExpiry);
@@ -16,8 +17,9 @@
  * "ChildObject.LookupField", comma-separated, e.g. "SBQQ__Quote__c.SBQQ__Opportunity2__c".
  * Each must be a lookup from the child to this record's object; anything else is ignored.
  *
- * Read-only. Runs as the viewing user: with sharing and WITH USER_MODE. Returns plain DTOs so
- * the component never meets namespace-prefixed field names.
+ * Runs as the viewing user: with sharing and WITH USER_MODE. Returns plain DTOs so the component
+ * never meets namespace-prefixed field names. The only writes are changeExpiry and
+ * changeReminders (DocGenSignatureReminderRules), for a request that isn't finished.
  */
 public with sharing class DocGenSignatureStatusController {
     @TestVisible
@@ -58,6 +60,19 @@ public with sharing class DocGenSignatureStatusController {
         public Datetime expiresAt;
         @AuraEnabled
         public Boolean isOpen;
+        /** Not signed, declined or revoked: the link can be extended and reminders changed. */
+        @AuraEnabled
+        public Boolean canChange;
+        /** "Link expires 22 Nov · Reminders every 2 days until 20 Nov", while unfinished. */
+        @AuraEnabled
+        public String plan;
+        /** The expiry and reminder settings, to pre-fill the card's editors. */
+        @AuraEnabled
+        public Date expiresOn;
+        @AuraEnabled
+        public Integer reminderEvery;
+        @AuraEnabled
+        public Date remindersUntil;
         @AuraEnabled
         public String summary;
         @AuraEnabled
@@ -71,7 +86,10 @@ public with sharing class DocGenSignatureStatusController {
     public class TimelineItem {
         @AuraEnabled
         public Datetime at;
-        /** sent, opened, reminder, resent, revoked, signed, declined, expired, expired-open, waiting */
+        /**
+         * sent, opened, reminder, resent, revoked, signed, declined, expired, expired-open,
+         * expiry-changed, reminders-changed, waiting
+         */
         @AuraEnabled
         public String kind;
         @AuraEnabled
@@ -92,6 +110,36 @@ public with sharing class DocGenSignatureStatusController {
             ex.setMessage(message);
             throw ex;
         }
+    }
+
+    /** Moves the link's expiry to the end of the given day; recorded on the timeline. */
+    @AuraEnabled
+    public static void changeExpiry(Id requestId, Date expiresOn) {
+        try {
+            DocGenSignatureReminderRules.changeExpiry(requestId, expiresOn);
+        } catch (AuraHandledException e) {
+            throw e;
+        } catch (Exception e) {
+            throw handled('Could not change the expiry: ' + e.getMessage());
+        }
+    }
+
+    /** EVERY (every N days, optionally until a date), NONE or ORG; recorded on the timeline. */
+    @AuraEnabled
+    public static void changeReminders(Id requestId, String mode, Integer everyDays, Date until) {
+        try {
+            DocGenSignatureReminderRules.changeReminders(requestId, mode, everyDays, until);
+        } catch (AuraHandledException e) {
+            throw e;
+        } catch (Exception e) {
+            throw handled('Could not change the reminders: ' + e.getMessage());
+        }
+    }
+
+    private static AuraHandledException handled(String message) {
+        AuraHandledException ex = new AuraHandledException(message);
+        ex.setMessage(message);
+        return ex;
     }
 
     private static List<RecordGroup> load(Id recordId, String relatedRecords) {
@@ -121,6 +169,8 @@ public with sharing class DocGenSignatureStatusController {
                 CreatedDate,
                 LastModifiedDate,
                 Expires_At__c,
+                Reminder_Every_Days__c,
+                Reminders_Until__c,
                 Related_Record_Id__c,
                 Protected_Signed_Content_Document_Id__c,
                 Marked_Up_Documents__c,
@@ -218,6 +268,21 @@ public with sharing class DocGenSignatureStatusController {
         Boolean finished = req.Status__c == 'Signed' || req.Status__c == 'Declined' || req.Status__c == 'Cancelled';
         Boolean expired = !finished && DocGenSignatureExpiry.isExpired(req.Expires_At__c, req.CreatedDate);
         r.isOpen = !finished && !expired;
+        r.canChange = !finished;
+        r.expiresOn = expiry.date();
+        r.reminderEvery = req.Reminder_Every_Days__c == null ? null : req.Reminder_Every_Days__c.intValue();
+        r.remindersUntil = req.Reminders_Until__c == null ? null : req.Reminders_Until__c.date();
+        if (!finished) {
+            r.plan =
+                (expired ? 'Link expired ' : 'Link expires ') +
+                expiry.format('d MMM') +
+                ' · ' +
+                DocGenSignatureReminderRules.describe(req.Reminder_Every_Days__c, req.Reminders_Until__c);
+            Boolean wantsReminders = req.Reminder_Every_Days__c == null || req.Reminder_Every_Days__c > 0;
+            if (wantsReminders && !remindersOn()) {
+                r.plan += ' (reminders are off in Signature Settings)';
+            }
+        }
 
         // --- the timeline ---
         add(r, req.CreatedDate, 'sent', 'Sent to ' + joinNames(nameList));
@@ -256,6 +321,12 @@ public with sharing class DocGenSignatureStatusController {
                     add(r, e.Occurred_At__c, 'revoked', 'Revoked' + byWho);
                 } else if (e.Type__c == DocGenSignatureEvents.EXPIRED_LINK_OPENED) {
                     add(r, e.Occurred_At__c, 'expired-open', who + ' tried to open the expired link');
+                } else if (e.Type__c == DocGenSignatureReminderRules.EXPIRY_CHANGED) {
+                    String what = String.isBlank(e.Detail__c) ? 'Link expiry changed' : e.Detail__c;
+                    add(r, e.Occurred_At__c, 'expiry-changed', what + byWho);
+                } else if (e.Type__c == DocGenSignatureReminderRules.REMINDERS_CHANGED) {
+                    String what = String.isBlank(e.Detail__c) ? 'Reminders changed' : e.Detail__c;
+                    add(r, e.Occurred_At__c, 'reminders-changed', what + byWho);
                 }
             }
         }
@@ -344,6 +415,17 @@ public with sharing class DocGenSignatureStatusController {
             r.summary = 'Sent ' + fmt(req.CreatedDate);
         }
         return r;
+    }
+
+    private static Boolean remindersOnCache;
+
+    /** Whether the reminder job is switched on (Signature Settings). */
+    private static Boolean remindersOn() {
+        if (remindersOnCache == null) {
+            DocGen_Settings__c settings = DocGen_Settings__c.getOrgDefaults();
+            remindersOnCache = settings != null && settings.Signature_Reminder_Enabled__c == true;
+        }
+        return remindersOnCache;
     }
 
     private static void add(RequestStatus r, Datetime at, String kind, String text) {
@@ -486,7 +568,7 @@ public with sharing class DocGenSignatureStatusController {
     private static Map<Id, List<DocGen_Signature_Event__c>> eventsFor(Set<Id> requestIds) {
         Map<Id, List<DocGen_Signature_Event__c>> out = new Map<Id, List<DocGen_Signature_Event__c>>();
         for (DocGen_Signature_Event__c e : [
-            SELECT Signature_Request__c, Signer__c, Type__c, Occurred_At__c, Actor__r.Name
+            SELECT Signature_Request__c, Signer__c, Type__c, Occurred_At__c, Detail__c, Actor__r.Name
             FROM DocGen_Signature_Event__c
             WHERE Signature_Request__c IN :requestIds
             WITH USER_MODE

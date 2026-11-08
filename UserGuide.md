@@ -51,6 +51,7 @@ Make your first document, build a template, send it for signature, and keep your
     - [What a signer sees](#signer-experience)
     - [Track, resend, or stop a request](#manage-signatures)
     - [See each request as a timeline](#signature-status)
+    - [Set link expiry and reminders](#signature-expiry-reminders)
     - [Set up external signing](#setup-signatures)
     - [Brand the signing experience](#brands-and-emails)
     - [Create the Salesforce signing site](#site-salesforce)
@@ -1965,6 +1966,8 @@ An administrator sets the default in **Portwood → Signatures**. A send can ove
 
 Reminders use hour offsets such as `24, 72, 168`. They go to pending signers while the request remains valid, subject to the configured scheduled job and email setup.
 
+A template can set its own expiry and reminder schedule in days, which the sender sees and can change, and a sent request can be extended or have its reminders changed from the Signature Status card. See [Set link expiry and reminders](#signature-expiry-reminders).
+
 #### Signing in person
 
 Portwood Admin users can use **Sign In Person** when it is offered for a pending signer. Confirm the identity-check attestation only after doing that check. The bypass is recorded in the audit history.
@@ -2023,7 +2026,11 @@ Each request has a status, the people it went to and a one-line summary, such as
 | **... signed** / **... declined: "..."** | The signature audit, with the reason given for a decline |
 | **Link expired**                         | The link's expiry, if nobody finished first              |
 | **... tried to open the expired link**   | The signer came back after the link lapsed               |
+| **Link extended to ... by ...**          | Someone extended or reopened the link (see below)        |
+| **Reminders every ... by ...**           | Someone changed or stopped the reminders                 |
 | **Waiting on ...**                       | Who still has to sign, and how long since it was sent    |
+
+Until a request is finished, a line under the summary gives its plan, such as **Link expires 22 Nov · Reminders every 2 days until 20 Nov**, with **Extend link** and **Reminders** to change it. See [Set link expiry and reminders](#signature-expiry-reminders).
 
 For drawing approvals, a line under the timeline says how many attached documents each signer opened and marked up.
 
@@ -2043,13 +2050,73 @@ Visits record the time, the kind of device and the browser's user agent. No IP a
 
 #### If the card is empty or shows an error
 
-The card runs as the viewing user. **Portwood User** and **Portwood Admin** include what it needs. With your own permission sets, give read access to the Portwood Signature Request, Signer, Signature Audit, Signature Attachment, Signer Attachment, Signer Visit and Signature Event objects, the fields the card shows, and the `DocGenSignatureStatusController` Apex class.
+The card runs as the viewing user. **Portwood User** and **Portwood Admin** include what it needs. With your own permission sets, give read access to the Portwood Signature Request, Signer, Signature Audit, Signature Attachment, Signer Attachment, Signer Visit and Signature Event objects, the fields the card shows, and the `DocGenSignatureStatusController` Apex class. To extend links and change reminders, also give the **Change Sent Signature Requests** custom permission.
 
 Requests are matched on the record they were sent from. A request sent from another record appears on that record, or under it on a parent page set up as above.
 
 _Administrators and senders · 5 min read · Reviewed for 3.63.0_
 
 **Next:** [Track, resend, or stop a request](#manage-signatures) · [Attach record PDFs for approval](#sign-attached-documents) · [Set up external signing](#setup-signatures)
+
+---
+
+<a id="signature-expiry-reminders"></a>
+
+### Set link expiry and reminders
+
+Give each template its own link expiry and reminder schedule, let the sender adjust both when sending, and extend a link or change the reminders after it has gone out.
+
+**Before you start:** Signature reminders are switched on in **Portwood → Signatures** and the reminder job is scheduled; see [Track, resend, or stop a request](#manage-signatures). You are a Portwood administrator for the template settings, and a sender with **Portwood User** or **Portwood Admin** for the rest.
+
+#### Set the defaults on a template
+
+1. Open the template in **Portwood → Templates** and go to **E-Signature Defaults**.
+2. Fill in any of these, in days:
+
+| Setting                       | What it does                                                             | Blank means                          |
+| ----------------------------- | ------------------------------------------------------------------------ | ------------------------------------ |
+| **Link Expires After (Days)** | How long signing links stay valid                                        | The org default (Signature Settings) |
+| **Remind Every (Days)**       | Days between reminder emails to anyone who hasn't signed. `0` sends none | The org reminder schedule            |
+| **Keep Reminding For (Days)** | Stop reminding this many days after sending                              | Remind until the link expires        |
+
+3. Check the line under the settings, which reads them back, for example "Links expire after 14 days; a reminder every 2 days for 10 days."
+4. Click **Save as New Version**. Nothing else about the template changes.
+
+**You are done when:** The template's line reads the schedule you want after you reopen it.
+
+#### Change them when sending
+
+In the **Signature Sender**, a single-template send shows:
+
+- **Link expires on**: a date, filled in from the template (or the org default). Links work until the end of that day.
+- **Reminders**: **Every few days** (with **Every (days)** and an optional **Until** date), **Standard schedule** (the org schedule in Signature Settings), or **No reminders**. It starts on the template's choice.
+
+The line under **Reminders** says what will happen, and warns when reminders are switched off for the org. Packets (several templates in one send) use the org defaults.
+
+A Flow does the same with the **Create Signature Request** action's **Link Expires On**, **Remind Every (Days)** and **Keep Reminding For (Days)** inputs. Leave them blank to use the template's settings.
+
+#### Extend a link or change the reminders later
+
+On the record's [Signature Status card](#signature-status), a request that hasn't been signed, declined or revoked shows its plan, for example "Link expires 22 Nov · Reminders every 2 days until 20 Nov", with two actions:
+
+- **Extend link** (or **Reopen link** once it has lapsed): pick a new date. Signers' existing links work again until the end of that day; nobody gets a new email.
+- **Reminders**: change how often, until when, back to the standard schedule, or stop them.
+
+Each change goes on the request's timeline with your name, such as "Link extended to 22 Nov 2026 by Sam Rivers". A sender extending at the customer's request is worth knowing about later.
+
+**Resend** in the Signature Sender also gives the link a fresh window: the template's length (or the org default), never shorter than a date someone already extended it to.
+
+Changing a sent request needs the **Change Sent Signature Requests** permission, which **Portwood User** and **Portwood Admin** include.
+
+#### How the reminders go out
+
+The hourly reminder job checks each request with its own schedule. A signer is reminded when the chosen number of days has passed since their last reminder (or since sending), as long as the link hasn't expired and the **Until** date hasn't passed. On a request signed in order, only the person whose turn it is gets reminded. Requests with their own schedule are left out of the org schedule, so nobody gets both.
+
+Each reminder appears on the timeline as **Reminder sent to ...**.
+
+_Administrators and senders · 5 min read · Reviewed for 3.63.0_
+
+**Next:** [Track, resend, or stop a request](#manage-signatures) · [See each request as a timeline](#signature-status) · [Set up external signing](#setup-signatures)
 
 ---
 
@@ -5265,6 +5332,9 @@ global String emailSubject
 global Boolean requireEmailVerification
 global Boolean prefillSignerEmail
 global Integer expirationDays
+global Date expiresOn
+global Integer reminderEveryDays
+global Integer reminderForDays
 global List<String> attachedDocumentIds
 global String attachedDocumentPosition
 global class Result

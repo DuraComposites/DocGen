@@ -855,6 +855,29 @@
             }
         },
         {
+            "slug": "signature-expiry-reminders",
+            "title": "Set link expiry and reminders",
+            "group": "sign",
+            "audience": "Administrators and senders",
+            "minutes": 5,
+            "summary": "Default expiry and reminder schedule per template, adjustable at send time, and extend a link or change reminders after sending.",
+            "sources": [
+                "force-app/main/default/classes/DocGenSignatureReminderRules.cls",
+                "force-app/main/default/classes/DocGenSignatureReminderSchedulable.cls",
+                "force-app/main/default/classes/DocGenSignatureFlowAction.cls",
+                "force-app/main/default/lwc/docGenTemplateSignatureSender",
+                "force-app/main/default/lwc/docGenSignatureStatus",
+                "force-app/main/default/lwc/docGenAdmin"
+            ],
+            "related": ["manage-signatures", "signature-status", "setup-signatures"],
+            "aliases": [],
+            "review": {
+                "version": "3.63.0",
+                "date": "2026-11-08",
+                "method": "org-and-source"
+            }
+        },
+        {
             "slug": "setup-signatures",
             "title": "Set up external signing",
             "group": "sign",

@@ -47,6 +47,16 @@ public with sharing class DocGenSignatureSenderController {
         // 'Before' (the default) or 'After' the template.
         @AuraEnabled
         public String attachedDocumentPosition { get; set; }
+        // Dura: link expiry date and reminder schedule chosen at send (DocGenSignatureReminderRules).
+        // expiresOn wins over expirationDays. reminderMode: TEMPLATE (default), ORG, NONE or EVERY.
+        @AuraEnabled
+        public Date expiresOn { get; set; }
+        @AuraEnabled
+        public String reminderMode { get; set; }
+        @AuraEnabled
+        public Integer reminderEveryDays { get; set; }
+        @AuraEnabled
+        public Date remindersUntil { get; set; }
     }
 
     /**
@@ -109,7 +119,12 @@ public with sharing class DocGenSignatureSenderController {
         // template list on upgrade (same reasoning as Brand__c in DocGenBrandResolver).
         DocGenFlsGuard.advisoryAssertAccessible(
             DocGen_Template__c.sObjectType,
-            new Set<String>{ 'Attached_Documents__c' }
+            new Set<String>{
+                'Attached_Documents__c',
+                'Signature_Expiry_Days__c',
+                'Signature_Reminder_Every_Days__c',
+                'Signature_Reminder_For_Days__c'
+            }
         );
         /* code-analyzer-suppress ApexFlsViolation */
         List<DocGen_Template__c> all = [
@@ -123,7 +138,11 @@ public with sharing class DocGenSignatureSenderController {
                 Record_Filter__c,
                 Base_Object_API__c,
                 Default_Email_Message__c,
-                Attached_Documents__c
+                Attached_Documents__c,
+                // Dura: send-time defaults for expiry and reminders (DocGenSignatureReminderRules).
+                Signature_Expiry_Days__c,
+                Signature_Reminder_Every_Days__c,
+                Signature_Reminder_For_Days__c
             FROM DocGen_Template__c
             WITH SYSTEM_MODE
             ORDER BY Sort_Order__c ASC NULLS LAST, Name ASC
@@ -1785,7 +1804,6 @@ public with sharing class DocGenSignatureSenderController {
             req.Document_Title_Format__c = documentTitleFormat;
         }
         req.Secure_Token__c = generateRequestVerificationToken();
-        req.Expires_At__c = DocGenSignatureExpiry.computeExpiry(expirationDays);
         Set<String> reqFields = new Set<String>{
             'Template__c',
             'Related_Record_Id__c',
@@ -1796,6 +1814,9 @@ public with sharing class DocGenSignatureSenderController {
             'Secure_Token__c',
             'Expires_At__c'
         };
+        // Dura: expiry and reminders from the send, then the template, then the org
+        // (DocGenSignatureReminderRules). Replaces computeExpiry(expirationDays), which it still honours.
+        reqFields.addAll(DocGenSignatureReminderRules.applyAtSend(req, options));
         if (String.isNotBlank(frozenJson)) {
             // #156: snapshot persisted to a ContentVersion (no 131072-char cap) and referenced
             // by Id, so large templates get a true frozen snapshot instead of a live re-merge.
@@ -3071,11 +3092,24 @@ public with sharing class DocGenSignatureSenderController {
     public static void resendSignatureRequest(Id requestId) {
         DocGenFlsGuard.assertAccessible(
             DocGen_Signature_Request__c.sObjectType,
-            new Set<String>{ 'Status__c', 'Template__c', 'Source_Document_Id__c', 'Render_Data_Snapshot__c' }
+            new Set<String>{
+                'Status__c',
+                'Template__c',
+                'Source_Document_Id__c',
+                'Render_Data_Snapshot__c',
+                'Expires_At__c'
+            }
         );
         /* code-analyzer-suppress ApexFlsViolation */
         DocGen_Signature_Request__c req = [
-            SELECT Id, Status__c, Template__r.Name, Source_Document_Id__c, Render_Data_Snapshot__c
+            SELECT
+                Id,
+                Status__c,
+                Template__r.Name,
+                Template__r.Signature_Expiry_Days__c,
+                Source_Document_Id__c,
+                Render_Data_Snapshot__c,
+                Expires_At__c
             FROM DocGen_Signature_Request__c
             WHERE Id = :requestId
             WITH SYSTEM_MODE
@@ -3163,8 +3197,12 @@ public with sharing class DocGenSignatureSenderController {
         /* code-analyzer-suppress ApexFlsViolation */
         Database.update(signers, false, AccessLevel.SYSTEM_MODE);
         req.Status__c = 'Sent';
-        // Resend opens a fresh signing window (org default) alongside the new tokens.
-        req.Expires_At__c = DocGenSignatureExpiry.computeExpiry(null);
+        // Resend opens a fresh signing window alongside the new tokens. Dura: the template's length
+        // (else the org default), and never earlier than a date someone already extended it to.
+        req.Expires_At__c = DocGenSignatureReminderRules.resendExpiry(
+            req.Expires_At__c,
+            req.Template__r?.Signature_Expiry_Days__c
+        );
         // v2.0.1 — per-field FLS enforcement (Checkmarx "FLS Update").
         DocGenFlsGuard.assertUpdateable(req, new Set<String>{ 'Status__c', 'Expires_At__c' });
         /* code-analyzer-suppress ApexFlsViolation */

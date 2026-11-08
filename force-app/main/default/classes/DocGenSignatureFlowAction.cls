@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Flow-invocable action to create a Portwood signature request and return signing links.
  *
@@ -171,6 +172,24 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
         global Integer expirationDays;
 
         @InvocableVariable(
+            label='Link Expires On'
+            description='Optional (Dura). The date signing links stop working, at the end of that day. Wins over Link Expiration (Days). Leave both blank to use the template default, then the org default.'
+        )
+        global Date expiresOn;
+
+        @InvocableVariable(
+            label='Remind Every (Days)'
+            description='Optional (Dura). Days between reminder emails to signers who have not signed yet. 0 sends no reminders. Leave blank to use the template default, then the org reminder schedule. Reminders need the reminder job switched on in Signature Settings.'
+        )
+        global Integer reminderEveryDays;
+
+        @InvocableVariable(
+            label='Keep Reminding For (Days)'
+            description='Optional (Dura). Stop reminding this many days after sending. Leave blank to remind until the link expires (or for the template default).'
+        )
+        global Integer reminderForDays;
+
+        @InvocableVariable(
             label='Attached Documents'
             description='Optional (#412). File Ids (ContentDocument or ContentVersion) of PDFs on the related record — e.g. engineering drawings — to show signers alongside the template. Each is pinned to its current version; signers must open every one and confirm they reviewed them before they can approve, and the signed PDF lists them in an approval register. The template must allow it: its Attached Documents setting must be Optional or Required (a Required template refuses a send without any), and Decline must not be hidden. It also needs {@Signature_...} tags or no signature tags at all, not a {#Signatures} loop block. Limits are set in Signature Settings (default 100 files, 20 MB each, 200 MB in total).'
         )
@@ -341,6 +360,9 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
             options.prefillSignerEmail = req.prefillSignerEmail;
             options.sendEmails = req.sendEmails; // #195 — false suppresses Portwood's invites (Flow sends its own)
             options.expirationDays = req.expirationDays; // null = org-default signing window
+            // Dura: expiry date and reminder schedule; blank inherits the template, then the org.
+            options.expiresOn = req.expiresOn;
+            applyReminderInputs(req, options);
             options.attachedDocumentIds = req.attachedDocumentIds; // #412 — existing record PDFs shown alongside the template
             options.attachedDocumentPosition = req.attachedDocumentPosition;
             List<DocGenSignatureSenderController.SignerResult> signerResults = DocGenSignatureSenderController.sendGuidedPdfRequest(
@@ -506,5 +528,24 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
         }
 
         return inputs;
+    }
+
+    /**
+     * Dura: Remind Every (Days) and Keep Reminding For (Days) as send options
+     * (DocGenSignatureReminderRules.applyAtSend). Blank every = the template's rule.
+     */
+    @TestVisible
+    private static void applyReminderInputs(Request req, DocGenSignatureSenderController.GuidedPdfSendOptions options) {
+        if (req.reminderForDays != null && req.reminderForDays > 0) {
+            options.remindersUntil = Date.today().addDays(req.reminderForDays);
+        }
+        if (req.reminderEveryDays == null) {
+            options.reminderMode = DocGenSignatureReminderRules.MODE_TEMPLATE;
+        } else if (req.reminderEveryDays <= 0) {
+            options.reminderMode = DocGenSignatureReminderRules.MODE_NONE;
+        } else {
+            options.reminderMode = DocGenSignatureReminderRules.MODE_EVERY;
+            options.reminderEveryDays = req.reminderEveryDays;
+        }
     }
 }
