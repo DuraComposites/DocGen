@@ -18,6 +18,7 @@ This checkout is **DuraComposites/DocGen**, Dura Composites' fork of Portwood. T
 
 - Add `Modified by Dura Composites Ltd.` near the top of any Portwood file you change, as a comment in that file's syntax (Apache-2.0 §4(b)). Add it once per file.
 - Add a row to "Changes from Portwood" in `.github/README.md` for every behaviour change.
+- `UserGuide.md` is generated from `docs/knowledgebase/` (articles + `guide.json`) by `npm run guide:build`. Never edit it by hand; CI runs `npm run guide:check`.
 - The repository is public. Never commit customer data, real drawings, org IDs, usernames or credentials.
 - Packaging: `sfdx-project.json` still names Portwood's package, and Dura's namespace isn't registered yet. **Don't run `sf package version create`** until the packaging work sets this up.
 

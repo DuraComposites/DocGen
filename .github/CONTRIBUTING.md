@@ -40,13 +40,15 @@ Anyone with access can push other branches and open pull requests.
 2. Make the change, following Portwood's code guidelines.
 3. **If you change a file that came from Portwood, add a notice near the top:** `Modified by Dura Composites Ltd.`, as a comment in that file's syntax. The Apache licence requires this ([§4(b)](../LICENSE)). Once a file has the line, it doesn't need another.
 4. If the change affects behaviour, add a row to **Changes from Portwood** in [README](README.md).
-5. Run the checks:
+5. **If users need to know about it, write or edit an article in `docs/knowledgebase/articles/`,** register it in `docs/knowledgebase/guide.json`, and run `npm run guide:build`. **Never edit `UserGuide.md` by hand:** it's generated, and the Knowledgebase check fails on hand edits. Then follow Portwood's [MAINTAINING guide](../docs/knowledgebase/MAINTAINING.md).
+6. Run the checks:
     ```bash
     npm run format:check      # CI runs this on every pull request and blocks the merge if it fails
+    npm run guide:check       # the User Guide is up to date with its articles and the code
     npm run qa -- --offline   # quick checks that need no org
     npm run qa                # the full set, against your scratch org
     ```
-6. Push the branch and open a pull request against `main` on `DuraComposites/DocGen`.
+7. Push the branch and open a pull request against `main` on `DuraComposites/DocGen`.
 
 ### Merging
 
