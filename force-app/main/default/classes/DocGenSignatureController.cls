@@ -887,7 +887,9 @@ public without sharing class DocGenSignatureController {
                 gate.signer.Signature_Request__c,
                 gate.signer.Id
             ),
-            'endpoint' => DocGenSignatureAttachments.endpointPath()
+            'endpoint' => DocGenSignatureAttachments.endpointPath(),
+            // #412 M2 — Off / Decline only / Approve or decline
+            'markup' => DocGenSignatureAttachments.markupMode(gate.signer)
         };
     }
 
@@ -2015,6 +2017,8 @@ public without sharing class DocGenSignatureController {
             DocGen_Template__c.sObjectType,
             new Set<String>{ 'Hide_Signer_Decline__c' }
         );
+        // FOR UPDATE: #412 M2, so the signer's markup saves can't interleave with this decline
+        // (DocGenSignatureAttachments.lockSigner).
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
         List<DocGen_Signer__c> signers = [
             SELECT
@@ -2024,6 +2028,7 @@ public without sharing class DocGenSignatureController {
                 Signer_Email__c,
                 Signature_Request__c,
                 Signature_Request__r.Expires_At__c,
+                Signature_Request__r.Status__c,
                 Signature_Request__r.Template__c,
                 Signature_Request__r.Template__r.Hide_Signer_Decline__c,
                 Role_Name__c,
@@ -2033,6 +2038,7 @@ public without sharing class DocGenSignatureController {
             WHERE Secure_Token__c = :token
             WITH SYSTEM_MODE
             LIMIT 1
+            FOR UPDATE
         ]; // NOPMD ApexCRUDViolation
 
         if (signers.isEmpty()) {
@@ -2055,6 +2061,13 @@ public without sharing class DocGenSignatureController {
         if (signer.Status__c == 'Declined') {
             result.put('success', false);
             result.put('message', 'You have already declined this request.');
+            return result;
+        }
+        // The request itself may be finished: cancelled by the sender, or declined or completed by
+        // another signer. Declining it then would reopen it as Declined.
+        if (new Set<String>{ 'Signed', 'Cancelled', 'Declined' }.contains(signer.Signature_Request__r.Status__c)) {
+            result.put('success', false);
+            result.put('message', 'This signature request is no longer active.');
             return result;
         }
 
@@ -2092,6 +2105,8 @@ public without sharing class DocGenSignatureController {
         );
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
         Database.update(signer, false, AccessLevel.SYSTEM_MODE);
+        // #412 M2 — the signer's draft markups go with this decline.
+        DocGenSignatureAttachments.submitMarkups(signer.Id);
 
         // Mark parent request as declined. Null out the cached preview HTML — the JSON blob
         // in Signature_Data__c carries the live preview with names already stamped, and
@@ -2910,6 +2925,8 @@ public without sharing class DocGenSignatureController {
                 'Secure_Token__c'
             }
         );
+        // FOR UPDATE: #412 M2, so the signer's markup saves can't interleave with this approval
+        // (DocGenSignatureAttachments.lockSigner).
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
         List<DocGen_Signer__c> signers = [
             SELECT
@@ -2931,6 +2948,7 @@ public without sharing class DocGenSignatureController {
             WHERE Secure_Token__c = :token
             WITH SYSTEM_MODE
             LIMIT 1
+            FOR UPDATE
         ];
         if (signers.isEmpty()) {
             throw new AuraHandledException('Signer not found.');
@@ -2978,6 +2996,8 @@ public without sharing class DocGenSignatureController {
             'Finalize composited PDF signer',
             signer.Id
         );
+        // #412 M2 — the signer's draft markups go with this approval.
+        DocGenSignatureAttachments.submitMarkups(signer.Id);
 
         DocGen_Signature_Audit__c audit = new DocGen_Signature_Audit__c();
         audit.Signature_Request__c = signer.Signature_Request__c;

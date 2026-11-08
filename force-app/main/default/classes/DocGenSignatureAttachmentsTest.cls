@@ -6,6 +6,7 @@
  *   - the approve gate (every document opened, review confirmed), the refused server
  *     re-render fallbacks, and the register
  *   - Decline must stay available, and the org-wide limits
+ *   - M2 markup: saving a marked-up copy, its gates, "Decline only", and the register
  */
 @IsTest
 private class DocGenSignatureAttachmentsTest {
@@ -136,6 +137,40 @@ private class DocGenSignatureAttachmentsTest {
         }
         Assert.fail('Expected the send to be refused');
         return null;
+    }
+
+    // An approval template that takes attached documents and allows markup.
+    private static Id markupTemplate(String mode) {
+        Id tplId = createTaggedTemplate('Optional');
+        update new DocGen_Template__c(Id = tplId, Attached_Document_Markup__c = mode);
+        return tplId;
+    }
+
+    // What PDF.js's saveDocument() sends: the original drawing with annotations appended.
+    private static Blob markedUp(String suffix) {
+        return Blob.valueOf('%PDF-1.4 drawing one\n% markup ' + suffix);
+    }
+
+    // The file a signer's markup of document [index] is saved as, or null.
+    private static Id markupDocument(Id signerId, Integer index) {
+        String versionId = [
+            SELECT Markup_Content_Version_Id__c
+            FROM DocGen_Signer_Attachment__c
+            WHERE Signer__c = :signerId AND Attachment__r.Sort_Order__c = :index
+        ]
+        .Markup_Content_Version_Id__c;
+        List<ContentVersion> versions = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :versionId];
+        return versions.isEmpty() ? null : versions[0].ContentDocumentId;
+    }
+
+    // The SHA-256 the server holds for document [index]: the original's, as the page gets it.
+    private static String originalSha(Id requestId, Integer index) {
+        return [
+            SELECT Sha256__c
+            FROM DocGen_Signature_Attachment__c
+            WHERE Signature_Request__c = :requestId AND Sort_Order__c = :index
+        ]
+        .Sha256__c;
     }
 
     private static void hideDeclineOrgWide() {
@@ -366,7 +401,7 @@ private class DocGenSignatureAttachmentsTest {
         List<Map<String, Object>> entries = (List<Map<String, Object>>) afterPin.get('attachments');
         Assert.areEqual(2, entries.size(), 'Both attachments listed');
         Assert.areEqual(
-            new Set<String>{ 'index', 'title', 'version', 'size', 'position', 'sha256', 'viewedAt' },
+            new Set<String>{ 'index', 'title', 'version', 'size', 'position', 'sha256', 'viewedAt', 'markedUpAt' },
             entries[0].keySet(),
             'Manifest exposes no record or file Id'
         );
@@ -571,6 +606,33 @@ private class DocGenSignatureAttachmentsTest {
         Assert.isFalse(flat.success, 'Flat typed-name path refused');
         Assert.isTrue(flat.message.contains('attached documents'), flat.message);
         Assert.areEqual(true, declined.get('success'), 'Decline needs no attachment to be opened');
+    }
+
+    @IsTest
+    static void declineEmail_saysWhichDocumentsWereOpenedAndMarkedUp() {
+        Id tplId = markupTemplate('Decline only');
+        send(tplId, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+
+        Test.startTest();
+        DocGenSignatureAttachments.serve(s.Secure_Token__c, 0);
+        DocGenSignatureAttachments.markViewed(s.Secure_Token__c, 0);
+        DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('bay 3'));
+        DocGenSignatureController.declineSignature(s.Secure_Token__c, 'Bay 3 is wrong', '1.2.3.4', 'JUnit/1.0');
+        String message = DocGenSignatureEmailService.declineMessage(s.Signature_Request__c, s.Id, 'Bay 3 is wrong');
+        String noReason = DocGenSignatureEmailService.declineMessage(s.Signature_Request__c, s.Id, null);
+        Test.stopTest();
+
+        Assert.isTrue(message.startsWith('Reason: Bay 3 is wrong\n\n'), message);
+        Assert.isTrue(message.contains('Attached documents: 1 of 2 opened.'), message);
+        Assert.isTrue(message.contains('Not opened: "GA-002 Sections"'), message);
+        Assert.isTrue(message.contains('Marked up: "GA-001 General Arrangement"'), message);
+        Assert.isTrue(noReason.startsWith('Attached documents: '), noReason);
+        Assert.areEqual(
+            '',
+            DocGenSignatureAttachments.reviewSummary(account().Id, s.Id),
+            'No attached documents, no summary'
+        );
     }
 
     @IsTest
@@ -1044,5 +1106,593 @@ private class DocGenSignatureAttachmentsTest {
         Assert.areEqual(20, cleared.get('Signature_Attachment_Max_File_MB__c'), 'Blank reports the default');
         Assert.areEqual(100, cleared.get('Signature_Attachment_Max_Files__c'), 'Blank reports the default');
         Assert.areEqual(200, cleared.get('Signature_Attachment_Max_Total_MB__c'), 'Blank reports the default');
+    }
+
+    // ------------------------------------------------------------- M2 markup
+
+    @IsTest
+    static void markup_savesANewFileThenReplacesIt_andRegistersIt() {
+        Id tplId = markupTemplate('Approve or decline');
+        send(tplId, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+
+        Test.startTest();
+        DocGenSignatureAttachments.serve(s.Secure_Token__c, 0);
+        DocGenSignatureAttachments.GuestResult first = DocGenSignatureAttachments.saveMarkup(
+            s.Secure_Token__c,
+            0,
+            markedUp('first')
+        );
+        Id firstFile = markupDocument(s.Id, 0);
+        DocGenSignatureAttachments.GuestResult second = DocGenSignatureAttachments.saveMarkup(
+            s.Secure_Token__c,
+            0,
+            markedUp('second, longer')
+        );
+        Map<String, Object> manifest = DocGenSignatureController.getAttachmentManifest(s.Secure_Token__c);
+        List<Object> register = DocGenSignatureAttachments.registerForRequest(s.Signature_Request__c, s.Id);
+        List<Object> othersSee = DocGenSignatureAttachments.registerForRequest(s.Signature_Request__c);
+        Test.stopTest();
+
+        Assert.areEqual(200, first.status, 'First save: ' + first.error);
+        Assert.areEqual(200, second.status, 'Second save: ' + second.error);
+        DocGen_Signer_Attachment__c review = [
+            SELECT Markup_Content_Version_Id__c, Markup_Sha256__c, Markup_Saved_At__c, Markup_Saves__c
+            FROM DocGen_Signer_Attachment__c
+            WHERE Signer__c = :s.Id AND Attachment__r.Sort_Order__c = 0
+        ];
+        ContentVersion latest = [
+            SELECT ContentDocumentId, VersionNumber, Title
+            FROM ContentVersion
+            WHERE Id = :review.Markup_Content_Version_Id__c
+        ];
+        Assert.areNotEqual(firstFile, latest.ContentDocumentId, 'A second save is a new file');
+        Assert.areEqual(
+            0,
+            [SELECT COUNT() FROM ContentDocument WHERE Id = :firstFile],
+            'The draft it replaces is deleted'
+        );
+        Assert.areEqual('1', latest.VersionNumber, 'One copy kept, not a growing version history');
+        Assert.areEqual(2, review.Markup_Saves__c, 'Saves are counted');
+        Assert.isTrue(latest.Title.startsWith('GA-001 General Arrangement - markup - Ada Approver'), latest.Title);
+        Assert.areEqual(
+            1,
+            [
+                SELECT COUNT()
+                FROM ContentDocumentLink
+                WHERE ContentDocumentId = :latest.ContentDocumentId AND LinkedEntityId = :account().Id
+            ],
+            'The markup is a file on the related record'
+        );
+        Assert.areEqual(
+            EncodingUtil.convertToHex(Crypto.generateDigest('SHA-256', markedUp('second, longer'))),
+            review.Markup_Sha256__c,
+            'The latest copy is fingerprinted'
+        );
+        Assert.areEqual(
+            1,
+            [SELECT COUNT() FROM ContentVersion WHERE Title = 'GA-001 General Arrangement' AND IsLatest = TRUE],
+            'The original is untouched'
+        );
+        Assert.areEqual('Approve or decline', manifest.get('markup'), 'The page is told the setting');
+        Map<String, Object> firstDoc = (Map<String, Object>) ((List<Object>) manifest.get('attachments'))[0];
+        Assert.isNotNull(firstDoc.get('markedUpAt'), 'The manifest marks the document as marked up');
+        List<Object> markedUpBy = (List<Object>) ((Map<String, Object>) register[0]).get('markedUpBy');
+        Assert.areEqual(1, markedUpBy.size(), 'The register lists the markup');
+        Assert.areEqual('Ada Approver', ((Map<String, Object>) markedUpBy[0]).get('name'), 'Signer named');
+        Assert.areEqual(review.Markup_Sha256__c, ((Map<String, Object>) markedUpBy[0]).get('sha256'), 'With its hash');
+        Assert.areEqual(
+            0,
+            ((List<Object>) ((Map<String, Object>) register[1]).get('markedUpBy')).size(),
+            'The other document has no markup'
+        );
+        Assert.areEqual(
+            0,
+            ((List<Object>) ((Map<String, Object>) othersSee[0]).get('markedUpBy')).size(),
+            'Anyone else sees a draft only once it is submitted'
+        );
+    }
+
+    @IsTest
+    static void markup_refusals() {
+        Id offTpl = createTaggedTemplate('Optional');
+        send(offTpl, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c offSigner = signer(offTpl);
+        Id tplId = markupTemplate('Approve or decline');
+        send(tplId, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+
+        Test.startTest();
+        DocGenSignatureAttachments.serve(offSigner.Secure_Token__c, 0);
+        Integer markupOff = DocGenSignatureAttachments.saveMarkup(offSigner.Secure_Token__c, 0, markedUp('x')).status;
+        Integer notOpened = DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('x')).status;
+        DocGenSignatureAttachments.serve(s.Secure_Token__c, 0);
+        Integer badIndex = DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 9, markedUp('x')).status;
+        Integer noIndex = DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, null, markedUp('x')).status;
+        Integer notLarger = DocGenSignatureAttachments.saveMarkup(
+                s.Secure_Token__c,
+                0,
+                Blob.valueOf('%PDF-1.4 drawing one')
+            )
+            .status;
+        Integer noBase = DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('x'), null).status;
+        Integer staleBase = DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('x'), 'ab12').status;
+        Integer empty = DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, null).status;
+        DocGenSignatureAttachments.markupHeadroomBytes = 5;
+        Integer tooLarge = DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('far too long')).status;
+        Integer badToken = DocGenSignatureAttachments.saveMarkup('nope', 0, markedUp('x')).status;
+        Test.stopTest();
+
+        Assert.areEqual(403, markupOff, 'The template must allow markup');
+        Assert.areEqual(409, notOpened, 'A document must be delivered before it is marked up');
+        Assert.areEqual(404, badIndex, 'Unknown index');
+        Assert.areEqual(400, noIndex, 'Missing index');
+        Assert.areEqual(400, notLarger, 'A markup is always larger than the original');
+        Assert.areEqual(409, noBase, 'The page must say which copy it built on');
+        Assert.areEqual(409, staleBase, 'Built on a copy that is no longer the latest');
+        Assert.areEqual(400, empty, 'No body');
+        Assert.areEqual(400, tooLarge, 'Within the headroom');
+        Assert.areEqual(400, badToken, 'Bad token');
+        Assert.areEqual(
+            0,
+            [SELECT COUNT() FROM DocGen_Signer_Attachment__c WHERE Markup_Content_Version_Id__c != NULL],
+            'Nothing saved'
+        );
+    }
+
+    @IsTest
+    static void markup_declineOnlyRefusesApprovalWithMarkups_butDeclineWorks() {
+        Id tplId = markupTemplate('Decline only');
+        send(tplId, oneSigner(), new List<String>{ documentId('GA-001 General Arrangement') }, 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+        signAllPlacements(s.Id);
+
+        Test.startTest();
+        DocGenSignatureAttachments.serve(s.Secure_Token__c, 0);
+        DocGenSignatureController.markAttachmentViewed(s.Secure_Token__c, 0);
+        DocGenSignatureController.confirmAttachmentsReviewed(s.Secure_Token__c);
+        DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('wrong section'));
+        DocGenSignatureController.SavePdfSignatureResult approved = composite(s.Secure_Token__c);
+        Map<String, Object> declined = DocGenSignatureController.declineSignature(
+            s.Secure_Token__c,
+            'Section B-B is wrong, see markup',
+            '1.2.3.4',
+            'JUnit/1.0'
+        );
+        Test.stopTest();
+
+        Assert.isFalse(approved.success, 'Under Decline only, markups cannot go with an approval');
+        Assert.isTrue(approved.message.contains('only be sent with a decline'), approved.message);
+        Assert.areEqual(true, declined.get('success'), 'The decline goes through with the markup saved');
+        Assert.areEqual('Declined', [SELECT Status__c FROM DocGen_Signer__c WHERE Id = :s.Id].Status__c, 'Declined');
+        DocGen_Signer_Attachment__c review = [
+            SELECT Markup_Submitted_At__c, Markup_Content_Version_Id__c
+            FROM DocGen_Signer_Attachment__c
+            WHERE Signer__c = :s.Id AND Markup_Content_Version_Id__c != NULL
+        ];
+        Assert.isNotNull(review.Markup_Submitted_At__c, 'The decline submits the draft markup');
+        String title = [
+            SELECT ContentDocument.Title
+            FROM ContentVersion
+            WHERE Id = :review.Markup_Content_Version_Id__c
+        ]
+        .ContentDocument.Title;
+        Assert.isFalse(title.endsWith('(draft)'), 'A submitted markup is no longer titled a draft: ' + title);
+        Assert.areEqual(
+            1,
+            [SELECT Marked_Up_Documents__c FROM DocGen_Signature_Request__c WHERE Id = :s.Signature_Request__c]
+            .Marked_Up_Documents__c,
+            'A decline counts its marked-up documents too'
+        );
+    }
+
+    @IsTest
+    static void markup_approveOrDeclineAllowsApprovalWithMarkups() {
+        Id tplId = markupTemplate('Approve or decline');
+        send(tplId, oneSigner(), new List<String>{ documentId('GA-001 General Arrangement') }, 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+        signAllPlacements(s.Id);
+
+        Test.startTest();
+        DocGenSignatureAttachments.serve(s.Secure_Token__c, 0);
+        DocGenSignatureController.markAttachmentViewed(s.Secure_Token__c, 0);
+        DocGenSignatureController.confirmAttachmentsReviewed(s.Secure_Token__c);
+        DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('approved as noted'));
+        DocGenSignatureController.SavePdfSignatureResult approved = composite(s.Secure_Token__c);
+        Test.stopTest();
+
+        Assert.isTrue(approved.success, 'Approved with comments: ' + approved.message);
+        Assert.isNotNull(
+            [
+                SELECT Markup_Submitted_At__c
+                FROM DocGen_Signer_Attachment__c
+                WHERE Signer__c = :s.Id AND Markup_Content_Version_Id__c != NULL
+            ]
+            .Markup_Submitted_At__c,
+            'The approval submits the draft markup'
+        );
+        Assert.areEqual(
+            1,
+            [SELECT Marked_Up_Documents__c FROM DocGen_Signature_Request__c WHERE Id = :s.Signature_Request__c]
+            .Marked_Up_Documents__c,
+            'A Flow can tell this approval carried markups'
+        );
+        String summary = DocGenSignatureEmailService.completionMessage(s.Signature_Request__c);
+        Assert.isTrue(summary.startsWith('Approved with comments. Marked up: "GA-001 General Arrangement"'), summary);
+    }
+
+    @IsTest
+    static void completionSummary_saysApprovedAsIs_andOnlyWhereApprovalsCanCarryMarkups() {
+        Id withComments = markupTemplate('Approve or decline');
+        send(withComments, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c s = signer(withComments);
+        Id declineOnly = markupTemplate('Decline only');
+        send(declineOnly, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c other = signer(declineOnly);
+        User plain;
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            plain = new User(
+                Alias = 'dgplain2',
+                Email = 'dgplain2@example.com',
+                EmailEncodingKey = 'UTF-8',
+                LastName = 'NoPortwoodPermissions',
+                LanguageLocaleKey = 'en_US',
+                LocaleSidKey = 'en_US',
+                ProfileId = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1]
+                .Id,
+                TimeZoneSidKey = 'Europe/London',
+                UserName = 'dgplain2_' + System.currentTimeMillis() + '@example.com.docgen'
+            );
+            insert plain;
+        }
+
+        String asIs;
+        String notApplicable;
+        Test.startTest();
+        // The completion email is sent from a queueable, as the Automated Process user.
+        System.runAs(plain) {
+            asIs = DocGenSignatureEmailService.completionMessage(s.Signature_Request__c);
+            notApplicable = DocGenSignatureEmailService.completionMessage(other.Signature_Request__c);
+        }
+        Test.stopTest();
+
+        Assert.areEqual('Approved as-is: none of the 2 attached documents were marked up.', asIs);
+        Assert.areEqual('', notApplicable, 'Under Decline only an approval is always as-is: nothing to say');
+        Assert.isNull(
+            [SELECT Marked_Up_Documents__c FROM DocGen_Signature_Request__c WHERE Id = :s.Signature_Request__c]
+            .Marked_Up_Documents__c,
+            'No markups submitted, no count'
+        );
+    }
+
+    @IsTest
+    static void rest_postSavesMarkupAndReportsErrors() {
+        Id tplId = markupTemplate('Approve or decline');
+        send(tplId, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+        DocGenSignatureAttachments.serve(s.Secure_Token__c, 0);
+
+        Test.startTest();
+        RestRequest req = new RestRequest();
+        req.requestURI = '/services/apexrest/signature-attachment';
+        req.httpMethod = 'POST';
+        req.addParameter('index', '0');
+        req.addHeader('x-portwood-token', s.Secure_Token__c);
+        req.addHeader('x-portwood-markup-base', originalSha(s.Signature_Request__c, 0));
+        req.requestBody = markedUp('via REST');
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+        DocGenSignatureAttachmentRest.saveMarkup();
+        Integer okStatus = RestContext.response.statusCode;
+        Map<String, Object> okBody = (Map<String, Object>) JSON.deserializeUntyped(
+            RestContext.response.responseBody.toString()
+        );
+
+        // A second window still holding the original: its save would overwrite the first.
+        RestContext.response = new RestResponse();
+        DocGenSignatureAttachmentRest.saveMarkup();
+        Integer staleStatus = RestContext.response.statusCode;
+
+        RestRequest bad = new RestRequest();
+        bad.requestURI = '/services/apexrest/signature-attachment';
+        bad.httpMethod = 'POST';
+        bad.addParameter('index', 'abc');
+        RestContext.request = bad;
+        RestContext.response = new RestResponse();
+        DocGenSignatureAttachmentRest.saveMarkup();
+        Integer badStatus = RestContext.response.statusCode;
+        Map<String, Object> badBody = (Map<String, Object>) JSON.deserializeUntyped(
+            RestContext.response.responseBody.toString()
+        );
+        Test.stopTest();
+
+        Assert.areEqual(200, okStatus, String.valueOf(okBody));
+        Assert.isNotNull(okBody.get('sha256'), 'The fingerprint is returned');
+        Assert.areEqual(409, staleStatus, 'A save built on a replaced copy is refused');
+        Assert.areEqual(400, badStatus, 'No token');
+        Assert.isNotNull(badBody.get('error'), 'Error message returned');
+    }
+
+    @IsTest
+    static void markup_draftCanBeWithdrawnAndReloaded_untilSubmitted() {
+        Id tplId = markupTemplate('Approve or decline');
+        send(tplId, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+
+        Test.startTest();
+        DocGenSignatureAttachments.serve(s.Secure_Token__c, 0);
+        Integer nothingYet = DocGenSignatureAttachments.serveMarkup(s.Secure_Token__c, 0).status;
+        DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('draft one'));
+        DocGenSignatureAttachments.GuestResult reloaded = DocGenSignatureAttachments.serveMarkup(s.Secure_Token__c, 0);
+        Id draftCv = [
+            SELECT Markup_Content_Version_Id__c
+            FROM DocGen_Signer_Attachment__c
+            WHERE Signer__c = :s.Id AND Attachment__r.Sort_Order__c = 0
+        ]
+        .Markup_Content_Version_Id__c;
+        String draftTitle = [SELECT Title FROM ContentVersion WHERE Id = :draftCv].Title;
+        Id draftDoc = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :draftCv].ContentDocumentId;
+        Integer withdrawn = DocGenSignatureAttachments.withdrawMarkup(s.Secure_Token__c, 0).status;
+        Integer again = DocGenSignatureAttachments.withdrawMarkup(s.Secure_Token__c, 0).status;
+        DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('draft two'));
+        DocGenSignatureAttachments.submitMarkups(s.Id);
+        Integer afterSubmit = DocGenSignatureAttachments.withdrawMarkup(s.Secure_Token__c, 0).status;
+        Integer saveAfterSubmit = DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('three')).status;
+        Test.stopTest();
+
+        Assert.areEqual(404, nothingYet, 'No markup to reload before one is saved');
+        Assert.areEqual(200, reloaded.status, 'The saved draft can be reloaded');
+        Assert.areEqual(markedUp('draft one').toString(), reloaded.bytes.toString(), 'Its exact bytes');
+        Assert.isTrue(draftTitle.endsWith('(draft)'), 'A background save is titled a draft: ' + draftTitle);
+        Assert.areEqual(200, withdrawn, 'A draft can be withdrawn');
+        Assert.areEqual(0, [SELECT COUNT() FROM ContentDocument WHERE Id = :draftDoc], 'Its file is deleted');
+        Assert.areEqual(200, again, 'Withdrawing nothing is a no-op');
+        Assert.areEqual(409, afterSubmit, 'A submitted markup cannot be withdrawn');
+        Assert.areEqual(409, saveAfterSubmit, 'Nor replaced');
+        DocGen_Signer_Attachment__c review = [
+            SELECT Markup_Content_Version_Id__c, Markup_Submitted_At__c
+            FROM DocGen_Signer_Attachment__c
+            WHERE Signer__c = :s.Id AND Attachment__r.Sort_Order__c = 0
+        ];
+        Assert.isNotNull(review.Markup_Submitted_At__c, 'Submitted');
+        Assert.isFalse(
+            [SELECT ContentDocument.Title FROM ContentVersion WHERE Id = :review.Markup_Content_Version_Id__c]
+                .ContentDocument.Title.endsWith('(draft)'),
+            'Submitting drops the draft title'
+        );
+    }
+
+    @IsTest
+    static void rest_getMarkupAndDeleteDraft() {
+        Id tplId = markupTemplate('Decline only');
+        send(tplId, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+        DocGenSignatureAttachments.serve(s.Secure_Token__c, 0);
+        DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('via REST'));
+
+        Test.startTest();
+        RestRequest get = new RestRequest();
+        get.requestURI = '/services/apexrest/signature-attachment';
+        get.httpMethod = 'GET';
+        get.addParameter('index', '0');
+        get.addParameter('markup', '1');
+        get.addHeader('X-Portwood-Token', s.Secure_Token__c);
+        RestContext.request = get;
+        RestContext.response = new RestResponse();
+        DocGenSignatureAttachmentRest.fetchAttachment();
+        Integer getStatus = RestContext.response.statusCode;
+        String getBody = RestContext.response.responseBody.toString();
+
+        RestRequest del = new RestRequest();
+        del.requestURI = '/services/apexrest/signature-attachment';
+        del.httpMethod = 'DELETE';
+        del.addParameter('index', '0');
+        del.addHeader('X-Portwood-Token', s.Secure_Token__c);
+        del.addHeader('X-Portwood-Markup-Base', RestContext.response.headers.get('X-Portwood-Sha256'));
+        RestContext.request = del;
+        RestContext.response = new RestResponse();
+        DocGenSignatureAttachmentRest.withdrawMarkup();
+        Integer delStatus = RestContext.response.statusCode;
+
+        RestRequest badDel = new RestRequest();
+        badDel.requestURI = '/services/apexrest/signature-attachment';
+        badDel.httpMethod = 'DELETE';
+        RestContext.request = badDel;
+        RestContext.response = new RestResponse();
+        DocGenSignatureAttachmentRest.withdrawMarkup();
+        Integer badStatus = RestContext.response.statusCode;
+        Test.stopTest();
+
+        Assert.areEqual(200, getStatus, 'GET ?markup=1 serves the saved markup');
+        Assert.areEqual(markedUp('via REST').toString(), getBody, 'The markup bytes, not the original');
+        Assert.areEqual(200, delStatus, 'DELETE withdraws the draft');
+        Assert.areEqual(0, DocGenSignatureAttachments.markupCount(s.Id), 'Nothing left');
+        Assert.areEqual(400, badStatus, 'No token');
+    }
+
+    @IsTest
+    static void markup_savesAreCapped() {
+        Id tplId = markupTemplate('Approve or decline');
+        send(tplId, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+        DocGenSignatureAttachments.serve(s.Secure_Token__c, 0);
+        DocGenSignatureAttachments.maxMarkupSaves = 2;
+
+        Test.startTest();
+        Integer first = DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('one')).status;
+        Integer cleared = DocGenSignatureAttachments.withdrawMarkup(s.Secure_Token__c, 0).status;
+        Integer second = DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('two')).status;
+        Integer third = DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('three')).status;
+        Test.stopTest();
+
+        Assert.areEqual(200, first, 'First save');
+        Assert.areEqual(200, cleared, 'Cleared');
+        Assert.areEqual(200, second, 'Clearing does not give the saves back, but this one is still within the cap');
+        Assert.areEqual(429, third, 'Over the cap');
+    }
+
+    @IsTest
+    static void markup_pointerToAnotherFileIsNeverServedDeletedOrRenamed() {
+        Id tplId = markupTemplate('Approve or decline');
+        send(tplId, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+        DocGenSignatureAttachments.serve(s.Secure_Token__c, 0);
+        DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('mine'));
+        // A privileged user points the signer's review row at another file on the record.
+        ContentVersion other = [
+            SELECT Id, ContentDocumentId
+            FROM ContentVersion
+            WHERE Title = 'GA-002 Sections' AND IsLatest = TRUE
+        ];
+        DocGen_Signer_Attachment__c review = [
+            SELECT Id
+            FROM DocGen_Signer_Attachment__c
+            WHERE Signer__c = :s.Id AND Attachment__r.Sort_Order__c = 0
+        ];
+        Id myDraft = markupDocument(s.Id, 0);
+        update new DocGen_Signer_Attachment__c(Id = review.Id, Markup_Content_Version_Id__c = other.Id);
+
+        Test.startTest();
+        Integer served = DocGenSignatureAttachments.serveMarkup(s.Secure_Token__c, 0).status;
+        Integer withdrawn = DocGenSignatureAttachments.withdrawMarkup(s.Secure_Token__c, 0, 'anything').status;
+        Test.stopTest();
+
+        Assert.areEqual(404, served, 'Only the signer\'s own draft is served');
+        Assert.areEqual(200, withdrawn, 'The pointer is cleared');
+        Assert.areEqual(
+            1,
+            [SELECT COUNT() FROM ContentDocument WHERE Id = :other.ContentDocumentId],
+            'The file is left alone'
+        );
+        Assert.isNull(
+            [SELECT Markup_Content_Version_Id__c FROM DocGen_Signer_Attachment__c WHERE Id = :review.Id]
+            .Markup_Content_Version_Id__c,
+            'Pointer cleared'
+        );
+        Assert.isNotNull(myDraft, 'The real draft existed');
+    }
+
+    @IsTest
+    static void markup_submitOnlyRenamesTheSignersOwnDraft() {
+        Id tplId = markupTemplate('Approve or decline');
+        send(tplId, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+        DocGenSignatureAttachments.serve(s.Secure_Token__c, 0);
+        DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('mine'));
+        ContentVersion other = [SELECT Id, ContentDocumentId FROM ContentVersion WHERE Title = 'Site photo'];
+        update new ContentDocument(Id = other.ContentDocumentId, Title = 'Site photo (draft)');
+        DocGen_Signer_Attachment__c review = [
+            SELECT Id
+            FROM DocGen_Signer_Attachment__c
+            WHERE Signer__c = :s.Id AND Attachment__r.Sort_Order__c = 0
+        ];
+        update new DocGen_Signer_Attachment__c(Id = review.Id, Markup_Content_Version_Id__c = other.Id);
+
+        Test.startTest();
+        DocGenSignatureAttachments.submitMarkups(s.Id);
+        Test.stopTest();
+
+        Assert.areEqual(
+            'Site photo (draft)',
+            [SELECT Title FROM ContentDocument WHERE Id = :other.ContentDocumentId].Title,
+            'Not renamed'
+        );
+        DocGen_Signer_Attachment__c after = [
+            SELECT Markup_Content_Version_Id__c, Markup_Submitted_At__c
+            FROM DocGen_Signer_Attachment__c
+            WHERE Id = :review.Id
+        ];
+        Assert.isNull(after.Markup_Content_Version_Id__c, 'The foreign pointer is cleared, not submitted');
+        Assert.isNull(after.Markup_Submitted_At__c, 'Nothing submitted');
+    }
+
+    @IsTest
+    static void register_showsAnotherSignersMarkupOnlyOnceSubmitted() {
+        Id tplId = markupTemplate('Approve or decline');
+        send(tplId, twoSigners(), drawingIds(), 'Before', false);
+        List<DocGen_Signer__c> both = [
+            SELECT Id, Secure_Token__c, Signature_Request__c
+            FROM DocGen_Signer__c
+            WHERE Signature_Request__r.Template__c = :tplId
+            ORDER BY Sort_Order__c ASC
+        ];
+        DocGenSignatureAttachments.serve(both[1].Secure_Token__c, 0);
+        DocGenSignatureAttachments.saveMarkup(both[1].Secure_Token__c, 0, markedUp('second signer'));
+
+        Test.startTest();
+        List<Map<String, Object>> whileDraft = DocGenSignatureAttachments.registerForToken(both[0].Secure_Token__c);
+        DocGenSignatureAttachments.submitMarkups(both[1].Id);
+        List<Map<String, Object>> onceSubmitted = DocGenSignatureAttachments.registerForToken(both[0].Secure_Token__c);
+        Test.stopTest();
+
+        Assert.areEqual(
+            0,
+            ((List<Object>) whileDraft[0].get('markedUpBy')).size(),
+            'Another signer\'s draft is not listed'
+        );
+        Assert.areEqual(1, ((List<Object>) onceSubmitted[0].get('markedUpBy')).size(), 'Listed once submitted');
+    }
+
+    @IsTest
+    static void declineSummary_survivesAUserWithoutPortwoodPermissions() {
+        Id tplId = markupTemplate('Decline only');
+        send(tplId, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+        DocGenSignatureAttachments.serve(s.Secure_Token__c, 0);
+        DocGenSignatureAttachments.markViewed(s.Secure_Token__c, 0);
+        DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('bay 3'));
+        DocGenSignatureController.declineSignature(s.Secure_Token__c, 'Bay 3', '1.2.3.4', 'JUnit/1.0');
+        // The decline email is built in a platform-event trigger, as the Automated Process user:
+        // no Portwood permission set, and not a guest.
+        User plain;
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            plain = new User(
+                Alias = 'dgplain',
+                Email = 'dgplain@example.com',
+                EmailEncodingKey = 'UTF-8',
+                LastName = 'NoPortwoodPermissions',
+                LanguageLocaleKey = 'en_US',
+                LocaleSidKey = 'en_US',
+                ProfileId = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1]
+                .Id,
+                TimeZoneSidKey = 'Europe/London',
+                UserName = 'dgplain_' + System.currentTimeMillis() + '@example.com.docgen'
+            );
+            insert plain;
+        }
+
+        String message;
+        Test.startTest();
+        System.runAs(plain) {
+            message = DocGenSignatureEmailService.declineMessage(s.Signature_Request__c, s.Id, 'Bay 3');
+        }
+        Test.stopTest();
+
+        Assert.isTrue(message.contains('Attached documents: 1 of 2 opened.'), message);
+        Assert.isTrue(message.contains('Marked up: "GA-001 General Arrangement"'), message);
+    }
+
+    @IsTest
+    static void decline_refusedOnceTheRequestIsClosed() {
+        Id tplId = createTaggedTemplate();
+        send(tplId, oneSigner(), drawingIds(), 'Before', false);
+        DocGen_Signer__c s = signer(tplId);
+        update new DocGen_Signature_Request__c(Id = s.Signature_Request__c, Status__c = 'Cancelled');
+
+        Test.startTest();
+        Map<String, Object> declined = DocGenSignatureController.declineSignature(
+            s.Secure_Token__c,
+            'too late',
+            '1.2.3.4',
+            'JUnit/1.0'
+        );
+        Test.stopTest();
+
+        Assert.areEqual(false, declined.get('success'), 'A cancelled request cannot be declined');
+        Assert.areEqual(
+            'Cancelled',
+            [SELECT Status__c FROM DocGen_Signature_Request__c WHERE Id = :s.Signature_Request__c].Status__c,
+            'It stays cancelled'
+        );
     }
 }
