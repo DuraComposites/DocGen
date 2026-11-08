@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Dura Composites Ltd. (new file) -->
+    <fullName>Last_Visited_At__c</fullName>
+    <description>When the signer was last on their signing page. Automated visits are left out.</description>
+    <inlineHelpText>When the signer was last on their signing page.</inlineHelpText>
+    <label>Last Opened</label>
+    <summarizedField>DocGen_Signer_Visit__c.Last_Seen_At__c</summarizedField>
+    <summaryFilterItems>
+        <field>DocGen_Signer_Visit__c.Device__c</field>
+        <operation>notEqual</operation>
+        <value>Automated</value>
+    </summaryFilterItems>
+    <summaryForeignKey>DocGen_Signer_Visit__c.Signer__c</summaryForeignKey>
+    <summaryOperation>max</summaryOperation>
+    <trackTrending>false</trackTrending>
+    <type>Summary</type>
+</CustomField>

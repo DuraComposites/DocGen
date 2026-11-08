@@ -834,6 +834,26 @@
             }
         },
         {
+            "slug": "signature-status",
+            "title": "See who has opened and signed",
+            "group": "sign",
+            "audience": "Administrators and senders",
+            "minutes": 4,
+            "summary": "Add the Signature Status card to a record page: every request, who opened their link and how often, and who signed or declined.",
+            "sources": [
+                "force-app/main/default/lwc/docGenSignatureStatus",
+                "force-app/main/default/classes/DocGenSignatureStatusController.cls",
+                "force-app/main/default/classes/DocGenSignerVisits.cls"
+            ],
+            "related": ["manage-signatures", "sign-attached-documents", "setup-signatures"],
+            "aliases": [],
+            "review": {
+                "version": "3.63.0",
+                "date": "2026-11-08",
+                "method": "org-and-source"
+            }
+        },
+        {
             "slug": "setup-signatures",
             "title": "Set up external signing",
             "group": "sign",

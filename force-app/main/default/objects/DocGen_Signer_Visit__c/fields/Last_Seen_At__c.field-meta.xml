@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Last_Seen_At__c</fullName>
+    <description
+    >The latest page load in this visit. A load within 30 minutes on the same device extends it.</description>
+    <inlineHelpText>The last time the signer loaded the page during this visit.</inlineHelpText>
+    <label>Last Seen At</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>DateTime</type>
+</CustomField>

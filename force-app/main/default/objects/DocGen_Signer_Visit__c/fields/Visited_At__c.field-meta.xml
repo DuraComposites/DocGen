@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Visited_At__c</fullName>
+    <description>When this visit started: the first page load of the visit.</description>
+    <inlineHelpText>When the signer opened their signing link for this visit.</inlineHelpText>
+    <label>Visited At</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>DateTime</type>
+</CustomField>

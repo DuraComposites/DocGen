@@ -1,0 +1,49 @@
+/* Dura Composites Ltd. (new file) */
+.spinner-holder {
+    position: relative;
+    min-height: 3rem;
+}
+.request-head {
+    gap: 0.5rem;
+}
+.request-title {
+    font-weight: 600;
+}
+.meta {
+    margin: 0.125rem 0 0.5rem;
+}
+.signers {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.signer {
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--slds-g-color-border-1, #e5e5e5);
+}
+.order {
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 0.5rem;
+    border-radius: 50%;
+    background: var(--slds-g-color-neutral-base-95, #f3f3f3);
+    text-align: center;
+    line-height: 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.line {
+    margin-top: 0.125rem;
+}
+.visits {
+    margin: 0.25rem 0 0 0.25rem;
+    padding: 0;
+    list-style: none;
+}
+.visits li {
+    padding: 0.125rem 0;
+}
+.signer-name {
+    font-weight: 700;
+}
