@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Modified by Dura Composites Ltd.
 # Deploy the QA-only UI host fixtures to a verify org.
 #
 # These live OUTSIDE force-app (the only packageDirectory in sfdx-project.json),
@@ -21,6 +22,8 @@
 set -euo pipefail
 ORG="${1:-docgen-verify}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+# Git Bash on Windows: fix sf's exit code and a missing python3 (see the file).
+source "$HERE/../lib/windows-shim.sh"
 
 NS="$(sf org display --target-org "$ORG" --json 2>/dev/null |
     python3 -c 'import json,sys; print(json.load(sys.stdin)["result"].get("namespace") or "")' 2>/dev/null || echo '')"

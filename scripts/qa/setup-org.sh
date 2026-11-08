@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 #
+# Modified by Dura Composites Ltd.
+#
 # One command from nothing to a fully testable DocGen org.
 #
 #   ./scripts/qa/setup-org.sh                    # reuse/refresh docgen-verify
@@ -40,6 +42,8 @@ for ((i = 1; i <= $#; i++)); do
 done
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+# Git Bash on Windows: fix sf's exit code and a missing python3 (see the file).
+source "$HERE/lib/windows-shim.sh"
 ROOT="$(cd "$HERE/../.." && pwd)"
 cd "$ROOT"
 

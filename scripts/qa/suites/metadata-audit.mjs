@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * METADATA AUDIT — the things no functional test ever notices.
  *
@@ -19,13 +20,14 @@
  * explicitly below with a REASON, so the waiver is a decision on the record
  * rather than a silent gap. Anything not waived and not on a layout is a finding.
  */
+import { fileURLToPath } from 'node:url';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { check, skip, suiteResult, SEVERITY } from '../lib/report.mjs';
 // Shared with record-pages — see lib/field-policy.mjs for why.
 import { visibilityWaiver, isForbidden, LAYOUT_FORBIDDEN as SHARED_FORBIDDEN } from '../lib/field-policy.mjs';
 
-const ROOT = new URL('../../../force-app/main/default/', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('../../../force-app/main/default/', import.meta.url));
 
 /**
  * Fields deliberately absent from a page layout, with the reason. Keyed

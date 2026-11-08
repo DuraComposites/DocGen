@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * The Apex unit suite — outcome plus REAL per-class coverage.
  *
@@ -12,11 +13,12 @@
  * — a guess dressed up as a measurement, and it would have sent someone chasing
  * 32 phantom gaps. The numbers now come from ApexCodeCoverageAggregate.
  */
+import { fileURLToPath } from 'node:url';
 import { readdirSync } from 'node:fs';
 import { runApexTests, apexCoverage, parseHumanTestRun } from '../lib/sf.mjs';
 import { check, skip, suiteResult, SEVERITY } from '../lib/report.mjs';
 
-const CLASSES_DIR = new URL('../../../force-app/main/default/classes/', import.meta.url).pathname;
+const CLASSES_DIR = fileURLToPath(new URL('../../../force-app/main/default/classes/', import.meta.url));
 
 /** The bar a 2GP package build enforces org-wide. */
 const PACKAGING_BAR = 75;

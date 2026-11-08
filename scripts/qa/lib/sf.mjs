@@ -5,9 +5,10 @@
  * behaviour is decided once. The CLI is chatty and occasionally flaky (the
  * ETIMEDOUT on a Soap endpoint is real and transient), so reads retry.
  */
-import { execFile } from 'node:child_process';
+// Modified by Dura Composites Ltd.
+import { execFile, execSync } from 'node:child_process';
 import { promisify } from 'node:util';
-import { writeFileSync, mkdtempSync } from 'node:fs';
+import { writeFileSync, mkdtempSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -15,11 +16,46 @@ const exec = promisify(execFile);
 
 const BIG = 64 * 1024 * 1024; // Apex debug logs are large; never truncate them.
 
+/**
+ * The command that runs the CLI, as [file, leadingArgs].
+ *
+ * On Windows `sf` is `sf.cmd`. execFile can't find it, and Node refuses to
+ * spawn a .cmd without a shell. Going through cmd.exe would mean quoting every
+ * argument for it, and SOQL arguments carry `%` and quotes. So instead, ask the
+ * CLI where it is installed once, through the shell, and then run its JS entry
+ * point with node directly: arguments pass through untouched, and the exit code
+ * is node's own.
+ */
+let sfCommand;
+function resolveSf() {
+    if (sfCommand) return sfCommand;
+    sfCommand = ['sf', []];
+    if (process.platform !== 'win32') return sfCommand;
+    let raw = '';
+    try {
+        raw = execSync('sf version --verbose --json', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    } catch (e) {
+        raw = e.stdout || ''; // the .cmd chain can report failure after printing the answer
+    }
+    try {
+        const root = JSON.parse(raw).rootPath;
+        const run = root && join(root, 'bin', 'run.js');
+        if (run && existsSync(run)) {
+            const bundled = join(root, 'bin', 'node.exe');
+            sfCommand = [existsSync(bundled) ? bundled : process.execPath, ['--no-deprecation', run]];
+        }
+    } catch {
+        // leave it as plain `sf`; the first call will fail with a clear ENOENT
+    }
+    return sfCommand;
+}
+
 async function sf(args, { timeout = 900000, retries = 1 } = {}) {
+    const [cmd, lead] = resolveSf();
     let lastErr;
     for (let attempt = 0; attempt <= retries; attempt++) {
         try {
-            const { stdout } = await exec('sf', args, { maxBuffer: BIG, timeout });
+            const { stdout } = await exec(cmd, [...lead, ...args], { maxBuffer: BIG, timeout });
             return stdout;
         } catch (e) {
             lastErr = e;

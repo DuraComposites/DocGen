@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * RECORD PAGES — the live half of the layout story.
  *
@@ -43,6 +44,7 @@
  * — the unique-constrained fields (API_Name__c, Asset_Key__c, Secure_Token__c)
  * would otherwise collide on the next run.
  */
+import { fileURLToPath } from 'node:url';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { check, skip, suiteResult, SEVERITY } from '../lib/report.mjs';
@@ -52,7 +54,7 @@ import { visibilityWaiver, isForbidden } from '../lib/field-policy.mjs';
 import { launch, login, openRecord, inPage, HIT_TEST } from '../lib/browser.mjs';
 import { runAnonymous, debugMap } from '../lib/sf.mjs';
 
-const ROOT = new URL('../../../force-app/main/default/', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('../../../force-app/main/default/', import.meta.url));
 
 /** The prefix every seeded record carries. Cleanup keys off exactly this. */
 const PFX = 'ZZQA';
