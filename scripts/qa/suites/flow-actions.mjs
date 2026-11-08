@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * FLOW ACTIONS & CRITICAL ENDPOINTS — does the automation surface actually work?
  *
@@ -52,12 +53,13 @@
  * Everything created is named with the QAFLOW prefix and deleted at both the
  * start and the end of the run, so a crashed run does not poison the next one.
  */
+import { fileURLToPath } from 'node:url';
 import { runAnonymous, debugMap } from '../lib/sf.mjs';
 import { check, skip, suiteResult, SEVERITY } from '../lib/report.mjs';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-const CLASSES = new URL('../../../force-app/main/default/classes/', import.meta.url).pathname;
+const CLASSES = fileURLToPath(new URL('../../../force-app/main/default/classes/', import.meta.url));
 
 /** Prefix on every record this suite creates. Cleanup keys off it. */
 const P = 'QAFLOW';

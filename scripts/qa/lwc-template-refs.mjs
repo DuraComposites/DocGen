@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // LWC template-reference audit — every {name} a template binds must exist in its JS.
 //
 // Pure Node, no org needed:  node scripts/qa/lwc-template-refs.mjs
@@ -14,10 +15,11 @@
 // different feature. The Data button went dead that way once; the QR/barcode panel went
 // dead that way a second time, shipping a Type dropdown with no options and a field
 // input wired to nothing. Deployment cannot catch it, so this does.
+import { fileURLToPath } from 'node:url';
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const LWC_DIR = new URL('../../force-app/main/default/lwc/', import.meta.url).pathname;
+const LWC_DIR = fileURLToPath(new URL('../../force-app/main/default/lwc/', import.meta.url));
 
 // Iteration aliases (for:item / for:index / iterator) are declared by the template
 // itself, so they are legitimately absent from the JS.
