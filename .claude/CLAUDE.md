@@ -23,5 +23,7 @@ This checkout is **DuraComposites/DocGen**, Dura Composites' fork of Portwood. T
 
 ## Windows
 
-- Run `sf` from PowerShell, not Git Bash. Under Git Bash, `sf` always exits 1, so Bash scripts that check its exit code fail.
-- `scripts/qa/setup-org.sh` has that problem today.
+- **Running `sf` by hand:** use PowerShell, not Git Bash. Under Git Bash, `sf` exits 1 even when it succeeds.
+- **The QA shell scripts** (`setup-org.sh`, `fixtures/deploy.sh`) source `scripts/qa/lib/windows-shim.sh`, which fixes that and a missing `python3`. Run them from Git Bash, e.g. `./scripts/qa/setup-org.sh docgen-verify --create --days 7 --hub prod`.
+- **`npm run qa`** works on Windows: `scripts/qa/lib/sf.mjs` runs the CLI's `run.js` with node there.
+- **Dura's Dev Hub** is the sf alias `prod`.

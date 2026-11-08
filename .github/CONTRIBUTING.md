@@ -58,13 +58,18 @@ Anyone with access can push other branches and open pull requests.
 Portwood's setup script creates a scratch org and configures it end to end. The [`dev-setup` skill](../.claude/skills/dev-setup/SKILL.md) explains each step.
 
 ```bash
-npm run org:new                         # creates and configures the docgen-verify scratch org
-npm run org:setup -- <existing-alias>   # configures an org you already have
+./scripts/qa/setup-org.sh docgen-verify --create --hub <dev-hub-alias>   # new scratch org, configured
+./scripts/qa/setup-org.sh <existing-alias>                               # configure an org you already have
+npm run qa                                                               # every test suite, against docgen-verify
 ```
 
-- You need a Dev Hub. Dura staff: ask a maintainer.
-- One step has to be done by hand: Setup → Release Updates → "Use the Visualforce PDF Rendering Service for `Blob.toPdf()` Invocations" → **Enable**.
-- **Windows:** the setup script is a Bash script and doesn't work under Git Bash yet, because the `sf` CLI reports the wrong exit code there. A Windows-friendly version is on its way. Until then, use WSL or a Mac or Linux machine.
+- **You need a Dev Hub.** Pass its alias with `--hub`, or set `DOCGEN_DEVHUB` once. Without either, the script falls back to Portwood's own Dev Hub name. Dura staff: ask a maintainer for access to Dura's.
+- **Scratch org lifetime:** `--days 7` is plenty for testing one branch. The default is 30.
+- **One step has to be done by hand:** Setup → Release Updates → "Use the Visualforce PDF Rendering Service for `Blob.toPdf()` Invocations" → **Enable**.
+- **Windows:**
+    - Run the setup script from a **Git Bash** terminal. `npm run org:new` won't work there, because npm runs scripts through cmd.exe.
+    - `scripts/qa/lib/windows-shim.sh` fixes the two things that used to stop it: `sf` returning exit code 1 under Git Bash, and `python3` being missing.
+    - `npm run qa` works from any terminal.
 
 ## Take a Portwood release
 
