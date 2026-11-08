@@ -59,7 +59,26 @@ public with sharing class DocGenSetupController {
         result.put('Signature_Attachment_Max_Files__c', attachmentLimits.get('maxFiles'));
         result.put('Signature_Attachment_Max_File_MB__c', attachmentLimits.get('maxFileMb'));
         result.put('Signature_Attachment_Max_Total_MB__c', attachmentLimits.get('maxTotalMb'));
+        result.put('Signature_Type_Only__c', s != null && s.Signature_Type_Only__c == true);
         return result;
+    }
+
+    /** Saves the org-wide typed-signature restriction. Unchecked preserves Draw or Type. */
+    @AuraEnabled
+    public static void saveSignatureInputSettings(Boolean typeOnly) {
+        if (
+            !FeatureManagement.checkPermission('DocGen_Admin_Access') &&
+            !Schema.sObjectType.DocGen_Settings__c.isUpdateable()
+        ) {
+            throw DocGenService.ahe('Insufficient privileges to modify Portwood settings.');
+        }
+        DocGen_Settings__c settings = DocGen_Settings__c.getOrgDefaults();
+        settings.Signature_Type_Only__c = (typeOnly == true);
+        Set<String> inputFields = new Set<String>{ 'Signature_Type_Only__c' };
+        DocGenFlsGuard.assertCreateable(settings, inputFields);
+        DocGenFlsGuard.assertUpdateable(settings, inputFields);
+        /* code-analyzer-suppress ApexFlsViolation */
+        Database.upsert(settings, AccessLevel.SYSTEM_MODE);
     }
 
     /**

@@ -8,6 +8,7 @@ import saveReminderSettings from '@salesforce/apex/DocGenSetupController.saveRem
 import saveVerificationSettings from '@salesforce/apex/DocGenSetupController.saveVerificationSettings';
 import saveDeclineSettings from '@salesforce/apex/DocGenSetupController.saveDeclineSettings';
 import saveAttachmentLimits from '@salesforce/apex/DocGenSetupController.saveAttachmentLimits';
+import saveSignatureInputSettings from '@salesforce/apex/DocGenSetupController.saveSignatureInputSettings';
 
 export default class DocGenSignatureSettings extends LightningElement {
     @track isLoaded = false;
@@ -37,6 +38,7 @@ export default class DocGenSignatureSettings extends LightningElement {
 
     // #367 — org-wide "Hide Decline Button" switch, unchecked by default (Decline shown).
     @track hideDecline = false;
+    @track typeOnly = false;
 
     // #412 — limits on the existing PDFs a signature request can attach.
     @track attachmentMaxFileMb = 20;
@@ -74,6 +76,7 @@ export default class DocGenSignatureSettings extends LightningElement {
             this.attachmentMaxFileMb = data.Signature_Attachment_Max_File_MB__c || 20;
             this.attachmentMaxFiles = data.Signature_Attachment_Max_Files__c || 100;
             this.attachmentMaxTotalMb = data.Signature_Attachment_Max_Total_MB__c || 200;
+            this.typeOnly = data.Signature_Type_Only__c === true;
         } catch (_err) {
             // Settings not yet created — use defaults
         }
@@ -120,6 +123,9 @@ export default class DocGenSignatureSettings extends LightningElement {
     }
     handlePrefillEmailChange(e) {
         this.prefillEmail = e.target.checked;
+    }
+    handleTypeOnlyChange(e) {
+        this.typeOnly = e.target.checked;
     }
     handleHideDeclineChange(e) {
         this.hideDecline = e.target.checked;
@@ -201,6 +207,7 @@ export default class DocGenSignatureSettings extends LightningElement {
                 maxFiles: parseInt(this.attachmentMaxFiles, 10) || null,
                 maxTotalMb: parseInt(this.attachmentMaxTotalMb, 10) || null
             });
+            await saveSignatureInputSettings({ typeOnly: this.typeOnly });
             this.saveSuccess = true;
             this.saveMessage =
                 'Settings saved successfully.' + (this.reminderEnabled ? ' Reminders scheduled hourly.' : '');

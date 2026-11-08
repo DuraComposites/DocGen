@@ -94,10 +94,35 @@ const COLUMNS = [
 const ACCEPTED_FORMATS = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'];
 
 export default class DocGenAssets extends LightningElement {
+    @track activeSection = 'images';
     @track assets = [];
     columns = COLUMNS;
     acceptedFormats = ACCEPTED_FORMATS;
     wiredAssetsResult;
+
+    get isImagesSection() {
+        return this.activeSection === 'images';
+    }
+
+    get isFontsSection() {
+        return this.activeSection === 'fonts';
+    }
+
+    get imagesSectionClass() {
+        return this.isImagesSection ? 'asset-section-button asset-section-button_active' : 'asset-section-button';
+    }
+
+    get fontsSectionClass() {
+        return this.isFontsSection ? 'asset-section-button asset-section-button_active' : 'asset-section-button';
+    }
+
+    showImagesSection() {
+        this.activeSection = 'images';
+    }
+
+    showFontsSection() {
+        this.activeSection = 'fonts';
+    }
 
     // Create modal state
     @track isCreateModalOpen = false;
@@ -133,7 +158,9 @@ export default class DocGenAssets extends LightningElement {
     wiredAssets(result) {
         this.wiredAssetsResult = result;
         if (result.data) {
-            this.assets = result.data.map((row) => this.decorateRow(row));
+            this.assets = result.data
+                .filter((row) => String(row.assetType || '').toLowerCase() !== 'htmlsnippet')
+                .map((row) => this.decorateRow(row));
         } else if (result.error) {
             this.showToast('Error loading assets', this.errMsg(result.error), 'error');
         }
@@ -507,6 +534,18 @@ export default class DocGenAssets extends LightningElement {
         } catch (error) {
             this.showToast('Error deleting asset', this.errMsg(error), 'error');
         }
+    }
+
+    get isSnippetsSection() {
+        return this.activeSection === 'snippets';
+    }
+
+    get snippetsSectionClass() {
+        return this.isSnippetsSection ? 'asset-section-button asset-section-button_active' : 'asset-section-button';
+    }
+
+    showSnippetsSection() {
+        this.activeSection = 'snippets';
     }
 
     // ===== Helpers =====
