@@ -299,6 +299,135 @@ private class DocGenHtmlTemplateTest {
     }
 
     @IsTest
+    static void saveTemplate_htmlVersionDoesNotQueueOfficeDecomposition() {
+        DocGen_Template__c tmpl = new DocGen_Template__c(
+            Name = 'HTML version ' + Datetime.now().getTime(),
+            Type__c = 'HTML',
+            Output_Format__c = 'PDF',
+            Base_Object_API__c = 'Account',
+            Query_Config__c = 'Name'
+        );
+        insert tmpl;
+
+        Map<String, Object> body = DocGenController.saveHtmlTemplateBody(
+            tmpl.Id,
+            'import.zip',
+            '<html><body><p>{Name}</p></body></html>'
+        );
+        Id bodyCvId = (Id) body.get('contentVersionId');
+
+        Test.startTest();
+        Map<String, Object> saved = DocGenController.saveTemplate(
+            new Map<String, Object>{
+                'Id' => tmpl.Id,
+                'Name' => tmpl.Name,
+                'Type__c' => 'HTML',
+                'Output_Format__c' => 'PDF',
+                'Base_Object_API__c' => 'Account',
+                'Query_Config__c' => 'Name'
+            },
+            true,
+            bodyCvId
+        );
+        System.assertEquals(0, Limits.getQueueableJobs(), 'HTML saves must not enqueue Office decomposition');
+        Test.stopTest();
+
+        System.assertNotEquals(null, saved.get('createdVersionId'));
+    }
+
+    @IsTest
+    static void saveTemplate_htmlVersionCopiesPriorBodyWithUniqueFile() {
+        String originalHtml = '<html><body><p>immutable body</p></body></html>';
+        Id tmplId = createHtmlTemplate(null, null, originalHtml);
+        DocGen_Template_Version__c prior = [
+            SELECT Content_Version_Id__c
+            FROM DocGen_Template_Version__c
+            WHERE Template__c = :tmplId AND Is_Active__c = TRUE
+            LIMIT 1
+        ];
+
+        Test.startTest();
+        Map<String, Object> saved = DocGenController.saveTemplate(
+            new Map<String, Object>{
+                'Id' => tmplId,
+                'Name' => 'Copied HTML',
+                'Type__c' => 'HTML',
+                'Output_Format__c' => 'PDF',
+                'Base_Object_API__c' => 'Account',
+                'Query_Config__c' => 'Name'
+            },
+            true,
+            null
+        );
+        Test.stopTest();
+
+        DocGen_Template_Version__c fresh = [
+            SELECT Content_Version_Id__c
+            FROM DocGen_Template_Version__c
+            WHERE Id = :(Id) saved.get('createdVersionId')
+            LIMIT 1
+        ];
+        System.assertNotEquals(
+            prior.Content_Version_Id__c,
+            fresh.Content_Version_Id__c,
+            'A legacy HTML version must not reuse the prior body ContentVersion'
+        );
+        ContentVersion copied = [
+            SELECT PathOnClient, VersionData
+            FROM ContentVersion
+            WHERE Id = :(Id) fresh.Content_Version_Id__c
+            LIMIT 1
+        ];
+        System.assertEquals(
+            'template1.html',
+            copied.PathOnClient,
+            'The copied body should have its own version filename'
+        );
+        System.assertEquals(originalHtml, copied.VersionData.toString(), 'The copied version must preserve the body');
+    }
+    @IsTest
+    static void saveAndPublishHtmlBodyUsesTemplatePageSetupWhenActiveVersionHasNone() {
+        DocGen_Template__c tmpl = new DocGen_Template__c(
+            Name = 'Canvas Legal ' + Datetime.now().getTime(),
+            Type__c = 'HTML',
+            Output_Format__c = 'PDF',
+            Base_Object_API__c = 'Account',
+            Query_Config__c = 'Name',
+            Page_Size__c = 'Legal',
+            Page_Orientation__c = 'Landscape',
+            Page_Margins__c = 'Custom',
+            Custom_Margins__c = '0.25,0.5,0.75,1.0'
+        );
+        insert tmpl;
+        insert new DocGen_Template_Version__c(
+            Template__c = tmpl.Id,
+            Is_Active__c = true,
+            Type__c = 'HTML',
+            Base_Object_API__c = 'Account'
+        );
+
+        Test.startTest();
+        Map<String, Object> saved = DocGenController.saveAndPublishHtmlBody(
+            tmpl.Id,
+            'canvas.html',
+            '<html><body><p>{Name}</p></body></html>',
+            true
+        );
+        Test.stopTest();
+
+        DocGen_Template_Version__c fresh = [
+            SELECT Page_Size__c, Page_Orientation__c, Page_Margins__c, Custom_Margins__c
+            FROM DocGen_Template_Version__c
+            WHERE Id = :(Id) saved.get('versionId')
+            LIMIT 1
+        ];
+        System.assertEquals('Legal', fresh.Page_Size__c, 'Designer publish must not fall back to Letter');
+        System.assertEquals('Landscape', fresh.Page_Orientation__c, 'Designer publish must carry orientation');
+        System.assertEquals('Custom', fresh.Page_Margins__c, 'Designer publish must carry margins mode');
+        System.assertEquals('0.25,0.5,0.75,1.0', fresh.Custom_Margins__c, 'Designer publish must carry custom margins');
+    }
+
+    @IsTest
     static void getHtmlTemplateBodyReturnsLatestBody() {
         DocGen_Template__c tmpl = new DocGen_Template__c(
             Name = 'BodyRead ' + Datetime.now().getTime(),
@@ -320,6 +449,37 @@ private class DocGenHtmlTemplateTest {
         Test.stopTest();
 
         System.assertEquals(htmlV2, readBack, 'Read-back should return the most recent body verbatim');
+    }
+
+    @IsTest
+    static void getHtmlTemplateBodyUsesActiveVersionBody() {
+        DocGen_Template__c tmpl = new DocGen_Template__c(
+            Name = 'VersionScopedBody ' + Datetime.now().getTime(),
+            Type__c = 'HTML',
+            Output_Format__c = 'PDF',
+            Base_Object_API__c = 'Account',
+            Query_Config__c = 'Name'
+        );
+        insert tmpl;
+
+        String versionBody = '<html><body><p>version one</p></body></html>';
+        Map<String, Object> saved = DocGenController.saveHtmlTemplateBody(tmpl.Id, 'v1.html', versionBody);
+        insert new DocGen_Template_Version__c(
+            Template__c = tmpl.Id,
+            Type__c = 'HTML',
+            Content_Version_Id__c = (Id) saved.get('contentVersionId'),
+            Is_Active__c = true
+        );
+
+        // This is a newer loose editor body, but it is not the active version's
+        // immutable body and must not be returned by the legacy designer.
+        DocGenController.saveHtmlTemplateBody(tmpl.Id, 'v2.html', '<html><body><p>newer loose draft</p></body></html>');
+
+        System.assertEquals(
+            versionBody,
+            DocGenController.getHtmlTemplateBody(tmpl.Id),
+            'The legacy designer must load the active version body, not the newest loose draft'
+        );
     }
 
     @IsTest
@@ -370,7 +530,9 @@ private class DocGenHtmlTemplateTest {
         List<Map<String, Object>> imgs = DocGenController.listHtmlTemplateImages(tmpl.Id);
         Test.stopTest();
 
-        System.assertEquals(2, imgs.size(), 'Both uploaded images should be listed');
+        // Identical image bytes are content-addressed and reused rather than
+        // creating a duplicate File for every save/version.
+        System.assertEquals(1, imgs.size(), 'Identical uploaded images should be deduplicated');
         String url = (String) imgs[0].get('url');
         System.assert(url.startsWith('/sfc/servlet.shepherd/version/download/'), 'Relative shepherd URL expected');
         System.assertNotEquals(null, imgs[0].get('fileName'), 'File name expected');
