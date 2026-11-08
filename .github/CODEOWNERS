@@ -1,0 +1,3 @@
+# Every pull request asks the DocGen maintainers for a review.
+# Only that team can merge into main (see the ruleset on main).
+* @DuraComposites/docgen-maintainers

@@ -1,0 +1,18 @@
+DocGen: Dura Composites fork
+Copyright 2026 Dura Composites Ltd
+
+This product is a modified version of Portwood (formerly DocGen),
+Copyright 2026 Portwood LLC, licensed under the Apache License,
+Version 2.0 (see LICENSE).
+Original source: https://github.com/Portwood-Global-Solutions/Portwood
+
+Dura Composites Ltd has modified some of the original files:
+  - each modified file carries a "Modified by Dura Composites Ltd." notice;
+  - the changes are summarised in .github/README.md;
+  - the git history records every change.
+
+This fork is not endorsed by Portwood LLC. "Portwood" is a name of
+Portwood LLC and is not licensed for use by this fork.
+
+Third-party components bundled with this product, and their licences,
+are listed in THIRD-PARTY-NOTICES.md.
