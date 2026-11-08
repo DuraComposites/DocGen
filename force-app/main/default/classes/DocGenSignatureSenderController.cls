@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 public with sharing class DocGenSignatureSenderController {
     public class SignerResult {
         @AuraEnabled
@@ -3168,6 +3169,8 @@ public with sharing class DocGenSignatureSenderController {
         DocGenFlsGuard.assertUpdateable(req, new Set<String>{ 'Status__c', 'Expires_At__c' });
         /* code-analyzer-suppress ApexFlsViolation */
         Database.update(req, false, AccessLevel.SYSTEM_MODE);
+        // Dura: a timeline entry per signer whose link was replaced (DocGenSignatureEvents).
+        DocGenSignatureEvents.logForSigners(req.Id, signers, DocGenSignatureEvents.LINK_RESENT, true);
 
         // requestId so {ExpirationHours} reflects the fresh signing window.
         DocGenSignatureEmailService.sendSignatureRequestEmails(emailList, documentTitle, req.Id);
@@ -3240,6 +3243,8 @@ public with sharing class DocGenSignatureSenderController {
             /* code-analyzer-suppress ApexFlsViolation */
             Database.update(unsignedSigners, false, AccessLevel.SYSTEM_MODE);
         }
+        // Dura: a timeline entry for the revoke, with who did it (DocGenSignatureEvents).
+        DocGenSignatureEvents.logForRequest(requestId, DocGenSignatureEvents.REVOKED, true);
         DocGenSignatureEmailService.sendSignerRevokedEmails(requestId);
     }
 

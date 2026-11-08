@@ -835,15 +835,16 @@
         },
         {
             "slug": "signature-status",
-            "title": "See who has opened and signed",
+            "title": "See each request as a timeline",
             "group": "sign",
             "audience": "Administrators and senders",
-            "minutes": 4,
-            "summary": "Add the Signature Status card to a record page: every request, who opened their link and how often, and who signed or declined.",
+            "minutes": 5,
+            "summary": "Add the Signature Status card: sent, opened, reminders, resends, revokes and how each request ended, also grouped across related records.",
             "sources": [
                 "force-app/main/default/lwc/docGenSignatureStatus",
                 "force-app/main/default/classes/DocGenSignatureStatusController.cls",
-                "force-app/main/default/classes/DocGenSignerVisits.cls"
+                "force-app/main/default/classes/DocGenSignerVisits.cls",
+                "force-app/main/default/classes/DocGenSignatureEvents.cls"
             ],
             "related": ["manage-signatures", "sign-attached-documents", "setup-signatures"],
             "aliases": [],

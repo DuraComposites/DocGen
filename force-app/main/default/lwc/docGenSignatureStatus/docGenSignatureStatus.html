@@ -9,7 +9,7 @@
             onclick={handleRefresh}
         ></lightning-button-icon>
 
-        <div class="slds-var-p-horizontal_medium">
+        <div class="body">
             <template lwc:if={loading}>
                 <div class="spinner-holder">
                     <lightning-spinner alternative-text="Loading signature requests" size="small"></lightning-spinner>
@@ -19,184 +19,69 @@
                 <p class="slds-text-color_error">{error}</p>
             </template>
             <template lwc:if={isEmpty}>
-                <p class="slds-text-color_weak">No signature requests on this record yet.</p>
+                <p class="muted">No signature requests yet.</p>
             </template>
 
-            <template lwc:if={hasRequests}>
-                <template for:each={requests} for:item="req">
-                    <article key={req.id} class="request slds-box slds-box_x-small slds-var-m-bottom_small">
-                        <header class="slds-grid slds-grid_vertical-align-center slds-wrap request-head">
-                            <div class="slds-col slds-grow">
-                                <a data-id={req.id} onclick={handleOpenRequest} class="request-title">{req.title}</a>
-                                <span class="slds-text-color_weak slds-var-m-left_x-small">{req.name}</span>
+            <template for:each={groups} for:item="g">
+                <section key={g.key} class="group">
+                    <template lwc:if={g.showHeader}>
+                        <a class="group-heading" data-id={g.recordId} onclick={handleOpenRecord}>{g.heading}</a>
+                    </template>
+
+                    <template for:each={g.requests} for:item="r">
+                        <article key={r.key} class="request">
+                            <div class="request-head">
+                                <a class="title" data-id={r.id} onclick={handleOpenRecord}>{r.title}</a>
+                                <span class={r.pillClass}>{r.statusLabel}</span>
                             </div>
-                            <span class={req.badgeClass}>{req.status}</span>
-                        </header>
-                        <p class="slds-text-body_small slds-text-color_weak meta">
-                            Sent&nbsp;<lightning-formatted-date-time
-                                value={req.sentAt}
-                                day="numeric"
-                                month="short"
-                                year="numeric"
-                                hour="2-digit"
-                                minute="2-digit"
-                            ></lightning-formatted-date-time>
-                            <template lwc:if={req.hasExpiry}>
-                                &nbsp;· expires&nbsp;<lightning-formatted-date-time
-                                    value={req.expiresAt}
-                                    day="numeric"
-                                    month="short"
-                                    year="numeric"
-                                ></lightning-formatted-date-time>
+                            <p class="muted small">{r.signerNames} · {r.summary}</p>
+
+                            <button class="toggle" data-id={r.id} onclick={handleToggle} aria-expanded={r.expanded}>
+                                <lightning-icon icon-name={r.toggleIcon} size="xx-small"></lightning-icon>
+                                <span>{r.toggleLabel}</span>
+                            </button>
+
+                            <template lwc:if={r.expanded}>
+                                <ol class="timeline">
+                                    <template for:each={r.items} for:item="t">
+                                        <li key={t.key} class="event">
+                                            <span class={t.dotClass}></span>
+                                            <template lwc:if={t.hasTime}>
+                                                <lightning-formatted-date-time
+                                                    class="when"
+                                                    value={t.at}
+                                                    weekday="short"
+                                                    day="numeric"
+                                                    month="short"
+                                                    hour="2-digit"
+                                                    minute="2-digit"
+                                                ></lightning-formatted-date-time>
+                                            </template>
+                                            <span class={t.textClass}>{t.text}</span>
+                                        </li>
+                                    </template>
+                                </ol>
+                                <template lwc:if={r.hasDrawings}>
+                                    <template for:each={r.drawingLines} for:item="line">
+                                        <p key={line} class="small drawing">
+                                            <lightning-icon icon-name="utility:file" size="xx-small"></lightning-icon>
+                                            <span>{line}</span>
+                                        </p>
+                                    </template>
+                                </template>
+                                <template lwc:if={r.hasSignedFile}>
+                                    <lightning-button
+                                        label="Signed PDF"
+                                        icon-name="doctype:pdf"
+                                        variant="base"
+                                        data-id={r.signedFileId}
+                                        onclick={handleOpenSignedFile}
+                                    ></lightning-button>
+                                </template>
                             </template>
-                            <template lwc:if={req.orderLabel}> · {req.orderLabel}</template>
-                            <template lwc:if={req.hasAttachments}> · {req.attachmentCount} attached documents</template>
-                        </p>
-
-                        <ul class="signers">
-                            <template for:each={req.signers} for:item="s">
-                                <li key={s.key} class="signer">
-                                    <div class="slds-grid slds-grid_vertical-align-start">
-                                        <span class="order">{s.order}</span>
-                                        <div class="slds-col slds-grow">
-                                            <div class="slds-grid slds-grid_vertical-align-center slds-wrap">
-                                                <span class="slds-col slds-grow">
-                                                    <span class="signer-name">{s.name}</span>
-                                                    <span class="slds-text-color_weak slds-text-body_small"
-                                                        >&nbsp;· {s.role}</span
-                                                    >
-                                                </span>
-                                                <span class={s.badgeClass}>{s.status}</span>
-                                            </div>
-                                            <p class="slds-text-body_small slds-text-color_weak">{s.email}</p>
-
-                                            <p class="slds-text-body_small line">
-                                                <template lwc:if={s.opened}>
-                                                    <lightning-icon
-                                                        icon-name="utility:preview"
-                                                        size="xx-small"
-                                                        class="slds-var-m-right_xx-small"
-                                                    ></lightning-icon>
-                                                    <span>{s.openedLabel}</span>&nbsp;·
-                                                    first&nbsp;<lightning-formatted-date-time
-                                                        value={s.firstOpenedAt}
-                                                        day="numeric"
-                                                        month="short"
-                                                        hour="2-digit"
-                                                        minute="2-digit"
-                                                    ></lightning-formatted-date-time>
-                                                    <template lwc:if={s.showLast}>
-                                                        &nbsp;· last&nbsp;<lightning-formatted-date-time
-                                                            value={s.lastOpenedAt}
-                                                            day="numeric"
-                                                            month="short"
-                                                            hour="2-digit"
-                                                            minute="2-digit"
-                                                        ></lightning-formatted-date-time>
-                                                    </template>
-                                                    <template lwc:if={s.manyVisits}>
-                                                        <span
-                                                            class="slds-badge slds-badge_lightest slds-var-m-left_x-small"
-                                                            >Keeps coming back</span
-                                                        >
-                                                    </template>
-                                                </template>
-                                                <template lwc:if={s.notOpened}>
-                                                    <span class="slds-text-color_weak">Not opened yet</span>
-                                                </template>
-                                            </p>
-
-                                            <template lwc:if={s.isSigned}>
-                                                <p class="slds-text-body_small line">
-                                                    Signed&nbsp;<lightning-formatted-date-time
-                                                        value={s.signedAt}
-                                                        day="numeric"
-                                                        month="short"
-                                                        year="numeric"
-                                                        hour="2-digit"
-                                                        minute="2-digit"
-                                                    ></lightning-formatted-date-time>
-                                                </p>
-                                            </template>
-                                            <template lwc:if={s.isDeclined}>
-                                                <p class="slds-text-body_small line slds-text-color_error">
-                                                    Declined<template lwc:if={s.declineReason}
-                                                        >: {s.declineReason}</template
-                                                    >
-                                                </p>
-                                            </template>
-                                            <template lwc:if={s.showReview}>
-                                                <p class="slds-text-body_small line">{s.reviewLabel}</p>
-                                            </template>
-                                            <template lwc:if={s.hasReminders}>
-                                                <p class="slds-text-body_small line slds-text-color_weak">
-                                                    {s.remindersLabel}<template lwc:if={s.lastReminderAt}
-                                                        >, last&nbsp;<lightning-formatted-date-time
-                                                            value={s.lastReminderAt}
-                                                            day="numeric"
-                                                            month="short"
-                                                            hour="2-digit"
-                                                            minute="2-digit"
-                                                        ></lightning-formatted-date-time
-                                                    ></template>
-                                                </p>
-                                            </template>
-
-                                            <template lwc:if={s.hasVisits}>
-                                                <button
-                                                    class="slds-button slds-text-body_small"
-                                                    data-id={s.id}
-                                                    onclick={handleToggleVisits}
-                                                >
-                                                    {s.visitsToggleLabel}
-                                                </button>
-                                                <template lwc:if={s.showVisits}>
-                                                    <ol class="visits">
-                                                        <template for:each={s.visitRows} for:item="v">
-                                                            <li key={v.key} class="slds-text-body_small">
-                                                                <lightning-icon
-                                                                    icon-name={v.icon}
-                                                                    size="xx-small"
-                                                                    alternative-text={v.deviceLabel}
-                                                                    class="slds-var-m-right_xx-small"
-                                                                ></lightning-icon>
-                                                                <lightning-formatted-date-time
-                                                                    value={v.visitedAt}
-                                                                    weekday="short"
-                                                                    day="numeric"
-                                                                    month="short"
-                                                                    hour="2-digit"
-                                                                    minute="2-digit"
-                                                                ></lightning-formatted-date-time>
-                                                                <span class="slds-text-color_weak"
-                                                                    >&nbsp;· {v.deviceLabel}<template
-                                                                        lwc:if={v.loadsLabel}
-                                                                    >
-                                                                        · {v.loadsLabel}</template
-                                                                    ></span
-                                                                >
-                                                            </li>
-                                                        </template>
-                                                    </ol>
-                                                </template>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </li>
-                            </template>
-                        </ul>
-
-                        <template lwc:if={req.hasSignedFile}>
-                            <lightning-button
-                                label="Signed PDF"
-                                icon-name="doctype:pdf"
-                                variant="base"
-                                data-id={req.signedFileId}
-                                onclick={handleOpenSignedFile}
-                            ></lightning-button>
-                        </template>
-                    </article>
-                </template>
+                        </article>
+                    </template>
+                </section>
             </template>
         </div>
     </lightning-card>

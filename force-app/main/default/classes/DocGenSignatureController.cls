@@ -431,6 +431,8 @@ public without sharing class DocGenSignatureController {
             ) {
                 applySigningBrand(res, signers[0].Signature_Request__r.Id);
                 res.errorMessage = 'This signature link has expired. Please request a new one.';
+                // Dura: the signer came back after the link lapsed (DocGenSignatureEvents).
+                DocGenSignatureEvents.logExpiredOpen(signers[0].Signature_Request__r.Id, signers[0].Id);
                 return res;
             }
             return validateSignerToken(signers[0]);
