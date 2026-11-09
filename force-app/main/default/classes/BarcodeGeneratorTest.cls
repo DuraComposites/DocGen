@@ -124,7 +124,7 @@ private class BarcodeGeneratorTest {
         User u = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
         System.runAs(u) {
             String qr = BarcodeGenerator.getPattern(
-                'https://pay.example.com/puco/invoice/INV-2026-000123?token=abcdefghijklmnopqrstuvwxyz1234567890',
+                'https://pay.portwoodglobalsolutions.com/puco/invoice/INV-2026-000123?token=abcdefghijklmnopqrstuvwxyz1234567890',
                 'qr'
             );
             List<String> rows = qr.split('\n');

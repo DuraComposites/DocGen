@@ -46,14 +46,21 @@ const KEEP = [
 const PROTECT = [
     /github\.com\/Portwood-Global-Solutions\/Portwood\/(?:issues|pull|discussions|releases|commit|compare)\/[\w.-]+/g,
     /\bPortwood@\d[\w.-]*/g,
-    /\bPortwood LLC\b/g
+    /\bPortwood LLC\b/g,
+    // Test fixtures checked byte for byte: the test font's internal names (DocGenFontTest) and an invoice
+    // URL whose QR code is compared with stored rows (BarcodeGeneratorTest).
+    /\bPortwood ?Test ?Script\b/g,
+    /https:\/\/pay\.portwoodglobalsolutions\.com\/puco\/invoice\/[^'"\s]*/g
 ];
 
 /** Links and demo data, applied before the names. */
 const LINKS = [
     [/https:\/\/github\.com\/Portwood-Global-Solutions\/Portwood/g, 'https://github.com/DuraComposites/DocGen'],
     [/github\.com\/Portwood-Global-Solutions\/Portwood/g, 'github.com/DuraComposites/DocGen'],
-    [/raw\.githubusercontent\.com\/Portwood-Global-Solutions\/Portwood/g, 'raw.githubusercontent.com/DuraComposites/DocGen'],
+    [
+        /raw\.githubusercontent\.com\/Portwood-Global-Solutions\/Portwood/g,
+        'raw.githubusercontent.com/DuraComposites/DocGen'
+    ],
     [/https:\/\/portwood\.dev\/guide\/?(?![\w/-])/g, GUIDE],
     [/PORTWOOD GLOBAL SOLUTIONS/g, 'EXAMPLE CONSULTING GROUP'],
     [/Portwood Global Solutions/g, 'Example Consulting Group'],
@@ -66,10 +73,7 @@ const LINKS = [
 ];
 
 /** Left unchanged and reported: a person decides where these should point. */
-const ASK = [
-    /[\w.+-]*@?portwood\.dev\b[^\s"'<>)\]`]*/g,
-    /https?:\/\/portwoodcommunity\.slack\.com[^\s"'<>)\]`]*/g
-];
+const ASK = [/[\w.+-]*@?portwood\.dev\b[^\s"'<>)\]`]*/g, /https?:\/\/portwoodcommunity\.slack\.com[^\s"'<>)\]`]*/g];
 
 /** The namespace and the product name. */
 const NAMES = [
@@ -145,7 +149,10 @@ function withNotice(text, file) {
         return `<!-- ${NOTICE} -->\n${text}`;
     }
     if (['.page', '.component'].includes(ext)) return `<!-- ${NOTICE} -->\n${text}`;
-    if (['.cmp', '.app', '.design', '.auradoc', '.evt', '.svg'].includes(ext) || /\.(xml|flexipage|object|genAiPromptTemplate)$/i.test(file)) {
+    if (
+        ['.cmp', '.app', '.design', '.auradoc', '.evt', '.svg'].includes(ext) ||
+        /\.(xml|flexipage|object|genAiPromptTemplate)$/i.test(file)
+    ) {
         return afterOpenTag(/<(?![?!/])[A-Za-z]/);
     }
     return null;
