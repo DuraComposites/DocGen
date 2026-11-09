@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
 // Builds the Canvas invoice body for the SDocs demo.
 //
@@ -237,7 +238,7 @@ shape(page1, 0, 0, 8.5, 1.45, { type: 'rect', fill: NAVY, borderWidth: 0 }, 0);
 shape(page1, 0, 1.45, 8.5, H.rule, { type: 'rect', fill: GOLD, borderWidth: 0 }, 1);
 
 // Wordmark. A shape + type rather than an image asset on purpose: the demo org
-// has no Portwood Asset uploaded, and {%asset:...} that does not resolve throws
+// has no DocGen Asset uploaded, and {%asset:...} that does not resolve throws
 // at generation rather than degrading.
 shape(page1, 0.6, 0.42, 0.26, 0.26, { type: 'rect', fill: GOLD, borderWidth: 0 }, 2);
 text(
@@ -246,7 +247,7 @@ text(
     0.34,
     4.4,
     H.coName,
-    'Portwood Professional Services',
+    'DocGen Professional Services',
     { size: 16, bold: true, color: ONNAVY },
     { z: 2 }
 );
@@ -256,7 +257,7 @@ text(
     0.74,
     4.6,
     H.coAddr,
-    '1200 Market Street, Suite 400 · Seattle, WA 98104\n(206) 555-0180 · billing@portwoodps.example · EIN 91-0000000',
+    '1200 Market Street, Suite 400 · Seattle, WA 98104\n(206) 555-0180 · billing@docgenps.example · EIN 91-0000000',
     { size: 8.5, color: ONNAVY_DIM },
     { z: 2 }
 );
@@ -393,10 +394,10 @@ richText(
     9.52,
     7.3,
     H.remit,
-    '<b>Remit payment to</b> — Portwood Professional Services · Cascadia First Bank<br />' +
+    '<b>Remit payment to</b> — DocGen Professional Services · Cascadia First Bank<br />' +
         'ACH / wire · Routing 125000024 · Account 8842019773 · Reference ' +
         INVOICE_NO +
-        '<br />Engagement lead {Project_Manager__c} · billing@portwoodps.example · (206) 555-0180<br />' +
+        '<br />Engagement lead {Project_Manager__c} · billing@docgenps.example · (206) 555-0180<br />' +
         'Amounts in USD. Milestones are invoiced on client acceptance. Approved change orders are listed in Appendix A.',
     { size: 9, color: INK, fill: TINT, padding: 8 },
     { mode: 'flow' }
@@ -520,7 +521,7 @@ text(
     10.05,
     7.3,
     H.footer,
-    'Portwood Professional Services · 1200 Market Street, Suite 400, Seattle WA 98104 · Net 30 · ' +
+    'DocGen Professional Services · 1200 Market Street, Suite 400, Seattle WA 98104 · Net 30 · ' +
         'Late balances accrue 1.0% per month.\nGenerated from Salesforce project {Project_Code__c} on {Today:date}.',
     { size: 8, color: MUTED }
 );

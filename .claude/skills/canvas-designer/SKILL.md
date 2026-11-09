@@ -1,7 +1,9 @@
 ---
 name: canvas-designer
-description: Work on Portwood's Canvas designer (docGenCanvas LWC and canvasModel.js). Use when changing the artboard, the box model, the HTML serializer or importer, or when a Canvas template renders differently from what the canvas showed.
+description: Work on DocGen's Canvas designer (docGenCanvas LWC and canvasModel.js). Use when changing the artboard, the box model, the HTML serializer or importer, or when a Canvas template renders differently from what the canvas showed.
 ---
+
+<!-- Modified by Dura Composites Ltd. -->
 
 # Working on the Canvas designer
 

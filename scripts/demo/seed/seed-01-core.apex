@@ -1,10 +1,11 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
-// Portwood DocGen DEMO — Seed 01: Core standard-object data
+// DocGen DEMO — Seed 01: Core standard-object data
 //   Accounts, Contacts, Opportunities (B2B pipeline + nonprofit donations),
 //   Product catalog (Product2 + Pricebook2 + entries), Orders + OrderItems.
 // Idempotent: deletes prior demo records (marker = [DOCGEN-DEMO]) then re-inserts.
 // Bare API names (these are standard / org-default-namespace objects).
-// Run: sf apex run --target-org dave@portwood.dev.demo -f "DEMO TEMPLATES/seed/seed-01-core.apex"
+// Run: sf apex run --target-org dave@example.com.demo -f "DEMO TEMPLATES/seed/seed-01-core.apex"
 // ============================================================================
 String MARK = '[DOCGEN-DEMO]'; // human-readable marker stored in Description (note: Description is not SOQL-filterable)
 Set<String> DEMO_ACCT_NAMES = new Set<String>{
@@ -22,7 +23,7 @@ if (!oldAccts.isEmpty()) {
     delete oldAccts;
 }
 delete [SELECT Id FROM PricebookEntry WHERE Product2.ProductCode LIKE 'PWG-%' AND Pricebook2.IsStandard = FALSE];
-delete [SELECT Id FROM Pricebook2 WHERE Name = 'Portwood 2026 Wholesale Catalog'];
+delete [SELECT Id FROM Pricebook2 WHERE Name = 'DocGen 2026 Wholesale Catalog'];
 delete [SELECT Id FROM PricebookEntry WHERE Product2.ProductCode LIKE 'PWG-%'];
 delete [SELECT Id FROM Product2 WHERE ProductCode LIKE 'PWG-%'];
 
@@ -332,7 +333,7 @@ insert prods;
 
 Id stdPbId = [SELECT Id FROM Pricebook2 WHERE IsStandard = TRUE LIMIT 1].Id;
 Pricebook2 catalog = new Pricebook2(
-    Name = 'Portwood 2026 Wholesale Catalog',
+    Name = 'DocGen 2026 Wholesale Catalog',
     IsActive = true,
     Description = MARK + ' Manufacturing demo catalog'
 );

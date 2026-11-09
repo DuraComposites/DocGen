@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * v1.68 — exercises the page-setup override path:
  *   - Page_Size__c × Page_Orientation__c × Page_Margins__c on Template + Version
@@ -455,7 +456,7 @@ private class DocGenPageSetupTest {
     @IsTest
     static void longHyperlinkTextGetsPdfBreaksWithoutChangingHref() {
         String url =
-            'https://www.example.com/portwood/document-generation/salesforce/testing/long-url-overflow/' +
+            'https://www.example.com/docgen/document-generation/salesforce/testing/long-url-overflow/' +
             'page-boundary-validation/abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         String wrapped = DocGenService.wrapHtmlForPdf('<p><a href="' + url + '">' + url + '</a></p>', '', null, null);
 
@@ -483,7 +484,7 @@ private class DocGenPageSetupTest {
     @IsTest
     static void longStyledHyperlinkTextGetsPdfBreaks() {
         String url =
-            'https://www.example.com/portwood/document-generation/salesforce/testing/long-url-overflow/' +
+            'https://www.example.com/docgen/document-generation/salesforce/testing/long-url-overflow/' +
             'page-boundary-validation/abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         String label =
             '<span style="font-weight:bold">' +

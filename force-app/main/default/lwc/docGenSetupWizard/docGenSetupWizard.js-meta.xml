@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <apiVersion>66.0</apiVersion>
     <isExposed>true</isExposed>
-    <masterLabel>Portwood Setup Wizard</masterLabel>
+    <masterLabel>DocGen Setup Wizard</masterLabel>
     <description>Guided setup wizard for configuring Public E-Signatures.</description>
     <targets>
         <target>lightning__AppPage</target>

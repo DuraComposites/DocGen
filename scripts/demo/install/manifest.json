@@ -1,5 +1,5 @@
 {
-    "namespace": "portwoodglobal__",
+    "namespace": "duradocgen__",
     "_pageFooter": "<div style=\"text-align:center;font-size:8.5pt;color:#8795a3;\">Page {PageNumber} of {TotalPages}</div>",
     "templates": [
         {
@@ -227,7 +227,7 @@
             "description": "A wholesale product catalog where every line shows a scannable Code 128 barcode of the product SKU.",
             "pageSize": "Letter",
             "orientation": "Portrait",
-            "testRecordSoql": "SELECT Id FROM Pricebook2 WHERE Name = 'Portwood 2026 Wholesale Catalog' LIMIT 1",
+            "testRecordSoql": "SELECT Id FROM Pricebook2 WHERE Name = 'DocGen 2026 Wholesale Catalog' LIMIT 1",
             "queryConfig": {
                 "v": 3,
                 "root": "Pricebook2",
@@ -316,7 +316,7 @@
             "pageSize": "Letter",
             "orientation": "Portrait",
             "footerHtml": "<div style=\"text-align:center;font-size:8.5pt;color:#8795a3;\">Page {PageNumber} of {TotalPages}</div>",
-            "testRecordSoql": "SELECT Id FROM Pricebook2 WHERE Name = 'Portwood 2026 Wholesale Catalog' LIMIT 1",
+            "testRecordSoql": "SELECT Id FROM Pricebook2 WHERE Name = 'DocGen 2026 Wholesale Catalog' LIMIT 1",
             "queryConfig": {
                 "v": 3,
                 "root": "Pricebook2",
@@ -360,7 +360,7 @@
             "pageSize": "Letter",
             "orientation": "Portrait",
             "footerHtml": "<div style=\"text-align:center;font-size:8.5pt;color:#8795a3;\">Page {PageNumber} of {TotalPages}</div>",
-            "testRecordSoql": "SELECT Id FROM Pricebook2 WHERE Name = 'Portwood Mega Catalog (Giant Demo)' LIMIT 1",
+            "testRecordSoql": "SELECT Id FROM Pricebook2 WHERE Name = 'DocGen Mega Catalog (Giant Demo)' LIMIT 1",
             "queryConfig": {
                 "v": 3,
                 "root": "Pricebook2",
@@ -511,7 +511,7 @@
             "pageSize": "Letter",
             "orientation": "Portrait",
             "footerHtml": "<div style=\"text-align:center;font-size:8.5pt;color:#8795a3;\">Page {PageNumber} of {TotalPages}</div>",
-            "testRecordSoql": "SELECT Id FROM Demo_Event__c WHERE Name = 'Portwood Summit 2026' LIMIT 1",
+            "testRecordSoql": "SELECT Id FROM Demo_Event__c WHERE Name = 'DocGen Summit 2026' LIMIT 1",
             "queryConfig": {
                 "v": 3,
                 "root": "Demo_Event__c",
@@ -562,7 +562,7 @@
             "pageSize": "Letter",
             "orientation": "Portrait",
             "footerHtml": "<div style=\"text-align:center;font-size:8.5pt;color:#8795a3;\">Page {PageNumber} of {TotalPages}</div>",
-            "testRecordSoql": "SELECT Id FROM Demo_Event__c WHERE Name = 'Portwood Summit 2026' LIMIT 1",
+            "testRecordSoql": "SELECT Id FROM Demo_Event__c WHERE Name = 'DocGen Summit 2026' LIMIT 1",
             "queryConfig": {
                 "v": 3,
                 "root": "Demo_Event__c",
@@ -599,7 +599,7 @@
             "description": "A sponsorship prospectus slide deck generated from event details.",
             "pageSize": "Letter",
             "orientation": "Landscape",
-            "testRecordSoql": "SELECT Id FROM Demo_Event__c WHERE Name = 'Portwood Summit 2026' LIMIT 1",
+            "testRecordSoql": "SELECT Id FROM Demo_Event__c WHERE Name = 'DocGen Summit 2026' LIMIT 1",
             "queryConfig": "Name, Event_Date__c, Venue__c, City__c, State__c, Organizer__c, Capacity__c, Description__c, Registration_URL__c"
         },
 
@@ -1004,7 +1004,7 @@
             "description": "A wholesale price list where every line carries a scannable Code 128 barcode of the SKU, rendered in HTML→PDF (v3.15+).",
             "pageSize": "Letter",
             "orientation": "Portrait",
-            "testRecordSoql": "SELECT Id FROM Pricebook2 WHERE Name = 'Portwood 2026 Wholesale Catalog' LIMIT 1",
+            "testRecordSoql": "SELECT Id FROM Pricebook2 WHERE Name = 'DocGen 2026 Wholesale Catalog' LIMIT 1",
             "queryConfig": {
                 "v": 3,
                 "root": "Pricebook2",

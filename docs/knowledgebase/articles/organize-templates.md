@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Help people find the right template and keep unfinished ones out of their way.
 
 #### Use clear names and categories
@@ -26,7 +28,7 @@ List permission-set API names exactly. When several permission sets are listed, 
 
 #### Understand visibility and data access
 
-The packaged **Portwood User** permission set gives read access to all template records. The visibility settings control the template choices users are offered; they do not hide the existence of those template records from someone with View All.
+The packaged **DocGen User** permission set gives read access to all template records. The visibility settings control the template choices users are offered; they do not hide the existence of those template records from someone with View All.
 
 Merged record and field access still matters. If template definitions themselves must be private, ask your administrator to design a custom permission set and sharing approach without the packaged template View All grant.
 

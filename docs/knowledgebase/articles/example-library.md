@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Start with a working example, then change one thing at a time.
 
 These files use standard Salesforce fields. The fictional examples use Northstar Bikes, its Contacts, and its Opportunities.
@@ -8,7 +10,7 @@ These files use standard Salesforce fields. The fictional examples use Northstar
 
 **Base object:** Account. **Type:** HTML. **Output:** PDF.
 
-[Open the Account Brief template](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/knowledgebase/examples/account-brief.html). Use GitHub's download control to save the HTML file, then [import it](#import-html).
+[Open the Account Brief template](https://github.com/DuraComposites/DocGen/blob/main/docs/knowledgebase/examples/account-brief.html). Use GitHub's download control to save the HTML file, then [import it](#import-html).
 
 Include these fields:
 
@@ -28,7 +30,7 @@ Sort Contacts by LastName and Opportunities by Name. Generate with an Account th
 
 **Base object:** Opportunity. **Type:** HTML. **Output:** PDF.
 
-[Open the Opportunity Summary template](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/knowledgebase/examples/opportunity-summary.html).
+[Open the Opportunity Summary template](https://github.com/DuraComposites/DocGen/blob/main/docs/knowledgebase/examples/opportunity-summary.html).
 
 Include Name, Account.Name, Amount, StageName, CloseDate, and IsWon. Generate once for a won Opportunity and once for an open one; the final message should change.
 
@@ -38,13 +40,13 @@ Include Name, Account.Name, Amount, StageName, CloseDate, and IsWon. Generate on
 
 **Base object:** Account. **Type:** HTML. **Data:** Name.
 
-[Open the Signing Practice template](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/knowledgebase/examples/signing-practice.html). Use the signer role **Customer** to match its tags.
+[Open the Signing Practice template](https://github.com/DuraComposites/DocGen/blob/main/docs/knowledgebase/examples/signing-practice.html). Use the signer role **Customer** to match its tags.
 
 Use it in a test org before sending real agreements. It demonstrates signature placement; it is not a business contract.
 
 #### More advanced examples
 
-The repository's [demo template library](https://github.com/Portwood-Global-Solutions/Portwood/tree/main/DEMO%20TEMPLATES) includes additional layouts. Read each example's field and object requirements before importing it; some require the demo schema or a developer-supplied provider.
+The repository's [demo template library](https://github.com/DuraComposites/DocGen/tree/main/DEMO%20TEMPLATES) includes additional layouts. Read each example's field and object requirements before importing it; some require the demo schema or a developer-supplied provider.
 
 #### Advanced layout lab
 

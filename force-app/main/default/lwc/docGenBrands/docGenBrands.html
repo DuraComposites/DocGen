@@ -1,4 +1,5 @@
 <template>
+    <!-- Modified by Dura Composites Ltd. -->
     <lightning-card title="Brands" icon-name="utility:apps">
         <div slot="actions">
             <lightning-button-icon
@@ -12,7 +13,7 @@
         <div class="slds-p-horizontal_medium slds-p-bottom_medium">
             <p class="slds-text-body_small slds-text-color_weak slds-p-bottom_small">
                 A Brand controls what your signature emails look like — the sender address, logo, and color. Set one up
-                once here, then choose it on any Portwood Template.
+                once here, then choose it on any DocGen Template.
             </p>
 
             <template if:true={isLoading}>
@@ -115,7 +116,7 @@
                             value={form.logoUrl}
                             oninput={handleLogoChange}
                             placeholder="https://…/logo.png"
-                            field-level-help="Must be a PUBLIC image URL — no Salesforce login required to view it. A private/internal file link (e.g. from a file's default 'Copy Link') will show as broken. Pick a Portwood Asset below instead to avoid this."
+                            field-level-help="Must be a PUBLIC image URL — no Salesforce login required to view it. A private/internal file link (e.g. from a file's default 'Copy Link') will show as broken. Pick a DocGen Asset below instead to avoid this."
                             class="slds-p-bottom_x-small"
                         ></lightning-input>
 

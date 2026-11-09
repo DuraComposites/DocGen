@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * LWC controller for the Command Hub "Email Templates" tab (#193). Lets admins
  * load, edit, preview, test-send, save, and reset the brandable email templates.
@@ -305,23 +306,23 @@ public with sharing class DocGenEmailTemplateController {
                 WHERE Asset_Key__c IN :keys
                 WITH SYSTEM_MODE
             ]) {
-                // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by Portwood permission sets
+                // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by DocGen permission sets
                 try {
                     resolveAssetPublicUrl(a.Id);
                 } catch (Exception perAsset) {
                     System.debug(
                         LoggingLevel.WARN,
-                        'Portwood: could not publish asset ' + a.Id + ' for email use: ' + perAsset.getMessage()
+                        'DocGen: could not publish asset ' + a.Id + ' for email use: ' + perAsset.getMessage()
                     );
                 }
             }
         } catch (Exception e) {
-            System.debug(LoggingLevel.WARN, 'Portwood: asset delivery ensure skipped: ' + e.getMessage());
+            System.debug(LoggingLevel.WARN, 'DocGen: asset delivery ensure skipped: ' + e.getMessage());
         }
     }
 
     /**
-     * "Override with Asset File": resolves a Portwood Shared Asset (its latest file
+     * "Override with Asset File": resolves a DocGen Shared Asset (its latest file
      * version) to a public content-delivery URL that email clients can fetch
      * anonymously, for use as the branded-header logo. Creates a ContentDistribution
      * on first use and reuses it afterwards; PreferencesLinkLatestVersion keeps the
@@ -351,7 +352,7 @@ public with sharing class DocGenEmailTemplateController {
             WHERE Id = :assetId AND (Asset_Type__c = 'Image' OR Asset_Type__c = NULL)
             WITH SYSTEM_MODE
             LIMIT 1
-        ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by Portwood permission sets
+        ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by DocGen permission sets
         if (assets.isEmpty() || assets[0].ContentDocumentLinks == null || assets[0].ContentDocumentLinks.isEmpty()) {
             throw DocGenService.ahe('This asset has no file yet — upload an image to it first.');
         }
@@ -390,7 +391,7 @@ public with sharing class DocGenEmailTemplateController {
             }
 
             ContentDistribution cd = new ContentDistribution();
-            cd.Name = 'Portwood Asset - ' + assets[0].Name;
+            cd.Name = 'DocGen Asset - ' + assets[0].Name;
             cd.ContentVersionId = cvId;
             cd.PreferencesAllowViewInBrowser = true;
             cd.PreferencesLinkLatestVersion = true;
@@ -475,7 +476,7 @@ public with sharing class DocGenEmailTemplateController {
             : (settings == null ? null : settings.Signature_OWA_Id__c);
         if (String.isBlank(owaId)) {
             throw new AuraHandledException(
-                'No Org-Wide Email Address is configured. Set one under Portwood > Signatures before sending a test.'
+                'No Org-Wide Email Address is configured. Set one under DocGen > Signatures before sending a test.'
             );
         }
         DocGenEmailTemplateService.RenderedEmail rendered = DocGenEmailTemplateService.renderWith(

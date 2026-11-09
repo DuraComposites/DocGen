@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Post-install seeder for the brandable email templates (#193).
  *
@@ -44,7 +45,7 @@ global with sharing class DocGenEmailTemplateInstall implements InstallHandler {
      */
     global static Integer seedDefaults() {
         Set<String> existing = new Set<String>();
-        // Package-internal object; CRUD via Portwood permission sets.
+        // Package-internal object; CRUD via DocGen permission sets.
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
         for (DocGen_Email_Template__c t : [
             SELECT Type__c
@@ -82,7 +83,7 @@ global with sharing class DocGenEmailTemplateInstall implements InstallHandler {
             rec.Subject__c = def.subject;
             rec.Body_Html__c = def.bodyHtml;
             rec.Is_Active__c = true;
-            rec.Description__c = 'Default template seeded by Portwood. Edit freely; delete to fall back to the built-in.';
+            rec.Description__c = 'Default template seeded by DocGen. Edit freely; delete to fall back to the built-in.';
             toInsert.add(rec);
         }
 

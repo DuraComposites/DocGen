@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Make a list that grows automatically: Contacts on an Account, products on an Opportunity, or rows from another related list.
 
 **Before you start:** Add the related list and its fields in [Choose the information in a document](#choose-data).
@@ -21,7 +23,7 @@ Create a table with a heading row and one example data row. Put the opening tag 
 | ----------------------------------- | --------- | -------------------- |
 | `{#Contacts}{FirstName} {LastName}` | `{Title}` | `{Email}{/Contacts}` |
 
-Keep both loop tags in the **same row**. Portwood copies that row once per Contact. The column headings stay outside the loop.
+Keep both loop tags in the **same row**. DocGen copies that row once per Contact. The column headings stay outside the loop.
 
 Inside the loop, `{FirstName}` means the current Contact's first name. Outside it, a tag refers to the base record.
 

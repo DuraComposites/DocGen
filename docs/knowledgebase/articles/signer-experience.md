@@ -1,4 +1,6 @@
-This is what to expect when someone opens a Portwood signing link.
+<!-- Modified by Dura Composites Ltd. -->
+
+This is what to expect when someone opens a DocGen signing link.
 
 #### Open the link
 
@@ -23,7 +25,7 @@ Drawing and typing are alternative ways to fill a signature. Clear the current v
 
 #### After signing
 
-If other people still need to sign, you may see a waiting confirmation. When everyone finishes, Portwood creates the completed file on the related Salesforce record. Depending on the request's delivery settings, completion emails can also carry the finished file.
+If other people still need to sign, you may see a waiting confirmation. When everyone finishes, DocGen creates the completed file on the related Salesforce record. Depending on the request's delivery settings, completion emails can also carry the finished file.
 
 Active verification and signing screens can use the selected company's branding. The final success and waiting-for-other-signers cards are intentionally plain.
 

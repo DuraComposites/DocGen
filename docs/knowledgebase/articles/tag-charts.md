@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Start with a one-line chart, then add only the options you need. Chart rendering depends on the output format and the way the document is generated; use the matrix below before building a large report.
 
 **Before you start:** Choose the fields and relationships in [Choose information](#choose-data). For an orientation and the format checklist, open [Find the right merge tag](#merge-tags).
@@ -15,7 +17,7 @@ Render **nine chart styles** inline in your generated documents — bar, column,
 | PowerPoint `.pptx` | `<p:pic>` referencing a PNG in `ppt/media/`                           |
 | Excel `.xlsx`      | (Coming in a follow-up release)                                       |
 
-**Zero external callouts.** The chart engine is 100% native Apex — same constraint that makes Portwood suitable for AppExchange security review and managed-package customers. Charts work in Flow actions, batch jobs, Queueables, and Apex tests as well as the runner LWC.
+**Zero external callouts.** The chart engine is 100% native Apex — same constraint that makes DocGen suitable for AppExchange security review and managed-package customers. Charts work in Flow actions, batch jobs, Queueables, and Apex tests as well as the runner LWC.
 
 **Two authoring paths:**
 
@@ -140,7 +142,7 @@ the rendered PNGs have to fit in a 6 MB Apex heap. On a record with thousands of
 that is not a limit you can tune around — a PowerPoint or Excel template over a few thousand
 child records used to fail outright with _"too large for sync PowerPoint/Excel output"_.
 
-For PowerPoint and Excel, Portwood now takes the same route it has always taken for Word:
+For PowerPoint and Excel, DocGen now takes the same route it has always taken for Word:
 **the browser does the work.** The runner pages the child records down in chunks, aggregates
 each page into buckets as it arrives, and renders the finished chart with **Chart.js** on a
 real `<canvas>` before embedding the PNG. Nothing large is ever held in Apex at once, so the
@@ -150,10 +152,10 @@ You do not opt in and you do not change your tags. Write `{Chart:...}` exactly a
 above; the runner picks the path. What you should know:
 
 - **It needs a browser.** Flow, batch and Apex entry points still use the server-side
-  rasterizer, which is why the heap guidance in [§14.8](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#148-template--output-size-guidance)
+  rasterizer, which is why the heap guidance in [§14.8](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#148-template--output-size-guidance)
   still applies to unattended generation.
 - **Non-groupable fields are refused with a message.** A Long Text Area cannot be used in a
-  SOQL `GROUP BY`, and attempting it throws an uncatchable platform exception — so Portwood
+  SOQL `GROUP BY`, and attempting it throws an uncatchable platform exception — so DocGen
   checks the field first and tells you, rather than letting the transaction die. Group by a
   Text, Picklist, Number, Date or Checkbox field instead.
 - **Charts still render on the Canvas artboard** while you design, using the same library.
@@ -165,8 +167,8 @@ above; the runner picks the path. What you should know:
 Paste the block below into Claude / GPT / Gemini with one substitution: `${MY_DATA_DESCRIPTION}` should describe your child relationship name, the dimension field you want bucketed, and (optionally) the cross-tab field plus its expected values. The LLM will produce a complete HTML template you can upload.
 
 ```text
-You are writing a Portwood HTML template that renders 8 chart styles using Portwood's
-{Chart:...} tag syntax. Portwood is a native Salesforce 2GP package; the template is a single
+You are writing a DocGen HTML template that renders 8 chart styles using DocGen's
+{Chart:...} tag syntax. DocGen is a native Salesforce 2GP package; the template is a single
 HTML file uploaded as a ContentVersion against a DocGen_Template__c with Type__c='HTML'.
 
 Hard constraints (Flying Saucer PDF engine, CSS 2.1 + small CSS 3 subset):
@@ -201,7 +203,7 @@ Required output:
    - A one-line description of when to use this style
    - The {Chart:...} tag itself, wrapped in <div class="chart">
    - <h2 class="page-break"> on sections 2-8 so each chart gets its own page
-4. A footer line acknowledging "Portwood Chart Engine — pure-Apex PNG rasterization".
+4. A footer line acknowledging "DocGen Chart Engine — pure-Apex PNG rasterization".
 
 Data shape — ${MY_DATA_DESCRIPTION}
 (Example: "Survey__c parent. Child relationship Survey_Responses__r. Bucket by Selected_Answer__c.
@@ -210,7 +212,7 @@ Cross-tab dimension Location__c with values 8000 Marina, 3260 Bayshore.")
 Use the bucket field for bar/column/pie/donut single-dimension styles. Use the cross-tab field
 in groupBy for stacked/clustered/line/area/pivot. ColSort must match the cross-tab values.
 
-Return the complete HTML file, ready to upload as a Portwood HTML template. No commentary.
+Return the complete HTML file, ready to upload as a DocGen HTML template. No commentary.
 ```
 
 #### Reference templates
@@ -266,7 +268,7 @@ The chart resolver **validates every dynamic identifier** (relationship, child o
 
 #### Governor budget
 
-Portwood caps chart aggregates at **50 SOQL queries per transaction** (static budget inside `DocGenChartBucketResolver`). When the budget is exhausted, remaining charts render a single sentinel bucket labeled `"Chart limit reached"` — they never silently render as empty. Re-author the template to consolidate charts (or use a pivot instead of N single-dimension charts) if you hit the ceiling.
+DocGen caps chart aggregates at **50 SOQL queries per transaction** (static budget inside `DocGenChartBucketResolver`). When the budget is exhausted, remaining charts render a single sentinel bucket labeled `"Chart limit reached"` — they never silently render as empty. Re-author the template to consolidate charts (or use a pivot instead of N single-dimension charts) if you hit the ceiling.
 
 Per-chart CPU budget is tracked too — the rasterizer auto-tunes `scale=` defaults so an 8-chart document fits comfortably in the 10-second synchronous Apex limit.
 
@@ -332,7 +334,7 @@ Inside `{#cols}` you get the standard bucket fields (`{key}` / `{key_label}` / `
 
 Use these when you want each row's segments to sum to 100% (stacked-bar composition) rather than each cell's value as a percent of the overall total.
 
-**Layout gotcha for pivot bodies:** Portwood's HTML container auto-expansion reacts to nested loops by duplicating the nearest open `<tr>`. If you put `{#cols}` directly inside `<tr>`, every column gets a whole row. **Use `<div>` + `display:table-row` + `display:table-cell` for pivot bodies, not `<tr>`/`<td>`.** See `docs/CommuteSurveyExample.html` for the canonical pattern.
+**Layout gotcha for pivot bodies:** DocGen's HTML container auto-expansion reacts to nested loops by duplicating the nearest open `<tr>`. If you put `{#cols}` directly inside `<tr>`, every column gets a whole row. **Use `<div>` + `display:table-row` + `display:table-cell` for pivot bodies, not `<tr>`/`<td>`.** See `docs/CommuteSurveyExample.html` for the canonical pattern.
 
 #### CSS 2.1 reminders (PDF output)
 

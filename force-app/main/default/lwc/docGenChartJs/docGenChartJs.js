@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * docGenChartJsRenderer
  *
@@ -461,7 +462,7 @@ export async function prepareChartsClientSide({ templateId, recordId, ChartCtor,
     try {
         tags = await getChartTagsForTemplate({ templateId });
     } catch (e) {
-        console.warn('Portwood: getChartTagsForTemplate failed; using Apex chart path', e);
+        console.warn('DocGen: getChartTagsForTemplate failed; using Apex chart path', e);
         return null;
     }
     if (!Array.isArray(tags) || tags.length === 0) {
@@ -481,7 +482,7 @@ export async function prepareChartsClientSide({ templateId, recordId, ChartCtor,
             (t) => !(t.childObject && t.lookupField && t.fieldApi && (t.kind === 'bucket' || isStyleSupported(t.style)))
         );
         console.warn(
-            'Portwood: client-side charts skipped — ' +
+            'DocGen: client-side charts skipped — ' +
                 `tag ${bad ? bad.relName + '.' + bad.fieldApi + ' (' + bad.style + ')' : 'unknown'} ` +
                 'is unsupported or has no resolvable child relationship. Using the Apex chart path.'
         );
@@ -580,7 +581,7 @@ export async function prepareChartsClientSide({ templateId, recordId, ChartCtor,
             } catch (chartErr) {
                 const errMsg =
                     (chartErr && (chartErr.body ? chartErr.body.message : chartErr.message)) || String(chartErr);
-                console.warn(`Portwood: Chart.js render failed for ${tag.signature} — ${errMsg}`, chartErr);
+                console.warn(`DocGen: Chart.js render failed for ${tag.signature} — ${errMsg}`, chartErr);
             }
         }
     }

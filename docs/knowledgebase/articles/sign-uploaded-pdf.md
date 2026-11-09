@@ -1,6 +1,8 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Send a finished PDF for signature without rebuilding it as a template.
 
-**Before you start:** Open the Salesforce record where the signed file belongs. The page needs **Portwood Signature Sender**. For external recipients, your administrator must [set up external signing](#setup-signatures).
+**Before you start:** Open the Salesforce record where the signed file belongs. The page needs **DocGen Signature Sender**. For external recipients, your administrator must [set up external signing](#setup-signatures).
 
 #### 1. Choose the document
 
@@ -8,9 +10,9 @@ Send a finished PDF for signature without rebuilding it as a template.
 2. Choose **Upload PDF** for a file on your computer, or **Salesforce file** for a PDF on this record.
 3. Select the PDF and continue.
 
-![The signature sender offers Upload PDF, Salesforce file, and Portwood template](docs/images/userguide/v3.60/signature-source.png)
+![The signature sender offers Upload PDF, Salesforce file, and DocGen template](docs/images/userguide/v3.60/signature-source.png)
 
-Use an unlocked, unsigned PDF of no more than **2 MB** and **50 pages**. Portwood keeps an original snapshot; choosing an existing Salesforce File does not replace that file.
+Use an unlocked, unsigned PDF of no more than **2 MB** and **50 pages**. DocGen keeps an original snapshot; choosing an existing Salesforce File does not replace that file.
 
 #### 2. Add the people
 

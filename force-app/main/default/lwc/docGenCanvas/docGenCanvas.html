@@ -1,4 +1,5 @@
 <template>
+    <!-- Modified by Dura Composites Ltd. -->
     <div class="dg-canvas-shell">
         <!-- Left rail: the tool picker. Canva's shape — icons here, depth to the right. -->
         <div class="dg-rail">
@@ -793,7 +794,7 @@
                     </p>
 
                     <template lwc:if={hasImageChoices}>
-                        <label class="dg-panel-label">Portwood assets</label>
+                        <label class="dg-panel-label">DocGen assets</label>
                         <div class="dg-imggrid">
                             <template for:each={imageChoices} for:item="a">
                                 <button
@@ -817,7 +818,7 @@
                     </template>
                     <template lwc:else>
                         <p class="dg-panel-warn">
-                            No active assets with a file yet. Add images on the <b>Portwood Assets</b> tab, then reopen
+                            No active assets with a file yet. Add images on the <b>DocGen Assets</b> tab, then reopen
                             this panel.
                         </p>
                     </template>

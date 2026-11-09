@@ -80,7 +80,7 @@ public with sharing class DocGenSignatureSenderController {
     }
 
     /**
-     * Returns all active Portwood templates for the signature sender template picker.
+     * Returns all active DocGen templates for the signature sender template picker.
      */
     @AuraEnabled(cacheable=true)
     public static List<DocGen_Template__c> getDocGenTemplates() {
@@ -146,7 +146,7 @@ public with sharing class DocGenSignatureSenderController {
             FROM DocGen_Template__c
             WITH SYSTEM_MODE
             ORDER BY Sort_Order__c ASC NULLS LAST, Name ASC
-        ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by Portwood permission sets
+        ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by DocGen permission sets
 
         return DocGenController.filterTemplatesForSender(all, relatedRecordId);
     }
@@ -183,7 +183,7 @@ public with sharing class DocGenSignatureSenderController {
     }
 
     /**
-     * Scans a Portwood template's pre-decomposed XML for {@Signature_XXX} placeholders.
+     * Scans a DocGen template's pre-decomposed XML for {@Signature_XXX} placeholders.
      * Returns deduplicated role names (backward-compatible).
      */
     @AuraEnabled
@@ -199,7 +199,7 @@ public with sharing class DocGenSignatureSenderController {
     }
 
     /**
-     * Scans a Portwood template for all v3 signature placements.
+     * Scans a DocGen template for all v3 signature placements.
      * Supports both v2 ({@Signature_Role}) and v3 ({@Signature_Role:Order:Type}) syntax.
      * Returns ordered list of PlacementInfo with role, sequence, type, and original tag.
      */
@@ -692,7 +692,7 @@ public with sharing class DocGenSignatureSenderController {
         // Distinct from signer signing tokens — this only gates audit-roster reads.
         req.Secure_Token__c = generateRequestVerificationToken();
         req.Expires_At__c = DocGenSignatureExpiry.computeExpiry(null);
-        // Package-internal object — CRUD controlled by Portwood permission sets
+        // Package-internal object — CRUD controlled by DocGen permission sets
         // v2.0.1 — per-field FLS enforcement (Checkmarx "FLS Create").
         DocGenFlsGuard.assertCreateable(
             req,
@@ -771,7 +771,7 @@ public with sharing class DocGenSignatureSenderController {
             } else {
                 System.debug(
                     LoggingLevel.WARN,
-                    'Portwood: no document body to freeze; request ' + req.Id + ' will live-merge at sign time.'
+                    'DocGen: no document body to freeze; request ' + req.Id + ' will live-merge at sign time.'
                 );
             }
             // v2.0.1 — per-field FLS enforcement (Checkmarx "FLS Update").
@@ -779,7 +779,7 @@ public with sharing class DocGenSignatureSenderController {
             /* code-analyzer-suppress ApexFlsViolation */
             Database.update(req, AccessLevel.SYSTEM_MODE);
         } catch (Exception e) {
-            System.debug(LoggingLevel.WARN, 'Portwood: Failed to pre-compute signature data: ' + e.getMessage());
+            System.debug(LoggingLevel.WARN, 'DocGen: Failed to pre-compute signature data: ' + e.getMessage());
         }
 
         // Create individual signer records + send emails (shared logic)
@@ -907,7 +907,7 @@ public with sharing class DocGenSignatureSenderController {
         req.Related_Record_Id__c = relatedRecordId;
         req.Status__c = 'Sent';
         req.Expires_At__c = DocGenSignatureExpiry.computeExpiry(null);
-        // Package-internal object — CRUD controlled by Portwood permission sets
+        // Package-internal object — CRUD controlled by DocGen permission sets
         // v2.0.1 — per-field FLS enforcement (Checkmarx "FLS Create").
         DocGenFlsGuard.assertCreateable(
             req,
@@ -938,7 +938,7 @@ public with sharing class DocGenSignatureSenderController {
      * signature is no longer supported. A flat PDF carries no parseable {@Signature_*}
      * placement tags, so it can never drive guided/field-by-field signing or stamp
      * signatures back into the document (it could only ever flat-sign + append a
-     * certificate). E-signature now always starts from a TEMPLATE, which Portwood
+     * certificate). E-signature now always starts from a TEMPLATE, which DocGen
      * re-renders and tags at send time. Kept (managed-package immutability) only to
      * fail fast with guidance; callers should use createGuidedPdfSignatureRequest /
      * createTemplateSnapshotRequest with a Template Id instead.
@@ -953,7 +953,7 @@ public with sharing class DocGenSignatureSenderController {
     ) {
         throw new AuraHandledException(
             'Sending a pre-generated PDF for signature is no longer supported. Send the template for ' +
-                'signature instead — Portwood renders and tags the document automatically so signatures can ' +
+                'signature instead — DocGen renders and tags the document automatically so signatures can ' +
                 'be placed in the document and stamped on completion.'
         );
     }
@@ -1661,8 +1661,8 @@ public with sharing class DocGenSignatureSenderController {
         }
 
         // ── Single canonical signature-send entry point ─────────────────────────
-        // Every send action (the runner LWC, "Portwood: Create Signature Request", and
-        // the deprecated "Portwood: Send Existing Document for Signature") funnels
+        // Every send action (the runner LWC, "DocGen: Create Signature Request", and
+        // the deprecated "DocGen: Send Existing Document for Signature") funnels
         // through here. Dispatch by template shape:
         //   • {@Signature_*} placement tags  → guided sentinel path below (inline-aware)
         //   • tag-less                        → guided synthetic "Signatures" block (#170)
@@ -1686,7 +1686,7 @@ public with sharing class DocGenSignatureSenderController {
                 WHERE Id = :templateId
                 WITH SYSTEM_MODE
                 LIMIT 1
-            ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by Portwood permission sets
+            ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by DocGen permission sets
             if (
                 !shape.isEmpty() &&
                 String.isNotBlank(shape[0].Base_Object_API__c) &&
@@ -2237,7 +2237,7 @@ public with sharing class DocGenSignatureSenderController {
         req.Secure_Token__c = token;
         req.Status__c = 'Sent';
         req.Expires_At__c = DocGenSignatureExpiry.computeExpiry(null);
-        // Package-internal object — CRUD controlled by Portwood permission sets
+        // Package-internal object — CRUD controlled by DocGen permission sets
         // v2.0.1 — per-field FLS enforcement (Checkmarx "FLS Create").
         DocGenFlsGuard.assertCreateable(
             req,
@@ -2307,7 +2307,7 @@ public with sharing class DocGenSignatureSenderController {
             }
         }
         if (!isAdmin) {
-            throw new AuraHandledException('Only Portwood Admin users can mark signers as verified in person.');
+            throw new AuraHandledException('Only DocGen Admin users can mark signers as verified in person.');
         }
 
         DocGenFlsGuard.assertAccessible(
@@ -2327,7 +2327,7 @@ public with sharing class DocGenSignatureSenderController {
             WHERE Id = :signerId
             WITH SYSTEM_MODE
             LIMIT 1
-        ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by Portwood permission sets
+        ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by DocGen permission sets
         if (signers.isEmpty()) {
             throw new AuraHandledException('Signer not found.');
         }
@@ -2379,7 +2379,7 @@ public with sharing class DocGenSignatureSenderController {
             Database.insert(audit, AccessLevel.SYSTEM_MODE);
         } catch (Exception e) {
             // Audit failure shouldn't block the admin's bypass action — log and continue
-            System.debug(LoggingLevel.WARN, 'Portwood: In-person audit write failed: ' + e.getMessage());
+            System.debug(LoggingLevel.WARN, 'DocGen: In-person audit write failed: ' + e.getMessage());
         }
 
         // #170 consolidation: this LWC only creates guided requests, so route the
@@ -2698,7 +2698,7 @@ public with sharing class DocGenSignatureSenderController {
         } catch (Exception e) {
             System.debug(
                 LoggingLevel.ERROR,
-                'Portwood: failed to share viewing document with guest signer: ' + e.getMessage()
+                'DocGen: failed to share viewing document with guest signer: ' + e.getMessage()
             );
         }
     }
@@ -2994,7 +2994,7 @@ public with sharing class DocGenSignatureSenderController {
             results.add(sr);
         }
 
-        // Package-internal object — CRUD controlled by Portwood permission sets
+        // Package-internal object — CRUD controlled by DocGen permission sets
         // v2.0.1 — per-field FLS enforcement (Checkmarx "FLS Create").
         DocGenFlsGuard.assertCreateable(
             signerRecords,
@@ -3311,7 +3311,7 @@ public with sharing class DocGenSignatureSenderController {
             html = injectPlacementSpans(html);
             return injectPreviewWatermarkOverlay(html, templateId);
         } catch (Exception e) {
-            System.debug(LoggingLevel.WARN, 'Portwood: Preview generation failed: ' + e.getMessage());
+            System.debug(LoggingLevel.WARN, 'DocGen: Preview generation failed: ' + e.getMessage());
             return null;
         }
     }
@@ -3327,7 +3327,7 @@ public with sharing class DocGenSignatureSenderController {
             Blob pdfBlob = buildDocumentPreviewPdfBlob(templateId, relatedRecordId);
             return pdfBlob == null ? null : EncodingUtil.base64Encode(pdfBlob);
         } catch (Exception e) {
-            System.debug(LoggingLevel.WARN, 'Portwood: PDF preview generation failed: ' + e.getMessage());
+            System.debug(LoggingLevel.WARN, 'DocGen: PDF preview generation failed: ' + e.getMessage());
             throw new AuraHandledException('PDF preview generation failed: ' + e.getMessage());
         }
     }
@@ -3412,7 +3412,7 @@ public with sharing class DocGenSignatureSenderController {
         } catch (Exception e) {
             System.debug(
                 LoggingLevel.WARN,
-                'Portwood: Could not create public signature preview image link for ' + cvId + ': ' + e.getMessage()
+                'DocGen: Could not create public signature preview image link for ' + cvId + ': ' + e.getMessage()
             );
         }
     }

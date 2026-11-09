@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import { LightningElement, api, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { CloseActionScreenEvent } from 'lightning/actions';
@@ -147,7 +148,7 @@ export default class DocGenSendEmailButton extends LightningElement {
         try {
             const opts = await getEmailButtons({ recordId: this.effectiveRecordId });
             if (!opts || opts.length === 0) {
-                this.fail('No Portwood Send Email button is configured for this record type.');
+                this.fail('No DocGen Send Email button is configured for this record type.');
                 return;
             }
             // The template list depends on the record and the button (a button can pin one

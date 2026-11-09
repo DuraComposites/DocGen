@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import { LightningElement } from 'lwc';
 import { loadFontFace } from 'c/docGenFontLoader';
 import getFontFaces from '@salesforce/apex/DocGenFontController.getFontFaces';
@@ -25,7 +26,7 @@ export default class DocGenFontAssets extends LightningElement {
     busy = false;
     message = '';
     error = '';
-    sample = 'Portwood 漢 Şahin Şirket\nThe font you choose is the font you print.';
+    sample = 'DocGen 漢 Şahin Şirket\nThe font you choose is the font you print.';
     showUpload = false;
     isBulkUpload = false;
     fontKey = '';
@@ -170,11 +171,11 @@ export default class DocGenFontAssets extends LightningElement {
     get emptyHint() {
         return this.canManage
             ? 'Upload a supported static TTF, inspect it, generate a PDF specimen, then review and approve it for Canvas and HTML templates.'
-            : 'Ask your Portwood admin to upload and approve a compatible font. You can use built-in fonts now.';
+            : 'Ask your DocGen admin to upload and approve a compatible font. You can use built-in fonts now.';
     }
     get nextStep() {
         if (!this.canManage && ['Staged', 'Published'].includes(this.selected?.status))
-            return 'Ask your Portwood admin to review a native PDF specimen and approve this face before using it.';
+            return 'Ask your DocGen admin to review a native PDF specimen and approve this face before using it.';
         return {
             Staged: 'Next: generate a PDF specimen, then review and approve it.',
             Published: 'Next: open the PDF specimen and approve this face after review.',

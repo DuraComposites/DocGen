@@ -1,6 +1,8 @@
-Use the Portwood app to build and maintain documents. Use a Salesforce record to generate a document for that record.
+<!-- Modified by Dura Composites Ltd. -->
 
-#### In the Portwood app
+Use the DocGen app to build and maintain documents. Use a Salesforce record to generate a document for that record.
+
+#### In the DocGen app
 
 | Place               | Go here to…                                                                     |
 | ------------------- | ------------------------------------------------------------------------------- |
@@ -14,7 +16,7 @@ Use the Portwood app to build and maintain documents. Use a Salesforce record to
 | **Brands**          | Create reusable company identities for signing                                  |
 | **Learning Center** | Open this guide                                                                 |
 
-**Signatures** in the left menu is the settings area. To send a request, open the relevant Salesforce record and use **Portwood Signature Sender**.
+**Signatures** in the left menu is the settings area. To send a request, open the relevant Salesforce record and use **DocGen Signature Sender**.
 
 #### Inside My Templates
 

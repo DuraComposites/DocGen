@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /** Font library in Assets. Exact, inspected Salesforce File versions back preview and native PDFs. */
 public with sharing class DocGenFontController {
     public static Boolean authorizedMutation = false;
@@ -21,7 +22,7 @@ public with sharing class DocGenFontController {
     }
     private static void admin() {
         if (!FeatureManagement.checkPermission('Manage_DocGen_Fonts'))
-            throw new DocGenException('Manage Portwood Fonts permission is required.');
+            throw new DocGenException('Manage DocGen Fonts permission is required.');
     }
     public static DocGen_Font_Face__c load(String key) {
         DocGenFlsGuard.assertAccessible(DocGen_Font_Face__c.sObjectType, FIELDS);
@@ -97,7 +98,7 @@ public with sharing class DocGenFontController {
         Set<String> names = new Set<String>();
         for (DocGen_Font_Face__c face : faces) {
             versions.add(Id.valueOf(face.Source_CV_Id__c));
-            names.add('Portwood font preview ' + face.Revision_Key__c);
+            names.add('DocGen font preview ' + face.Revision_Key__c);
         }
         Map<String, String> previews = new Map<String, String>();
         DocGenFlsGuard.assertAccessible(
@@ -147,10 +148,7 @@ public with sharing class DocGenFontController {
             meta.put('selectable', f.Status__c == 'Verified' && f.Asset__r.Is_Active__c);
             meta.put('canManage', canManage);
             meta.put('fileUrl', fileUrl(f.Source_CV_Id__c));
-            meta.put(
-                'previewUrl',
-                previews.get('Portwood font preview ' + f.Revision_Key__c + ':' + f.Source_CV_Id__c)
-            );
+            meta.put('previewUrl', previews.get('DocGen font preview ' + f.Revision_Key__c + ':' + f.Source_CV_Id__c));
             meta.put('previewFamily', 'PW_' + f.Revision_Key__c);
             out.add(meta);
         }
@@ -586,7 +584,7 @@ public with sharing class DocGenFontController {
         ContentVersion source = uploaded;
         if (source == null) {
             source = new ContentVersion(
-                Title = 'Portwood font source ' + key,
+                Title = 'DocGen font source ' + key,
                 PathOnClient = (String) meta.get('filename'),
                 VersionData = bytes,
                 FirstPublishLocationId = asset.Id
@@ -660,7 +658,7 @@ public with sharing class DocGenFontController {
         admin();
         DocGen_Font_Face__c face = load(key);
         ContentVersion file = sourceFile(face);
-        String name = 'Portwood font preview ' + key;
+        String name = 'DocGen font preview ' + key;
         Id versionId = file.Id;
         DocGenFlsGuard.assertAccessible(
             ContentDistribution.sObjectType,
@@ -836,7 +834,7 @@ public with sharing class DocGenFontController {
         String html =
             '<html><head><meta charset="utf-8"/><style>@page{size:letter;margin:0.7in;}' +
             DocGenFontService.faceCss(f) +
-            '</style></head><body><p>Portwood native font specimen</p><h1 style="font-family:&quot;' +
+            '</style></head><body><p>DocGen native font specimen</p><h1 style="font-family:&quot;' +
             m.get('family') +
             '&quot;;font-weight:' +
             m.get('weight') +
@@ -851,7 +849,7 @@ public with sharing class DocGenFontController {
             '</p></body></html>';
         Blob pdf = Test.isRunningTest() ? Blob.valueOf('%PDF-test') : Blob.toPdf(html);
         ContentVersion proof = new ContentVersion(
-            Title = 'Portwood font specimen ' + f.Name,
+            Title = 'DocGen font specimen ' + f.Name,
             PathOnClient = 'font-specimen.pdf',
             VersionData = pdf,
             FirstPublishLocationId = f.Asset__c

@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Check the request and delivery state before resending.
 
 #### The invitation or code email did not arrive
@@ -13,7 +15,7 @@ Changing DNS or email security policy requires your email administrator. Use the
 
 #### The public link says Invalid page
 
-Ask the administrator to check **Signature Site URL**. An Experience Cloud base URL should not end with `/s`. Confirm the signing Visualforce pages are enabled on the site currently serving the links, and that its own guest user has **Portwood Guest Signature**.
+Ask the administrator to check **Signature Site URL**. An Experience Cloud base URL should not end with `/s`. Confirm the signing Visualforce pages are enabled on the site currently serving the links, and that its own guest user has **DocGen Guest Signature**.
 
 After correcting setup, test a fresh request. Moving to another site does not transfer the old site's guest assignments automatically.
 
@@ -41,4 +43,4 @@ For template requests, also check signer roles against the template's signature 
 
 #### The signed file is missing
 
-Check whether **all** required signers finished, refresh requests, and open Files on the related record. Look at the request's completion state and Portwood Error Logs before sending a duplicate request.
+Check whether **all** required signers finished, refresh requests, and open Files on the related record. Look at the request's completion state and DocGen Error Logs before sending a duplicate request.

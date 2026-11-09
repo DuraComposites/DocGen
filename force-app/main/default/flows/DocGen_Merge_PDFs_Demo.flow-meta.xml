@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='UTF-8' ?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <apiVersion>66.0</apiVersion>
     <actionCalls>
         <name>Merge_Text</name>
@@ -196,7 +197,7 @@
         </rules>
     </decisions>
     <description
-    >Interactive demo of Portwood: Merge PDFs. Run scripts/demo/pdf-merge/seed-demo.apex first to create the sample Files. Choose Text or Text Collection, merge, and open the result.</description>
+    >Interactive demo of DocGen: Merge PDFs. Run scripts/demo/pdf-merge/seed-demo.apex first to create the sample Files. Choose Text or Text Collection, merge, and open the result.</description>
     <formulas>
         <name>DefaultIdsText</name>
         <dataType>String</dataType>
@@ -208,8 +209,8 @@
         <expression
         >SUBSTITUTE(SUBSTITUTE(LEFT({!$Api.Partner_Server_URL_620}, FIND("/services", {!$Api.Partner_Server_URL_620}) - 1), "--c.", "."), ".vf.force.com", ".my.salesforce.com") &amp; "/lightning/r/ContentDocument/" &amp; {!mergedContentDocumentId} &amp; "/view"</expression>
     </formulas>
-    <interviewLabel>Portwood PDF Merge Demo {!$Flow.CurrentDateTime}</interviewLabel>
-    <label>Portwood: PDF Merge Demo</label>
+    <interviewLabel>DocGen PDF Merge Demo {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>DocGen: PDF Merge Demo</label>
     <processMetadataValues>
         <name>BuilderType</name>
         <value>
@@ -231,7 +232,7 @@
             <field>Title</field>
             <operator>EqualTo</operator>
             <value>
-                <stringValue>Portwood Merge Demo - Welcome</stringValue>
+                <stringValue>DocGen Merge Demo - Welcome</stringValue>
             </value>
         </filters>
         <filters>
@@ -261,7 +262,7 @@
             <field>Title</field>
             <operator>EqualTo</operator>
             <value>
-                <stringValue>Portwood Merge Demo - Project Brief</stringValue>
+                <stringValue>DocGen Merge Demo - Project Brief</stringValue>
             </value>
         </filters>
         <filters>
@@ -370,7 +371,7 @@
             <name>documentTitle</name>
             <dataType>String</dataType>
             <defaultValue>
-                <stringValue>Portwood - Welcome Packet</stringValue>
+                <stringValue>DocGen - Welcome Packet</stringValue>
             </defaultValue>
             <fieldText>New PDF name</fieldText>
             <fieldType>InputField</fieldType>

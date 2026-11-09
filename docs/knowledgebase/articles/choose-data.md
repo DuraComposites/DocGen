@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Tell the template which information it can use. Selecting a field makes it available; placing its tag decides where it prints.
 
 **Example:** An Account brief needs the Account's name, the owner's name, and a table of Contacts.
@@ -36,4 +38,4 @@ Each related list can have its own filter, sort, and limit. A filter on Contacts
 
 Save the template and preview a record with values in the fields you chose. If a value is missing, check the record, field selection, tag spelling, and the generating user's access to that field.
 
-For more complex data, see [Use prepared or custom data](#custom-data). Manual query formats and provider code live in the [query reference](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/reference/query-config.md).
+For more complex data, see [Use prepared or custom data](#custom-data). Manual query formats and provider code live in the [query reference](https://github.com/DuraComposites/DocGen/blob/main/docs/reference/query-config.md).

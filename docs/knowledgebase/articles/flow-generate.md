@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Let a Salesforce Flow make a document when a business event happens.
 
 **Before you start:** You know Flow Builder and have a tested template. Give the template a stable **API Name**, such as `Opportunity_Summary`, and confirm the Flow's running context can access the required data.
@@ -7,7 +9,7 @@ Let a Salesforce Flow make a document when a business event happens.
 1. Create an after-save, record-triggered Flow on **Opportunity**.
 2. Set entry conditions so it runs when the record **first changes to Closed Won**, rather than on every later edit to a won deal.
 3. Put document work on an appropriate asynchronous path when required by the rendering method and your transaction design.
-4. Add an **Action** and search for **Generate Document** from Portwood.
+4. Add an **Action** and search for **Generate Document** from DocGen.
 5. Set the inputs:
 
 | Input                      | Example                                                     |

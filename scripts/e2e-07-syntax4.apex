@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // DocGen E2E Test 07.4 — {#ChartBucket} aggregation tag via processXmlForTest()
 // Run: sf apex run --target-org <org> -f scripts/e2e-07-syntax4.apex
 // Depends on: nothing (uses DocGenService.processXmlForTest directly)
@@ -424,7 +425,7 @@ try {
     String bt = '<td>SKU {*Code__c:code128:200x44} <span>scan {*Url__c:qr:160}</span></td>';
     String marked = DocGenService.processXmlForTest(
         bt,
-        new Map<String, Object>{ 'Code__c' => 'PWG-1001', 'Url__c' => 'https://verify.portwood.dev/x' }
+        new Map<String, Object>{ 'Code__c' => 'PWG-1001', 'Url__c' => 'https://verify.example.com/x' }
     );
     Boolean emitted = marked.contains('##BARCODE:code128') && marked.contains('##BARCODE:qr');
     String rendered = DocGenHtmlRenderer.replaceBarcodeMarkersInHtml(marked);

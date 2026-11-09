@@ -1,9 +1,11 @@
 ---
 name: dev-setup
-description: Get from a fresh clone of Portwood to a working, fully-tested Salesforce org. Use when setting up a development environment, creating a scratch org, onboarding to the project, or when org setup fails with permission or "No such column" errors.
+description: Get from a fresh clone of DocGen to a working, fully-tested Salesforce org. Use when setting up a development environment, creating a scratch org, onboarding to the project, or when org setup fails with permission or "No such column" errors.
 ---
 
-# Setting up a Portwood dev environment
+<!-- Modified by Dura Composites Ltd. -->
+
+# Setting up a DocGen dev environment
 
 Two commands. If either fails, the causes are almost always in the gotchas below.
 

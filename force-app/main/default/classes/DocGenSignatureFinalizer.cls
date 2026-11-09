@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // global (not public) so the @InvocableMethod is visible in subscriber-org Flow
 // Builder — this is a managed package, where public Apex is invisible to subscribers.
 // Inputs are primitives (no Apex-Defined Flow variable), so no @AuraEnabled needed.
@@ -18,7 +19,7 @@ global without sharing class DocGenSignatureFinalizer { // NOPMD AvoidGlobalModi
     global static void finalizeSignature(List<FinalizeRequest> requests) {
         for (FinalizeRequest req : requests) {
             // CxSAST: Loop bounded by design — max 1 iteration (InvocableMethod single-record pattern)
-            System.debug(LoggingLevel.DEBUG, 'Portwood: Finalizing signature via Flow System Context.');
+            System.debug(LoggingLevel.DEBUG, 'DocGen: Finalizing signature via Flow System Context.');
             // This runs in System Mode thanks to the Flow context, bypassing Guest User limits on ContentVersion
             DocGenSignatureService.handleSignatureSubmission(req.token, req.base64Image);
         }

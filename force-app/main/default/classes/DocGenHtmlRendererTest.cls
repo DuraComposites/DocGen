@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 @IsTest
 private class DocGenHtmlRendererTest {
     @IsTest
@@ -989,7 +990,7 @@ private class DocGenHtmlRendererTest {
 
     @IsTest
     static void testReplaceBarcodeMarkersInHtmlQr() {
-        String html = '<div>Scan: ##BARCODE:qr:160:https://verify.portwood.dev/c/ABC##</div>';
+        String html = '<div>Scan: ##BARCODE:qr:160:https://verify.example.com/c/ABC##</div>';
         String out = DocGenHtmlRenderer.replaceBarcodeMarkersInHtml(html);
         System.assert(!out.contains('##BARCODE:'), 'QR marker must be converted');
         System.assert(out.contains('display:inline-block'), 'Should render QR CSS modules');
@@ -2881,7 +2882,7 @@ private class DocGenHtmlRendererTest {
     static void testCompactFooterKeepsWordBodyBottomMargin() {
         String footer =
             '<w:ftr><w:p><w:pPr><w:pStyle w:val="Footer"/><w:jc w:val="center"/></w:pPr>' +
-            '<w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:t>PORTWOOD QA FOOTER</w:t></w:r></w:p></w:ftr>';
+            '<w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:t>DOCGEN QA FOOTER</w:t></w:r></w:p></w:ftr>';
         String docXml =
             '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' +
             '<!-- DOCGEN_FOOTER_START -->' +

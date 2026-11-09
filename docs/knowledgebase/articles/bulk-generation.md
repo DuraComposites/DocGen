@@ -1,10 +1,12 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Make one document per record without opening every record yourself.
 
 **Before you start:** Check one document first. Use an active template and a filter that selects only the intended records.
 
 #### Try a small run
 
-1. Open **Portwood → Bulk Generation**.
+1. Open **DocGen → Bulk Generation**.
 2. Select the template.
 3. Choose a saved filter or enter a **SOQL Condition**. For the fictional Accounts in this guide:
 
@@ -39,7 +41,7 @@ Choose **Sort By** and **Direction** before running. This controls processing an
 
 #### Print double-sided
 
-For Print-Ready Packet or Combined + Individual, turn on **Duplex Padding** when each document should start on the front of a sheet. Portwood adds a blank page after odd-length documents in the combined packet. Individual files are left unpadded.
+For Print-Ready Packet or Combined + Individual, turn on **Duplex Padding** when each document should start on the front of a sheet. DocGen adds a blank page after odd-length documents in the combined packet. Individual files are left unpadded.
 
 Duplex packets have a size estimate based on the sample record. Large images or embedded fonts can reduce how many documents fit in one packet. Split large runs or choose Individual Files when the estimate or job asks for it.
 

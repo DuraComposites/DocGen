@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * docGenZipReader — the inline DEFLATE fallback.
  *
@@ -109,7 +110,7 @@ for (const level of [0, 1, 6, 9]) {
 console.log('\nreal .docx parts — what an Office template upload actually carries');
 try {
     const docx = readFileSync(
-        new URL('../../docs/appexchange/Portwood_DocGen_Solution_Architecture_and_Usage_Guide.docx', import.meta.url)
+        new URL('../../docs/appexchange/DocGen_DocGen_Solution_Architecture_and_Usage_Guide.docx', import.meta.url)
     );
     const entries = await mod.readZip(new Uint8Array(docx));
     ok(entries.length > 0, `readZip returned ${entries.length} entries end to end`);
@@ -141,7 +142,7 @@ console.log('\nthe actual #320 scenario — the sandbox refuses DecompressionStr
         ok(blocked.__test.hasNativeInflate() === false, 'the feature detect reports the API unavailable');
 
         const docx = readFileSync(
-            new URL('../../docs/appexchange/Portwood_DocGen_Solution_Architecture_and_Usage_Guide.docx', import.meta.url)
+            new URL('../../docs/appexchange/DocGen_DocGen_Solution_Architecture_and_Usage_Guide.docx', import.meta.url)
         );
         const entries = await blocked.readZip(new Uint8Array(docx));
         ok(entries.length > 0, `readZip still returns ${entries.length} entries with no native API`);

@@ -1,6 +1,7 @@
+// Modified by Dura Composites Ltd.
 // What happens to an absolutely positioned box when merged content OUTGROWS it,
 // and when it sits past the bottom of page 1? This decides how a pixel-exact
-// canvas can host {#Loop} content, which is the whole point of Portwood.
+// canvas can host {#Loop} content, which is the whole point of DocGen.
 String rows = '';
 for (Integer i = 1; i <= 40; i++) {
     rows += '<tr><td>Line item ' + i + '</td><td>$' + (i * 37) + '</td></tr>';

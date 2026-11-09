@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 @IsTest
 private class DocGenFontTest {
     @TestSetup
@@ -7,7 +8,7 @@ private class DocGenFontTest {
             Alias = 'fontau',
             Email = 'font-author@example.invalid',
             EmailEncodingKey = 'UTF-8',
-            LastName = 'Portwood Font Author QA',
+            LastName = 'DocGen Font Author QA',
             LanguageLocaleKey = 'en_US',
             LocaleSidKey = 'en_US',
             TimeZoneSidKey = 'America/New_York',
@@ -19,7 +20,7 @@ private class DocGenFontTest {
         insert new PermissionSetAssignment(AssigneeId = author.Id, PermissionSetId = userPs);
         User admin = author.clone(false, false, false, false);
         admin.Alias = 'fontad';
-        admin.LastName = 'Portwood Font Admin QA';
+        admin.LastName = 'DocGen Font Admin QA';
         admin.Username = 'fontadmin' + UserInfo.getOrganizationId() + System.now().getTime() + '@example.invalid';
         insert admin;
         Id adminPs = [SELECT Id FROM PermissionSet WHERE Name = 'DocGen_Admin' LIMIT 1].Id;
@@ -51,7 +52,7 @@ private class DocGenFontTest {
     private static String bound(String key, String text) {
         return '<html><head></head><body><div style="-pw-font-face:' +
             key +
-            ';font-family:\'Portwood Test Script\';font-weight:400;font-style:normal;">' +
+            ';font-family:\'DocGen Test Script\';font-weight:400;font-style:normal;">' +
             text +
             '</div></body></html>';
     }
@@ -62,8 +63,8 @@ private class DocGenFontTest {
             System.assertEquals(key, stage());
             DocGen_Font_Face__c f = DocGenFontController.load(key);
             Map<String, Object> meta = (Map<String, Object>) JSON.deserializeUntyped(f.Metadata_JSON__c);
-            System.assertEquals('Portwood Test Script', meta.get('family'));
-            System.assertEquals('PortwoodTestScript-Regular', meta.get('postscriptName'));
+            System.assertEquals('DocGen Test Script', meta.get('family'));
+            System.assertEquals('DocGenTestScript-Regular', meta.get('postscriptName'));
             System.assertEquals('400', String.valueOf(meta.get('weight')));
             System.assertEquals('Staged', f.Status__c);
             System.assertEquals(1, [SELECT COUNT() FROM DocGen_Font_Face__c]);
@@ -198,8 +199,7 @@ private class DocGenFontTest {
             }
             try {
                 DocGenFontService.prepare(
-                    bound(key, 'Şahin')
-                        .replace('</body>', '<p style="font-family:Portwood Test Script">Şahin</p></body>')
+                    bound(key, 'Şahin').replace('</body>', '<p style="font-family:DocGen Test Script">Şahin</p></body>')
                 );
                 System.assert(false);
             } catch (DocGenException e) {
@@ -208,7 +208,7 @@ private class DocGenFontTest {
             try {
                 DocGenFontService.prepare(
                     bound(key, 'Şahin')
-                        .replace('<head>', '<head><style>.custom{font-family:Portwood Test Script;}</style>')
+                        .replace('<head>', '<head><style>.custom{font-family:DocGen Test Script;}</style>')
                 );
                 System.assert(false);
             } catch (DocGenException e) {
@@ -243,7 +243,7 @@ private class DocGenFontTest {
                 rendered.contains('width:90% !important;text-align:center !important;'),
                 'Preserve inline layout priorities'
             );
-            String pinned = 'font-family:&quot;Portwood Test Script&quot; !important;font-weight:400 !important;font-style:normal !important;';
+            String pinned = 'font-family:&quot;DocGen Test Script&quot; !important;font-weight:400 !important;font-style:normal !important;';
             System.assertEquals(
                 2,
                 rendered.split(pinned, -1).size() - 1,
@@ -266,7 +266,7 @@ private class DocGenFontTest {
         System.runAs(fontAdmin()) {
             String key = verified();
             String exact = bound(key, 'Şahin ş')
-                .replace('Portwood Test Script\';', 'Portwood Test Script\' !IMPORTANT;')
+                .replace('DocGen Test Script\';', 'DocGen Test Script\' !IMPORTANT;')
                 .replace('font-weight:400;', 'font-weight:normal ! important;')
                 .replace('font-style:normal;', 'font-style:normal !important;');
             System.assert(
@@ -275,7 +275,7 @@ private class DocGenFontTest {
             );
             for (
                 String changed : new List<String>{
-                    exact.replace('Portwood Test Script', 'Arial'),
+                    exact.replace('DocGen Test Script', 'Arial'),
                     exact.replace('font-weight:normal', 'font-weight:700'),
                     exact.replace('font-style:normal', 'font-style:italic')
                 }
@@ -290,7 +290,7 @@ private class DocGenFontTest {
             try {
                 DocGenFontService.prepare(
                     bound(key, 'Şahin')
-                        .replace('</body>', '<p style="font-family:Portwood Test Script !important;">Şahin</p></body>')
+                        .replace('</body>', '<p style="font-family:DocGen Test Script !important;">Şahin</p></body>')
                 );
                 System.assert(false, 'Priority cannot bypass an explicit binding requirement');
             } catch (DocGenException e) {
@@ -301,7 +301,7 @@ private class DocGenFontTest {
                     bound(key, 'Şahin')
                         .replace(
                             '<head>',
-                            '<head><style>.unbound{font-family:"Portwood Test Script" !IMPORTANT;}</style>'
+                            '<head><style>.unbound{font-family:"DocGen Test Script" !IMPORTANT;}</style>'
                         )
                 );
                 System.assert(false, 'Stylesheet priority cannot bypass font bindings and glyph validation');
@@ -317,7 +317,7 @@ private class DocGenFontTest {
             String custom =
                 '<div style="-pw-font-face:' +
                 key +
-                ';font-family:\'Portwood Test Script\';font-weight:400;font-style:normal;">Şahin <span>漢</span></div>';
+                ';font-family:\'DocGen Test Script\';font-weight:400;font-style:normal;">Şahin <span>漢</span></div>';
             String out = DocGenService.wrapHtmlForPdf(custom, '', null, null);
             System.assert(out.contains('Şahin') && out.contains('漢</span>'), 'Selected font glyphs remain live text');
             System.assert(
@@ -374,7 +374,7 @@ private class DocGenFontTest {
     static void authorCanUseVerifiedFontsWithoutManagementPermission() {
         System.runAs(fontAdmin()) {
             String key = verified();
-            User author = [SELECT Id FROM User WHERE LastName = 'Portwood Font Author QA' LIMIT 1];
+            User author = [SELECT Id FROM User WHERE LastName = 'DocGen Font Author QA' LIMIT 1];
             System.runAs(author) {
                 System.assert(!FeatureManagement.checkPermission('Manage_DocGen_Fonts'));
                 System.assert(!DocGenFontController.getFontFaces().isEmpty());
@@ -418,7 +418,7 @@ private class DocGenFontTest {
             Blob bytes = DocGenFontTestData.regular();
             String license = 'SIL OFL 1.1 - test fixture';
             ContentVersion cv = new ContentVersion(
-                Title = 'PortwoodTestScript-Regular',
+                Title = 'DocGenTestScript-Regular',
                 PathOnClient = 'PWTestScript-Regular.ttf',
                 VersionData = bytes
             );
@@ -441,7 +441,7 @@ private class DocGenFontTest {
                     .startsWith('/sfc/dist/version/download/')
             );
             System.assertEquals(1, [SELECT COUNT() FROM ContentVersion]);
-            User author = [SELECT Id FROM User WHERE LastName = 'Portwood Font Author QA' LIMIT 1];
+            User author = [SELECT Id FROM User WHERE LastName = 'DocGen Font Author QA' LIMIT 1];
             System.runAs(author) {
                 try {
                     DocGenFontController.getFontJobStatus(job);
@@ -473,7 +473,7 @@ private class DocGenFontTest {
     @IsTest
     static void rejectAnotherUsersPrivateFont() {
         System.runAs(fontAdmin()) {
-            User author = [SELECT Id FROM User WHERE LastName = 'Portwood Font Author QA' LIMIT 1];
+            User author = [SELECT Id FROM User WHERE LastName = 'DocGen Font Author QA' LIMIT 1];
             Id documentId;
             System.runAs(author) {
                 ContentVersion cv = new ContentVersion(
@@ -583,7 +583,7 @@ private class DocGenFontTest {
         System.runAs(fontAdmin()) {
             String key = verified();
             String tag = fontTag(key);
-            User author = [SELECT Id FROM User WHERE LastName = 'Portwood Font Author QA' LIMIT 1];
+            User author = [SELECT Id FROM User WHERE LastName = 'DocGen Font Author QA' LIMIT 1];
             System.runAs(author) {
                 System.assertEquals(tag, DocGenFontController.getFontFaces()[0].get('mergeTag'));
                 String source = '<p style="' + tag + ';font-size:12pt">Şahin 漢</p>';

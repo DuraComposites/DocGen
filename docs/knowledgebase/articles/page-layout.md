@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Set the paper, margins, repeated page content, and page background.
 
 #### Choose paper and margins
@@ -40,4 +42,4 @@ Use a picture for a text watermark such as DRAFT. Word's text-watermark and rota
 
 Use a record with long text and many table rows. Inspect headers, footers, the last row of a page, blank space, and the last page. In Word, section breaks and different-first-page settings can also affect the PDF.
 
-For troubleshooting widths, AutoFit, and HTML styling, use the [layout reference](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/reference/template-layout.md).
+For troubleshooting widths, AutoFit, and HTML styling, use the [layout reference](https://github.com/DuraComposites/DocGen/blob/main/docs/reference/template-layout.md).

@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 # Reusable terms and HTML snippets
 
 This review branch adds **Assets → Terms & snippets**. Save a section once and include its full formatted content in HTML and Canvas documents with a stable tag:
@@ -8,7 +10,7 @@ This review branch adds **Assets → Terms & snippets**. Save a section once and
 
 ## Customer journey
 
-1. Open **Portwood → Assets → Terms & snippets → New shared content**.
+1. Open **DocGen → Assets → Terms & snippets → New shared content**.
 2. Name the section, choose an optional category, and write it. **HTML source** supports exact inline formatting and tables. The tag key is permanent once saved; the name can change.
 3. Save and **Copy tag**. In Designer use **Insert → Shared content**, or paste the tag on its own line in an HTML template. The keyboard insert menu also lists active sections.
 4. Preview a PDF with a sample record. The Designer keeps the reference as an atomic chip; the PDF includes the entire section.
@@ -52,11 +54,11 @@ Heap guards allow 250,000 characters per snippet, 100 distinct snippets, eight n
 
 `DocGen_Asset__c.Asset_Type__c = HTMLSnippet` identifies these assets. The existing immutable `Asset_Key__c` supplies the key; `Category__c` groups them. Each asset has a Salesforce File with successive ContentVersions and **private-on-records** sharing. There are no snippet Static Resources or public ContentDistributions.
 
-The authoring/merge gateways enforce asset sharing and CRUD/FLS. A private inner file reader retrieves only the backing revisions of those authorized assets, allowing another Portwood reader to generate documents and another authorized editor to publish a revision. Readers cannot publish. Image upload, image deletion and public email-logo endpoints reject non-image assets.
+The authoring/merge gateways enforce asset sharing and CRUD/FLS. A private inner file reader retrieves only the backing revisions of those authorized assets, allowing another DocGen reader to generate documents and another authorized editor to publish a revision. Readers cannot publish. Image upload, image deletion and public email-logo endpoints reject non-image assets.
 
 ## Working scratch sample
 
-In `portwood-ai-journey`, open **My templates → Your templates → Shared Content - Quote Demo → Design**. The inactive sample uses the fictional Northstar Quote and its three line items. It includes:
+In `docgen-ai-journey`, open **My templates → Your templates → Shared Content - Quote Demo → Design**. The inactive sample uses the fictional Northstar Quote and its three line items. It includes:
 
 - `{%snippet:demo-standard-terms}`: formatted terms, merging `{Account.Name}` and `{QuoteNumber}`.
 - `{%snippet:demo-closing-note}`: a reusable closing paragraph in the verified Poppins Italic face.

@@ -1,10 +1,12 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Signature tags reserve places for named signing roles. A role in the template must match the role supplied when you create the signing request.
 
 **Before you start:** Choose the fields and relationships in [Choose information](#choose-data). For an orientation and the format checklist, open [Find the right merge tag](#merge-tags).
 
 #### Signatures
 
-See [§10](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#10-e-signatures-v3) for the full signature feature. Tag syntax:
+See [§10](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#10-e-signatures-v3) for the full signature feature. Tag syntax:
 
 ```
 {@Signature_Buyer}                  v2 — typed full signature (default)
@@ -19,7 +21,7 @@ See [§10](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserG
 - **Role**: any string (Buyer, Seller, Witness, Loan_Officer, etc.). Underscores become spaces in the UI.
 - **Order**: sequence number per-role (optional, defaults to 1). Used for sequential signing and multi-placement per signer.
 - **Type**: `Full` | `Initials` | `Date` | `DatePick` (optional, defaults to `Full`).
-- **Style** (optional): add `:inline` as a final suffix (e.g. `{@Signature_Buyer:1:Full:inline}`, `{@Signature_Buyer:1:Date:inline}`) to render a **compact in-place mark** instead of the stamp card. See [§10.7.2](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#1072-stamp-card-vs-inline--how-a-signature-renders).
+- **Style** (optional): add `:inline` as a final suffix (e.g. `{@Signature_Buyer:1:Full:inline}`, `{@Signature_Buyer:1:Date:inline}`) to render a **compact in-place mark** instead of the stamp card. See [§10.7.2](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#1072-stamp-card-vs-inline--how-a-signature-renders).
 
 Pre-signing, tags are preserved in the output (not replaced). Post-signing, each tag position carries the signer's mark as a **stamp card** — drawn ink or typed name in a signature font, with a "Signed by X · date" caption (see §10.10). Date tags stamp the signed date as text.
 

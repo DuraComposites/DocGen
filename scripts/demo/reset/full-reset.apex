@@ -1,13 +1,14 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
-// Portwood DocGen DEMO — FULL RESET
+// DocGen DEMO — FULL RESET
 //   Returns the org to clone-clean DATA state. Deletes EVERYTHING the demo
 //   created: generated documents, signature artifacts, all demo templates +
 //   template bodies, and all seeded demo data (standard + custom).
 //   KEEPS: the custom Demo_*__c schema, the DocGen_Demo permset/app, and the
 //          installed managed package. (To remove the schema too, see README.)
-// Run: sf apex run --target-org dave@portwood.dev.demo -f "DEMO TEMPLATES/reset/full-reset.apex"
+// Run: sf apex run --target-org dave@example.com.demo -f "DEMO TEMPLATES/reset/full-reset.apex"
 // ============================================================================
-String NS = 'portwoodglobal__';
+String NS = 'duradocgen__';
 Set<String> DEMO_ACCT_NAMES = new Set<String>{
     'Northwind Traders',
     'Summit Components Inc.',
@@ -27,7 +28,7 @@ for (Opportunity o : demoOpps)
 List<Pricebook2> cats = [
     SELECT Id
     FROM Pricebook2
-    WHERE Name IN ('Portwood 2026 Wholesale Catalog', 'Portwood Mega Catalog (Giant Demo)')
+    WHERE Name IN ('DocGen 2026 Wholesale Catalog', 'DocGen Mega Catalog (Giant Demo)')
 ];
 for (Pricebook2 p : cats)
     demoIds.add(p.Id);
@@ -161,7 +162,7 @@ if (!accts.isEmpty()) {
 // The 2,200-line GIANT catalog is removed separately in chunks by
 // full-reset-giant.apex (driven by reset.sh) to stay under the CPU limit.
 delete [SELECT Id FROM PricebookEntry WHERE Product2.ProductCode LIKE 'PWG-%' AND Pricebook2.IsStandard = FALSE];
-delete [SELECT Id FROM Pricebook2 WHERE Name = 'Portwood 2026 Wholesale Catalog'];
+delete [SELECT Id FROM Pricebook2 WHERE Name = 'DocGen 2026 Wholesale Catalog'];
 delete [SELECT Id FROM Product2 WHERE ProductCode LIKE 'PWG-%'];
 
 System.debug('FULL-RESET DONE (core) — run full-reset-giant.apex in a loop to remove the giant catalog. Schema kept.');

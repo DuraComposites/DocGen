@@ -1,7 +1,7 @@
 {
-    "orgName": "Portwood PE Install Test",
+    "orgName": "DocGen PE Install Test",
     "edition": "professional",
-    "description": "Professional Edition scratch org used to verify that the Portwood managed package installs and runs on a low-tier SKU. Deliberately minimal: PE does not support Experience Cloud Sites or Translation Workbench, so the features/settings blocks that config/permission-test-scratch-def.json requests would fail org creation here. Always created --no-namespace: a subscriber receives the namespace from the package, it does not own it.",
+    "description": "Professional Edition scratch org used to verify that the DocGen managed package installs and runs on a low-tier SKU. Deliberately minimal: PE does not support Experience Cloud Sites or Translation Workbench, so the features/settings blocks that config/permission-test-scratch-def.json requests would fail org creation here. Always created --no-namespace: a subscriber receives the namespace from the package, it does not own it.",
     "features": ["EnableSetPasswordInApi"],
     "settings": {
         "lightningExperienceSettings": {

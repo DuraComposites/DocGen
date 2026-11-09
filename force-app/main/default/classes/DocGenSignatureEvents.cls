@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // Dura Composites Ltd. (new file)
 /**
  * Records what happens to a signature request and when, for the Signature Status timeline:
@@ -5,11 +6,11 @@
  * One DocGen_Signature_Event__c per event, on the request, and on the signer it concerns.
  *
  * Sends, visits, signatures and declines are not repeated here: the request's CreatedDate, the
- * signer's DocGen_Signer_Visit__c rows and the signature audit (which Portwood writes for a
+ * signer's DocGen_Signer_Visit__c rows and the signature audit (which DocGen writes for a
  * decline too, with the reason on the signer) already carry them. An expiry needs no
  * row either: the expiry time is known (DocGenSignatureExpiry).
  *
- * Called from Portwood's own code paths, one line each, after their own save:
+ * Called from DocGen's own code paths, one line each, after their own save:
  *   - DocGenSignatureReminderSchedulable.execute: Reminder sent (no actor: it's automatic);
  *   - DocGenSignatureSenderController.resendSignatureRequest: Link resent, by the user;
  *   - DocGenSignatureSenderController.cancelSignatureRequest: Revoked, by the user;

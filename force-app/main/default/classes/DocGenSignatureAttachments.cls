@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Existing record PDFs attached to a guided signature request (#412 — drawing approval).
  *
@@ -777,7 +778,7 @@ public inherited sharing class DocGenSignatureAttachments {
      * which is all the page records; marked up means a markup submitted with the response.
      *
      * Runs where the decline email is sent: a platform-event trigger, as the Automated Process
-     * user, which has no Portwood permission set and isn't a guest. The guest guard would throw
+     * user, which has no DocGen permission set and isn't a guest. The guest guard would throw
      * there and the line would silently go missing, so these reads use the advisory one (#390).
      */
     public static String reviewSummary(Id requestId, Id signerId) {

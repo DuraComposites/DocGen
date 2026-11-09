@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 @IsTest
 private class DocGenHtmlTemplateTest {
     @TestSetup
@@ -1457,7 +1458,7 @@ private class DocGenHtmlTemplateTest {
      * "@page body h1 h2 ... .docgen-body-content .tab" — and this reproduces the exact
      * shape of it. Google Docs and Notion put <style> in the body routinely, and so
      * does re-uploading a previously generated document, which is why the selectors in
-     * that report were Portwood's own docgen-* classes.
+     * that report were DocGen's own docgen-* classes.
      *
      * Both halves matter: the stray text has to go, AND the CSS has to survive. Fixing
      * the first by dropping the author's stylesheet would be no fix at all.

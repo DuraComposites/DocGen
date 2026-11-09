@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // Documentation data only. Run in the dedicated knowledgebase scratch org.
 // Re-running keeps the three named example accounts and their sample contacts.
 List<Account> existing = [SELECT Id FROM Account WHERE Name = 'Northstar Bikes' LIMIT 1];
@@ -11,7 +12,7 @@ if (existing.isEmpty()) {
             BillingCity = 'Indianapolis',
             BillingState = 'Indiana',
             AnnualRevenue = 1250000,
-            Description = 'A fictional bicycle shop used in the Portwood knowledgebase.'
+            Description = 'A fictional bicycle shop used in the DocGen knowledgebase.'
         ),
         new Account(
             Name = 'Willow and Pine',

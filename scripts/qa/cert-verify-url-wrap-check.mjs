@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Certificate of Completion — verify-URL wrapping.
  *
@@ -71,7 +72,7 @@ const SIZE = 7.5;
 const LH = 10;
 
 const url =
-    'https://portwood-demo.my.site.com/apex/portwoodglobal__DocGenVerify?token=5aafdea1ab3c8433b527b7bf21cd94e80f515d541d05209c7102ad9f1e2b3c4d5';
+    'https://docgen-demo.my.site.com/apex/duradocgen__DocGenVerify?token=5aafdea1ab3c8433b527b7bf21cd94e80f515d541d05209c7102ad9f1e2b3c4d5';
 let lines = [];
 let endY = drawWrappedText(lines, url, { font, size: SIZE, maxWidth: MAX, lineHeight: LH, y: 300 });
 ok(lines.length > 1, `long URL wraps (${lines.length} lines)`);

@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 @IsTest
 private class DocGenMiscTests {
     @TestSetup
@@ -4633,7 +4634,7 @@ private class DocGenMiscTests {
     @IsTest
     static void unknownCustomLabelMergeTagRendersEmpty() {
         String result = DocGenService.processXmlForTest(
-            'Before {!$Label.Portwood_Label_That_Does_Not_Exist} after',
+            'Before {!$Label.DocGen_Label_That_Does_Not_Exist} after',
             new Map<String, Object>()
         );
 
@@ -10882,7 +10883,7 @@ private class DocGenMiscTests {
 
     /**
      * Builds a DrawingML slide table with a header row and one loop row whose
-     * {#Lines}…{/Lines} span crosses cell boundaries — the shape Portwood's
+     * {#Lines}…{/Lines} span crosses cell boundaries — the shape DocGen's
      * Opportunity Products slide uses.
      */
     private static String pptTableXml(String loopRowCells) {

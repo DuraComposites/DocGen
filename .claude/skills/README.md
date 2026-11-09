@@ -1,10 +1,12 @@
-# Portwood skills
+<!-- Modified by Dura Composites Ltd. -->
+
+# DocGen skills
 
 Project knowledge packaged as [Claude Code skills](https://docs.claude.com/en/docs/claude-code/skills).
 If you use Claude Code in this repo they load automatically when relevant; if you don't,
 read them as plain Markdown — each one is a self-contained guide.
 
-They exist because most of what makes Portwood hard to change is not visible in the
+They exist because most of what makes DocGen hard to change is not visible in the
 code: the renderer silently ignores half of CSS, tags resolve through four different
 paths that don't share code, and a whole class of bug only appears in a real
 managed-package install. These write that down.

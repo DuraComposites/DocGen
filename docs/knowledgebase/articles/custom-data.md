@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Use information your Flow or developer has prepared instead of querying a normal Salesforce record.
 
 Most templates should start with the visual field chooser. Use a custom-data path when the document needs calculated structures, API results, or a deliberately prepared dataset.
@@ -20,7 +22,7 @@ A small example:
 
 The template can use `{Name}`, `{Total:currency}`, and a repeating `{#Items}…{/Items}` section.
 
-Supplying JSON bypasses the normal data query. Portwood does not create those Salesforce records for you. If the result should attach to a record, provide its **Record ID** and **Save to Record = True** as well.
+Supplying JSON bypasses the normal data query. DocGen does not create those Salesforce records for you. If the result should attach to a record, provide its **Record ID** and **Save to Record = True** as well.
 
 #### Use an Apex data provider
 
@@ -28,7 +30,7 @@ A developer can implement **DocGenDataProvider** and bind the template to that c
 
 Your developer is responsible for the provider's data access, filtering, errors, and any external integrations. The core document-generation path does not automatically make a provider's callouts or data handling safe or storage-free.
 
-The [query and provider reference](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/reference/query-config.md) includes the interface, configuration, examples, and execution constraints.
+The [query and provider reference](https://github.com/DuraComposites/DocGen/blob/main/docs/reference/query-config.md) includes the interface, configuration, examples, and execution constraints.
 
 #### Test the shape, not just one example
 

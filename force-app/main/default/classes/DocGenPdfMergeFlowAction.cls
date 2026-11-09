@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /** Merge exact Salesforce File versions in the order supplied by Flow. */
 global with sharing class DocGenPdfMergeFlowAction { // NOPMD AvoidGlobalModifier - managed Flow action
     global class Request {
@@ -52,7 +53,7 @@ global with sharing class DocGenPdfMergeFlowAction { // NOPMD AvoidGlobalModifie
     private static final Integer MAX_PARTS = 100;
 
     @InvocableMethod(
-        label='Portwood: Merge PDFs'
+        label='DocGen: Merge PDFs'
         description='Merge uploaded PDFs entirely in Salesforce, in the supplied ContentVersion ID order. Creates a new PDF File and returns its IDs. Enforces file access and Apex size limits; encrypted, signed and XFA PDFs are rejected.'
         category='Document Generation'
     )

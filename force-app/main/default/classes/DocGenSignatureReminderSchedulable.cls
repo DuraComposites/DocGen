@@ -94,7 +94,7 @@ public with sharing class DocGenSignatureReminderSchedulable implements Schedula
                 AND Signature_Request__r.Reminder_Every_Days__c = NULL // Dura: no own schedule
             WITH SYSTEM_MODE
             LIMIT 200
-        ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by Portwood permission sets
+        ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by DocGen permission sets
 
         if (pendingSigners.isEmpty())
             return;

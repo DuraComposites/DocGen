@@ -1,5 +1,6 @@
+// Modified by Dura Composites Ltd.
 /**
- * Central rendering engine for every Portwood signature/notification email (#193).
+ * Central rendering engine for every DocGen signature/notification email (#193).
  *
  * Outbound emails are record-driven: an admin defines one active
  * DocGen_Email_Template__c per Type__c (subject + rich-text HTML body +
@@ -9,7 +10,7 @@
  *
  * OUT-OF-THE-BOX GUARANTEE: if no active record exists for a type (fresh
  * install before the post-install seed runs, or an admin deleted one), the
- * service renders a BUILT-IN default that mirrors the markup Portwood has
+ * service renders a BUILT-IN default that mirrors the markup DocGen has
  * always shipped. Any failure reading the record store also falls back to the
  * built-in. Email therefore never silently breaks.
  *
@@ -99,7 +100,7 @@ global with sharing class DocGenEmailTemplateService {
 
     /**
      * Renders an email for the given type, brand-aware (#369).
-     * @param brandId optional Portwood Brand — when set and active, its own
+     * @param brandId optional DocGen Brand — when set and active, its own
      *                logo/color/company/footer win ahead of the org-wide
      *                Signature Settings default. null behaves exactly as before
      *                this parameter existed.
@@ -224,7 +225,7 @@ global with sharing class DocGenEmailTemplateService {
         String bodyInner = expandBody(assetResolvedHtml, v, brand, true);
         if (def.layoutMode == MODE_FULL_HTML) {
             // Full custom HTML: the body IS the whole document — send it as authored,
-            // tokens/widgets resolved, no Portwood header/footer chrome.
+            // tokens/widgets resolved, no DocGen header/footer chrome.
             out.htmlBody = bodyInner;
         } else {
             out.htmlBody = wrapChrome(bodyInner, brand, logo, company, footer, def.logoHeight);
@@ -311,7 +312,7 @@ global with sharing class DocGenEmailTemplateService {
                 WHERE Is_Active__c = TRUE
                 WITH SYSTEM_MODE
                 ORDER BY LastModifiedDate DESC
-            ]; // NOPMD - package-internal object; CRUD via Portwood permission sets
+            ]; // NOPMD - package-internal object; CRUD via DocGen permission sets
         }
 
         private List<DocGen_Asset__c> readAssetByKey(String assetKey) {
@@ -329,7 +330,7 @@ global with sharing class DocGenEmailTemplateService {
                 WHERE Asset_Key__c = :assetKey AND (Asset_Type__c = 'Image' OR Asset_Type__c = NULL)
                 WITH SYSTEM_MODE
                 LIMIT 1
-            ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by Portwood permission sets
+            ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by DocGen permission sets
         }
 
         private List<ContentDistribution> readDistributionByCv(Id cvId) {
@@ -401,7 +402,7 @@ global with sharing class DocGenEmailTemplateService {
             }
         } catch (Exception e) {
             // Object not deployed yet, FLS blocked, etc. — built-in defaults cover us.
-            System.debug(LoggingLevel.WARN, 'Portwood: email-template load fell back to built-ins: ' + e.getMessage());
+            System.debug(LoggingLevel.WARN, 'DocGen: email-template load fell back to built-ins: ' + e.getMessage());
         }
     }
 
@@ -623,7 +624,7 @@ global with sharing class DocGenEmailTemplateService {
             assetUrlCache.put(assetKey, resolved == null ? '' : resolved);
             return resolved;
         } catch (Exception e) {
-            System.debug(LoggingLevel.WARN, 'Portwood: asset tag resolution fell back: ' + e.getMessage());
+            System.debug(LoggingLevel.WARN, 'DocGen: asset tag resolution fell back: ' + e.getMessage());
             return null;
         }
     }
@@ -653,7 +654,7 @@ global with sharing class DocGenEmailTemplateService {
             String rawKey = m.group(1).contains(':') ? m.group(1).substringBefore(':') : m.group(1);
             String url = resolveAssetPublicUrlByKey(rawKey);
             if (String.isBlank(url)) {
-                System.debug(LoggingLevel.WARN, 'Portwood: email asset tag unresolved (key=' + m.group(1) + ')');
+                System.debug(LoggingLevel.WARN, 'DocGen: email asset tag unresolved (key=' + m.group(1) + ')');
             } else {
                 result += escapeHtml(url);
             }
@@ -688,7 +689,7 @@ global with sharing class DocGenEmailTemplateService {
             List<ContentDistribution> dists = new TemplateReader().readDistributionByCv(cvId);
             return dists.isEmpty() ? null : dists[0].ContentDownloadUrl;
         } catch (Exception e) {
-            System.debug(LoggingLevel.WARN, 'Portwood: logo asset resolution fell back to URL: ' + e.getMessage());
+            System.debug(LoggingLevel.WARN, 'DocGen: logo asset resolution fell back to URL: ' + e.getMessage());
             return null;
         }
     }
@@ -740,7 +741,7 @@ global with sharing class DocGenEmailTemplateService {
         if (String.isNotBlank(footer)) {
             html += '<p style="font-size:12px;color:#999999;margin:0;line-height:1.4;">' + escapeHtml(footer) + '</p>';
         } else {
-            html += '<p style="font-size:12px;color:#999999;margin:0;">Powered by Portwood &mdash; Open-Source Document Generation for Salesforce</p>';
+            html += '<p style="font-size:12px;color:#999999;margin:0;">Powered by DocGen &mdash; Open-Source Document Generation for Salesforce</p>';
         }
         html += '</td></tr>';
 
@@ -794,7 +795,7 @@ global with sharing class DocGenEmailTemplateService {
     }
 
     // =====================================================================
-    // Built-in defaults (the markup Portwood has always shipped)
+    // Built-in defaults (the markup DocGen has always shipped)
     // =====================================================================
 
     /** Returns the built-in default definition for a type. Public for the install seed + LWC "reset". */
@@ -853,7 +854,7 @@ global with sharing class DocGenEmailTemplateService {
                 '<p>Thanks for signing. All parties have now completed <strong>{DocumentTitle}</strong>, and the signed document is finalized. No further action is needed.</p>' +
                 '<p style="font-size:13px;color:#706e6b;">This is your confirmation that the signature was recorded.</p>';
         } else {
-            d.subject = 'Portwood Notification';
+            d.subject = 'DocGen Notification';
             d.bodyHtml = '<p>{Message}</p>';
         }
         return d;

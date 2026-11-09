@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Use this route when your organization wants signing served through an Experience Cloud site. The standalone [Salesforce Site walkthrough](#site-salesforce) is the simpler starting point when you do not need a wider portal.
 
 **Before you start:** Your administrator owns an active Experience Cloud site, its domain, and its guest-access policy. Experience templates and administrative screens vary; follow Salesforce's [Create an Experience Cloud Site](https://help.salesforce.com/s/articleView?id=networks_creating.htm&language=en_US&type=5) for the site's initial creation and publication.
@@ -8,9 +10,9 @@ In **Setup → Digital Experiences → All Sites**, open the site's **Workspaces
 
 #### 2. Enable the packaged public pages
 
-Find this site's guest profile/public access settings. In its **Enabled Visualforce Page Access**, enable the packaged pages `DocGenSignature`, `DocGenSignaturePdf`, `DocGenVerify`, and `DocGenSign` in the `portwoodglobal` namespace.
+Find this site's guest profile/public access settings. In its **Enabled Visualforce Page Access**, enable the packaged pages `DocGenSignature`, `DocGenSignaturePdf`, `DocGenVerify`, and `DocGenSign` in the `duradocgen` namespace.
 
-Open that guest profile's actual user and assign **Portwood Guest Signature** under Permission Set Assignments. Keep the assignment tied to the correct site's guest user. Do not use the logged-in member profile as a substitute for guest access.
+Open that guest profile's actual user and assign **DocGen Guest Signature** under Permission Set Assignments. Keep the assignment tied to the correct site's guest user. Do not use the logged-in member profile as a substitute for guest access.
 
 #### 3. Allow the public document preview
 
@@ -22,9 +24,9 @@ Without this, the signing shell can load while the PDF says **Document unavailab
 
 #### 4. Enter the correct base address
 
-In **Portwood → Signatures → Signature Site URL**, use the site's base address with its site path, but remove a trailing `/s`.
+In **DocGen → Signatures → Signature Site URL**, use the site's base address with its site path, but remove a trailing `/s`.
 
-| Browser's portal address                  | Portwood base setting                   |
+| Browser's portal address                  | DocGen base setting                     |
 | ----------------------------------------- | --------------------------------------- |
 | `https://example.my.site.com/customers/s` | `https://example.my.site.com/customers` |
 

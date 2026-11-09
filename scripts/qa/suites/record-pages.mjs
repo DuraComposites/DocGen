@@ -206,7 +206,7 @@ function labelForLayoutField(meta, api) {
  * Anonymous Apex cannot declare classes or methods, so both scripts are flat
  * loops. Both resolve the namespace from the describe rather than assuming it:
  * this harness has to work against a no-namespace staging org AND a namespaced
- * scratch org, where every field is `portwoodglobal__X__c`.
+ * scratch org, where every field is `duradocgen__X__c`.
  */
 function nsPreamble() {
     return `
@@ -406,7 +406,7 @@ const SCRAPE = inPage(`${HIT_TEST}
   // Any custom (namespaced) component actually placed on the page.
   const customTags = [...new Set(__dgFind('*', true)
       .map((e) => e.tagName.toLowerCase())
-      .filter((t) => /^(portwoodglobal|c)-/.test(t)))];
+      .filter((t) => /^(duradocgen|c)-/.test(t)))];
 
   const firstLabel = labelEls[0] || null;
   return {

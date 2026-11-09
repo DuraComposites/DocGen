@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -40,7 +41,7 @@ export function apexSurface(root) {
     const markdown = types
         .map(
             (type) =>
-                `#### ${type.name}\n\n${type.package} · [Source](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/${type.file})\n\n\`\`\`apex\n${type.declarations.join('\n')}\n\`\`\``
+                `#### ${type.name}\n\n${type.package} · [Source](https://github.com/DuraComposites/DocGen/blob/main/${type.file})\n\n\`\`\`apex\n${type.declarations.join('\n')}\n\`\`\``
         )
         .join('\n\n');
     return { types, markdown };

@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 # Query configuration and custom data
 
 V1, V2, and V3 describe Salesforce record queries. V4 binds a custom provider or the special Flow JSON source. Use the visual V3 builder for new record-query templates unless a specific integration needs a different format.
@@ -105,13 +107,13 @@ Applies to both sync and giant-query paths.
 
 ### Apex Data Provider (V4 — class-backed templates)
 
-When the data you need to render isn't an SObject — external API responses, computed totals, cross-object aggregations, anything SOQL can't reach — implement the `portwoodglobal.DocGenDataProvider` interface in your org and bind a template to that class. The merge engine calls your class at render time and uses whatever Map you return.
+When the data you need to render isn't an SObject — external API responses, computed totals, cross-object aggregations, anything SOQL can't reach — implement the `duradocgen.DocGenDataProvider` interface in your org and bind a template to that class. The merge engine calls your class at render time and uses whatever Map you return.
 
 #### Step 1 — write the provider class in your org
 
 ```apex
-/** Subscriber-side example. Deploy to your org after installing Portwood. */
-global with sharing class KBAccountProvider implements portwoodglobal.DocGenDataProvider {
+/** Subscriber-side example. Deploy to your org after installing DocGen. */
+global with sharing class KBAccountProvider implements duradocgen.DocGenDataProvider {
     global Map<String, Object> getData(Id recordId) {
         Account account = [
             SELECT Name, Industry, Phone
@@ -159,14 +161,14 @@ The sample deliberately returns at most 100 Contacts; its count reflects those r
 
 Two methods are required, both `global`. `getData` returns a `Map<String, Object>`; `getFieldNames` returns the list of merge tags shown in the wizard.
 
-The interface lives in the managed package — reference it with the full namespace: `portwoodglobal.DocGenDataProvider`.
+The interface lives in the managed package — reference it with the full namespace: `duradocgen.DocGenDataProvider`.
 
 #### Step 2 — bind a template to the class
 
-In the Portwood app → New Template:
+In the DocGen app → New Template:
 
 1. **Step 1 — Data Source**: pick **Apex Class (Data Provider)** instead of Salesforce Record.
-2. **Data Provider Class**: search for your class name (e.g., `KBAccountProvider`). The picker filters to classes implementing `portwoodglobal.DocGenDataProvider`. Select yours.
+2. **Data Provider Class**: search for your class name (e.g., `KBAccountProvider`). The picker filters to classes implementing `duradocgen.DocGenDataProvider`. Select yours.
 3. The wizard validates the class, calls `getFieldNames()`, and displays the available merge tags.
 4. **Step 2** lands directly on the connected-provider view. Compose your template body using the merge tags as you would for any other template.
 5. **Step 3** — review and save.
@@ -175,11 +177,11 @@ Behind the scenes the template's `Query_Config__c` becomes `{"v":4,"provider":"K
 
 #### Step 3 — generate
 
-Same as any template. The Portwood app's Generate button, the **Generate Document** Flow action, the Apex `DocGenService.generateDocument()` API — all of them detect the v4 binding automatically and call your class.
+Same as any template. The DocGen app's Generate button, the **Generate Document** Flow action, the Apex `DocGenService.generateDocument()` API — all of them detect the v4 binding automatically and call your class.
 
 ```apex
 // From Apex — exactly the same call shape as a SOQL-backed template
-Id contentDocId = portwoodglobal.DocGenService.generateDocument(templateId, accountId, null);
+Id contentDocId = duradocgen.DocGenService.generateDocument(templateId, accountId, null);
 ```
 
 #### Common patterns

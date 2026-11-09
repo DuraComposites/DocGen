@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
@@ -381,7 +382,7 @@ export default class DocGenBulkRunner extends NavigationMixin(LightningElement) 
         return getSavedQueries({ templateId: this.selectedTemplateId })
             .then((data) => {
                 // Normalize to namespace-free keys — raw SObject keys are
-                // portwoodglobal__-prefixed in subscriber orgs, so reading
+                // duradocgen__-prefixed in subscriber orgs, so reading
                 // q.Query_Condition__c directly only works unpackaged.
                 this.savedQueries = (data || []).map((q) => ({
                     Id: q.Id,
@@ -669,7 +670,7 @@ export default class DocGenBulkRunner extends NavigationMixin(LightningElement) 
                 this.isProcessing = false;
                 this.showToast(
                     'Status updates interrupted',
-                    'The job is still running server-side. Check Portwood Jobs (Recent Jobs below) for the final result.',
+                    'The job is still running server-side. Check DocGen Jobs (Recent Jobs below) for the final result.',
                     'warning'
                 );
             }

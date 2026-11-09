@@ -1,5 +1,6 @@
+// Modified by Dura Composites Ltd.
 /**
- * Resolves the Portwood Brand (#369) a signature email should use — the sender
+ * Resolves the DocGen Brand (#369) a signature email should use — the sender
  * identity a Template optionally points at via DocGen_Template__c.Brand__c.
  * Per-transaction cached so a bulk send issues at most one query per distinct
  * request and one per distinct brand, regardless of recipient count.

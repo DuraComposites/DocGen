@@ -102,7 +102,7 @@
                                             max-length="80"
                                             pattern="[a-zA-Z][a-zA-Z0-9_]*"
                                             message-when-pattern-mismatch="Letters, numbers, and underscores only; must start with a letter."
-                                            field-level-help="Stable key for referencing this template from Flows and Portwood Buttons (Template API Name input). Auto-fills from the name; survives sandbox-to-production deploys, unlike the record Id. Must be unique. Clear it to re-sync with the name."
+                                            field-level-help="Stable key for referencing this template from Flows and DocGen Buttons (Template API Name input). Auto-fills from the name; survives sandbox-to-production deploys, unlike the record Id. Must be unique. Clear it to re-sync with the name."
                                             class="slds-var-m-top_medium"
                                         ></lightning-input>
                                         <lightning-input
@@ -270,9 +270,9 @@
                                                 <p
                                                     class="slds-text-body_small slds-text-color_weak slds-var-m-top_x-small"
                                                 >
-                                                    Implement <code>portwoodglobal.DocGenDataProvider</code> in your
-                                                    org's Apex code to supply merge data from any source (callouts,
-                                                    computed values, cross-object aggregations).
+                                                    Implement <code>duradocgen.DocGenDataProvider</code> in your org's
+                                                    Apex code to supply merge data from any source (callouts, computed
+                                                    values, cross-object aggregations).
                                                 </p>
                                                 <template if:true={isValidatingProvider}>
                                                     <div
@@ -966,7 +966,7 @@
                                 <div class="slds-box slds-theme_default" style="border-radius: 8px">
                                     <p class="slds-text-body_small slds-text-color_weak slds-var-m-bottom_small">
                                         Bind this template to an Apex class implementing
-                                        <code>portwoodglobal.DocGenDataProvider</code>. The class supplies merge data at
+                                        <code>duradocgen.DocGenDataProvider</code>. The class supplies merge data at
                                         render time — no SOQL config needed.
                                     </p>
                                     <template if:false={isProviderConnected}>
@@ -1735,7 +1735,7 @@
                                     <lightning-icon icon-name="utility:brush" size="small"></lightning-icon>
                                     <span
                                         class="dg-beta-chip"
-                                        title="The visual designer is in beta — rough edge? Report a Bug in the sidebar or email support@portwood.dev."
+                                        title="The visual designer is in beta — rough edge? Tell your Salesforce administrator."
                                         >BETA</span
                                     >
                                     <div class="dg-designer-template-switch">
@@ -2139,12 +2139,6 @@
                                         <div class="dg-slash-foot">
                                             Not seeing your field? Edit your query: Edit Template &#8594; Query
                                             Configuration.
-                                            <br />
-                                            Think this should be a command?
-                                            <a
-                                                href="mailto:hello@portwood.dev?subject=Portwood%20designer%20command%20idea"
-                                                >Email hello@portwood.dev</a
-                                            >
                                         </div>
                                     </div>
                                 </template>
@@ -3633,7 +3627,7 @@
                                             max-length="80"
                                             pattern="[a-zA-Z][a-zA-Z0-9_]*"
                                             message-when-pattern-mismatch="Letters, numbers, and underscores only; must start with a letter."
-                                            field-level-help="Stable key for referencing this template from Flows and Portwood Buttons (Template API Name input). Survives sandbox-to-production deploys, unlike the record Id. Must be unique."
+                                            field-level-help="Stable key for referencing this template from Flows and DocGen Buttons (Template API Name input). Survives sandbox-to-production deploys, unlike the record Id. Must be unique."
                                             class="slds-var-m-top_medium"
                                         ></lightning-input>
                                     </div>
@@ -3654,7 +3648,7 @@
                                             value={editTemplateBrand}
                                             options={brandOptions}
                                             onchange={handleEditBrandChange}
-                                            field-level-help="Which Portwood Brand's sender address, logo, and color signature requests from this template use. None uses the org-wide Signature Settings default."
+                                            field-level-help="Which DocGen Brand's sender address, logo, and color signature requests from this template use. None uses the org-wide Signature Settings default."
                                             class="slds-var-m-top_medium"
                                         ></lightning-combobox>
                                     </div>
@@ -3964,7 +3958,7 @@
                                         </lightning-textarea>
                                         <lightning-textarea
                                             label="Required Permission Sets"
-                                            field-level-help="Comma-separated permission set API names (e.g. DocGen_Executive_Templates, DocGen_Finance_Templates). Users need at least ONE assigned to see this template. Blank = visible to all Portwood users."
+                                            field-level-help="Comma-separated permission set API names (e.g. DocGen_Executive_Templates, DocGen_Finance_Templates). Users need at least ONE assigned to see this template. Blank = visible to all DocGen users."
                                             value={editTemplateRequiredPermissionSets}
                                             onchange={handleEditRequiredPermSetsChange}
                                             class="slds-var-m-top_medium"
@@ -4253,7 +4247,7 @@
                                                 class="slds-text-body_small slds-text-color_weak slds-var-m-bottom_small"
                                             >
                                                 This template is bound to an Apex class implementing
-                                                <code>portwoodglobal.DocGenDataProvider</code>. The class supplies merge
+                                                <code>duradocgen.DocGenDataProvider</code>. The class supplies merge
                                                 data at render time — no SOQL config needed.
                                             </p>
                                             <template if:false={isProviderConnected}>
@@ -5393,7 +5387,7 @@
                                                 label="Copy AI Prompt"
                                                 icon-name="utility:copy"
                                                 onclick={handleCopyEditAiPrompt}
-                                                title="Copies a ready-to-paste prompt (your fields + Portwood tag syntax + PDF layout rules) for Claude / ChatGPT / Gemini / Copilot. Paste the returned HTML into the designer."
+                                                title="Copies a ready-to-paste prompt (your fields + DocGen tag syntax + PDF layout rules) for Claude / ChatGPT / Gemini / Copilot. Paste the returned HTML into the designer."
                                                 class="slds-var-m-left_x-small"
                                             >
                                             </lightning-button>
@@ -5665,7 +5659,7 @@
                 </header>
                 <div class="slds-modal__content slds-var-p-around_large">
                     <p class="slds-text-body_small slds-text-color_weak slds-var-m-bottom_medium">
-                        Your fields, the Portwood tag syntax and the PDF engine's layout rules are sent automatically —
+                        Your fields, the DocGen tag syntax and the PDF engine's layout rules are sent automatically —
                         the same prompt as <strong>Copy AI Prompt</strong>. Just describe what you want.
                     </p>
 

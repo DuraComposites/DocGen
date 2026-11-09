@@ -1,7 +1,9 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 # Generate templates with Agentforce — setup
 
 **The setup and usage instructions live in the UserGuide, section 5.7.11.** That
-is the version customers read at <https://portwood.dev/guide>, so it is the one
+is the version customers read at <https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md>, so it is the one
 that gets kept current. This file exists only so links in the Apex source have
 somewhere to land, and to hold the engineering notes that do not belong in a
 customer document.
@@ -46,4 +48,4 @@ failure for a managed package.
 **The route that remains open** is an extension package: a separate
 Einstein-requiring package carrying the provider class and the prompt template.
 The base package needs no change — `DocGenAiProviderFactory` already resolves
-the provider in the subscriber namespace first, then in `portwoodglobal`.
+the provider in the subscriber namespace first, then in `duradocgen`.

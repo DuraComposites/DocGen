@@ -1,8 +1,9 @@
+// Modified by Dura Composites Ltd.
 trigger DocGenFontFaceGuard on DocGen_Font_Face__c(before insert, before update, before delete) {
     if (!DocGenFontController.authorizedMutation) {
         for (DocGen_Font_Face__c f : Trigger.isDelete ? Trigger.old : Trigger.new)
             f.addError(
-                'Manage font revisions through Portwood Assets. Published font dependencies and evidence are immutable.'
+                'Manage font revisions through DocGen Assets. Published font dependencies and evidence are immutable.'
             );
     } else if (Trigger.isUpdate) {
         for (DocGen_Font_Face__c f : Trigger.new) {

@@ -1,8 +1,10 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 # Merge tag reference
 
-This advanced reference accompanies the [task-based knowledgebase](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md). Retained from the existing guide and reviewed against the 3.60.0 source. Use the task articles for current installation and user workflows.
+This advanced reference accompanies the [task-based knowledgebase](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md). Retained from the existing guide and reviewed against the 3.60.0 source. Use the task articles for current installation and user workflows.
 
-Every tag Portwood recognizes. Tags are case-insensitive for functions (`{SUM:...}` == `{sum:...}` in processXml; the giant-query assembler's aggregate regex is case-sensitive — use uppercase to be safe).
+Every tag DocGen recognizes. Tags are case-insensitive for functions (`{SUM:...}` == `{sum:...}` in processXml; the giant-query assembler's aggregate regex is case-sensitive — use uppercase to be safe).
 
 ### 7.1 Field merge
 
@@ -14,7 +16,7 @@ Use a Salesforce Custom Label anywhere a normal scalar merge tag is accepted:
 {!$Label.Your_Label_Name}
 ```
 
-Portwood resolves the label at generation time using the running user's Salesforce language, so translations are honored without changing the template. Labels created in the subscriber org use the form above; a namespaced label may use `{!$Label.namespace.Label_Name}`. A missing label renders as an empty value, matching an unknown field tag.
+DocGen resolves the label at generation time using the running user's Salesforce language, so translations are honored without changing the template. Labels created in the subscriber org use the form above; a namespaced label may use `{!$Label.namespace.Label_Name}`. A missing label renders as an empty value, matching an unknown field tag.
 
 ```
 {FieldName}
@@ -72,14 +74,14 @@ Use `:currency:auto` when the symbol should follow the **record's own currency**
 How it works and what to know:
 
 - **The source field must hold an ISO 4217 code** (`GBP`, `USD`, `EUR`, …) — its value is matched against the supported-currency list above.
-- **List the source field in your template's Query Config.** Portwood builds its query from the Query Config (it does not scan the template body), so a field referenced only inside `:currency:auto=...` must be added to the Query Config like any other merge field. The standard `CurrencyIsoCode` is added automatically in multi-currency orgs, so bare `:currency:auto` works without listing it.
+- **List the source field in your template's Query Config.** DocGen builds its query from the Query Config (it does not scan the template body), so a field referenced only inside `:currency:auto=...` must be added to the Query Config like any other merge field. The standard `CurrencyIsoCode` is added automatically in multi-currency orgs, so bare `:currency:auto` works without listing it.
 - **Safe fallback:** if the source field is missing, blank, or not a recognized ISO code, the tag falls back to the default `$` format — it never errors or prints a raw code.
 - **Bare `:currency` is unchanged** — it always emits `$`. Auto-detection is strictly opt-in via `:auto`.
 - **Aggregates** support it too: `{SUM:Lines.Amount:currency:auto=CustomerCurrency__c}` uses the **parent** record's currency for the symbol.
 
 ##### Totalling across currencies
 
-In a multi-currency org, the rows behind an aggregate can each carry their own currency. Adding them together and stamping one symbol on the result produces a number that looks authoritative and is meaningless — so Portwood won't do it silently.
+In a multi-currency org, the rows behind an aggregate can each carry their own currency. Adding them together and stamping one symbol on the result produces a number that looks authoritative and is meaningless — so DocGen won't do it silently.
 
 ```
 {SUM:Lines.Amount:currency:EUR}            Mixed-currency rows → generation fails with a clear error
@@ -143,9 +145,9 @@ Repeat a block for each child record.
 {/Contacts}
 ```
 
-**Container auto-expansion.** If the loop tags sit inside a table row or a bulleted/numbered list paragraph, Portwood detects it and repeats the **entire row/paragraph** instead of just the inner content. This is how invoice line-item tables work — drop `{#OpportunityLineItems}` and `{/OpportunityLineItems}` anywhere inside the row and every line item gets its own row automatically.
+**Container auto-expansion.** If the loop tags sit inside a table row or a bulleted/numbered list paragraph, DocGen detects it and repeats the **entire row/paragraph** instead of just the inner content. This is how invoice line-item tables work — drop `{#OpportunityLineItems}` and `{/OpportunityLineItems}` anywhere inside the row and every line item gets its own row automatically.
 
-**Repeating the column header (`{RepeatHeader}`).** Add the text `{RepeatHeader}` anywhere inside the header row (the row with your column labels) to mark it as a repeating header. Portwood strips the marker and groups that row as the table's `<thead>`, which reprints at the top of the table and at each section break in very large (giant-query) documents. Place it once, in the header row only:
+**Repeating the column header (`{RepeatHeader}`).** Add the text `{RepeatHeader}` anywhere inside the header row (the row with your column labels) to mark it as a repeating header. DocGen strips the marker and groups that row as the table's `<thead>`, which reprints at the top of the table and at each section break in very large (giant-query) documents. Place it once, in the header row only:
 
 ```
 | {RepeatHeader}Short Code | Cost to send | Cost to receive |
@@ -154,7 +156,7 @@ Repeat a block for each child record.
 
 This works in **Word (`.docx`) templates**; **HTML templates** use a native `<thead>…</thead>`. _(For large datasets that use the giant-query path, re-save the template once after adding `{RepeatHeader}` so the change is captured.)_
 
-> **Note on per-page repetition.** The PDF engine (Flying Saucer) does not reliably reprint a header on _every_ page of a large bordered table — so on multi-page tables the header repeats per section, not strictly per page. (Portwood previously attempted true per-page repeat via the engine's `-fs-table-paginate`, but that caused severe mis-pagination on real templates with running headers/footers and was removed.)
+> **Note on per-page repetition.** The PDF engine (Flying Saucer) does not reliably reprint a header on _every_ page of a large bordered table — so on multi-page tables the header repeats per section, not strictly per page. (DocGen previously attempted true per-page repeat via the engine's `-fs-table-paginate`, but that caused severe mis-pagination on real templates with running headers/footers and was removed.)
 
 Nested loops are supported:
 
@@ -316,7 +318,7 @@ Repository ships a complete worked example exercising every IF feature. Three fi
 
 - `dev-only-deploy/main/default/classes/ProjectStatusDemoProvider.cls` — a V4 Apex Data Provider that returns synthetic project data (no SOQL — works without test data setup).
 - `scripts/template-project-status.html` — the full HTML template body. Demonstrates nested IF, AND/OR/NOT, parens, comparison, bare-boolean IF, empty-rel `totalSize=0`, inverse loops with `{:else}`.
-- `scripts/demo-project-status-template.apex` — anonymous Apex script that creates the Portwood template, links the provider, and renders one PDF attached to a record.
+- `scripts/demo-project-status-template.apex` — anonymous Apex script that creates the DocGen template, links the provider, and renders one PDF attached to a record.
 
 To run it:
 
@@ -379,7 +381,7 @@ Render **nine chart styles** inline in your generated documents — bar, column,
 | PowerPoint `.pptx` | `<p:pic>` referencing a PNG in `ppt/media/`                           |
 | Excel `.xlsx`      | (Coming in a follow-up release)                                       |
 
-**Zero external callouts.** The chart engine is 100% native Apex — same constraint that makes Portwood suitable for AppExchange security review and managed-package customers. Charts work in Flow actions, batch jobs, Queueables, and Apex tests as well as the runner LWC.
+**Zero external callouts.** The chart engine is 100% native Apex — same constraint that makes DocGen suitable for AppExchange security review and managed-package customers. Charts work in Flow actions, batch jobs, Queueables, and Apex tests as well as the runner LWC.
 
 **Two authoring paths:**
 
@@ -504,7 +506,7 @@ the rendered PNGs have to fit in a 6 MB Apex heap. On a record with thousands of
 that is not a limit you can tune around — a PowerPoint or Excel template over a few thousand
 child records used to fail outright with _"too large for sync PowerPoint/Excel output"_.
 
-For PowerPoint and Excel, Portwood now takes the same route it has always taken for Word:
+For PowerPoint and Excel, DocGen now takes the same route it has always taken for Word:
 **the browser does the work.** The runner pages the child records down in chunks, aggregates
 each page into buckets as it arrives, and renders the finished chart with **Chart.js** on a
 real `<canvas>` before embedding the PNG. Nothing large is ever held in Apex at once, so the
@@ -514,10 +516,10 @@ You do not opt in and you do not change your tags. Write `{Chart:...}` exactly a
 above; the runner picks the path. What you should know:
 
 - **It needs a browser.** Flow, batch and Apex entry points still use the server-side
-  rasterizer, which is why the heap guidance in [§14.8](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#148-template--output-size-guidance)
+  rasterizer, which is why the heap guidance in [§14.8](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#148-template--output-size-guidance)
   still applies to unattended generation.
 - **Non-groupable fields are refused with a message.** A Long Text Area cannot be used in a
-  SOQL `GROUP BY`, and attempting it throws an uncatchable platform exception — so Portwood
+  SOQL `GROUP BY`, and attempting it throws an uncatchable platform exception — so DocGen
   checks the field first and tells you, rather than letting the transaction die. Group by a
   Text, Picklist, Number, Date or Checkbox field instead.
 - **Charts still render on the Canvas artboard** while you design, using the same library.
@@ -529,8 +531,8 @@ above; the runner picks the path. What you should know:
 Paste the block below into Claude / GPT / Gemini with one substitution: `${MY_DATA_DESCRIPTION}` should describe your child relationship name, the dimension field you want bucketed, and (optionally) the cross-tab field plus its expected values. The LLM will produce a complete HTML template you can upload.
 
 ```text
-You are writing a Portwood HTML template that renders 8 chart styles using Portwood's
-{Chart:...} tag syntax. Portwood is a native Salesforce 2GP package; the template is a single
+You are writing a DocGen HTML template that renders 8 chart styles using DocGen's
+{Chart:...} tag syntax. DocGen is a native Salesforce 2GP package; the template is a single
 HTML file uploaded as a ContentVersion against a DocGen_Template__c with Type__c='HTML'.
 
 Hard constraints (Flying Saucer PDF engine, CSS 2.1 + small CSS 3 subset):
@@ -565,7 +567,7 @@ Required output:
    - A one-line description of when to use this style
    - The {Chart:...} tag itself, wrapped in <div class="chart">
    - <h2 class="page-break"> on sections 2-8 so each chart gets its own page
-4. A footer line acknowledging "Portwood Chart Engine — pure-Apex PNG rasterization".
+4. A footer line acknowledging "DocGen Chart Engine — pure-Apex PNG rasterization".
 
 Data shape — ${MY_DATA_DESCRIPTION}
 (Example: "Survey__c parent. Child relationship Survey_Responses__r. Bucket by Selected_Answer__c.
@@ -574,7 +576,7 @@ Cross-tab dimension Location__c with values 8000 Marina, 3260 Bayshore.")
 Use the bucket field for bar/column/pie/donut single-dimension styles. Use the cross-tab field
 in groupBy for stacked/clustered/line/area/pivot. ColSort must match the cross-tab values.
 
-Return the complete HTML file, ready to upload as a Portwood HTML template. No commentary.
+Return the complete HTML file, ready to upload as a DocGen HTML template. No commentary.
 ```
 
 #### 7.6.4 Reference templates
@@ -630,7 +632,7 @@ The chart resolver **validates every dynamic identifier** (relationship, child o
 
 #### 7.6.7 Governor budget
 
-Portwood caps chart aggregates at **50 SOQL queries per transaction** (static budget inside `DocGenChartBucketResolver`). When the budget is exhausted, remaining charts render a single sentinel bucket labeled `"Chart limit reached"` — they never silently render as empty. Re-author the template to consolidate charts (or use a pivot instead of N single-dimension charts) if you hit the ceiling.
+DocGen caps chart aggregates at **50 SOQL queries per transaction** (static budget inside `DocGenChartBucketResolver`). When the budget is exhausted, remaining charts render a single sentinel bucket labeled `"Chart limit reached"` — they never silently render as empty. Re-author the template to consolidate charts (or use a pivot instead of N single-dimension charts) if you hit the ceiling.
 
 Per-chart CPU budget is tracked too — the rasterizer auto-tunes `scale=` defaults so an 8-chart document fits comfortably in the 10-second synchronous Apex limit.
 
@@ -696,7 +698,7 @@ Inside `{#cols}` you get the standard bucket fields (`{key}` / `{key_label}` / `
 
 Use these when you want each row's segments to sum to 100% (stacked-bar composition) rather than each cell's value as a percent of the overall total.
 
-**Layout gotcha for pivot bodies:** Portwood's HTML container auto-expansion reacts to nested loops by duplicating the nearest open `<tr>`. If you put `{#cols}` directly inside `<tr>`, every column gets a whole row. **Use `<div>` + `display:table-row` + `display:table-cell` for pivot bodies, not `<tr>`/`<td>`.** See `docs/CommuteSurveyExample.html` for the canonical pattern.
+**Layout gotcha for pivot bodies:** DocGen's HTML container auto-expansion reacts to nested loops by duplicating the nearest open `<tr>`. If you put `{#cols}` directly inside `<tr>`, every column gets a whole row. **Use `<div>` + `display:table-row` + `display:table-cell` for pivot bodies, not `<tr>`/`<td>`.** See `docs/CommuteSurveyExample.html` for the canonical pattern.
 
 #### 7.6.9 CSS 2.1 reminders (PDF output)
 
@@ -786,7 +788,7 @@ A size token must contain an `x` (the width × height separator); a bare number 
 - **Cross-user by design:** an asset one administrator creates renders correctly in documents other users generate.
 - **Deactivate** an asset (rather than deleting it) to retire it without losing history. A tag that points at a deactivated or unknown key renders a small `[missing asset: <key>]` placeholder so you notice it in review — it never breaks document generation.
 
-**What the tag produces.** The tag resolves to the asset's current image and then flows through Portwood's normal image pipeline, so it behaves like an inline image native to each format. You place the tag **where you want the image to appear** — you do not wrap it in your own `<img>` or pass it to a `src`; the tag _is_ the image.
+**What the tag produces.** The tag resolves to the asset's current image and then flows through DocGen's normal image pipeline, so it behaves like an inline image native to each format. You place the tag **where you want the image to appear** — you do not wrap it in your own `<img>` or pass it to a `src`; the tag _is_ the image.
 
 | Output                          | What `{%asset:key}` becomes                                                                                                                                                                                                                                                                                                                                                                                             |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -797,7 +799,7 @@ A size token must contain an `x` (the width × height separator); a bare number 
 | **Excel (`.xlsx`)**             | Image assets are **not** rendered in Excel output in v1 — the tag is removed cleanly (no error).                                                                                                                                                                                                                                                                                                                        |
 | **Large datasets (>2000 rows)** | Tags in headers, footers, and grand-summary areas resolve the same way (the high-volume rendering path emits the same `<img>`).                                                                                                                                                                                                                                                                                         |
 
-**Permissions:** administrators (Portwood Admin) create and manage assets; standard Portwood users get read-only access, which is all that is needed to generate documents that reference them.
+**Permissions:** administrators (DocGen Admin) create and manage assets; standard DocGen users get read-only access, which is all that is needed to generate documents that reference them.
 
 > **v1 scope:** shared assets are **images** only. Text/HTML snippet assets and pinning a template to a specific asset version are planned follow-ups.
 
@@ -832,7 +834,7 @@ So `:3inx` → `:288x`, `:x25mm` → `:x95`.
 **Hand-authored `<img>` tags (advanced).** If you write your own `<img src="/sfc/servlet.shepherd/version/download/068…">` instead of a `{%}` tag, you control the CSS directly, but two caveats apply:
 
 1. Only `width`/`height` take effect — `max-width` does not (same engine limit as above).
-2. The renderer computes one rendered size **per image URL** and reuses it. If you reference the **same** file at two different sizes, both come out the same. Add a throwaway query parameter to make each distinct (`…/068…?n=1`, `…/068…?n=2`). Portwood's `{%}` tags do this automatically, so prefer the tag unless you specifically need raw markup. (A grid of _different_ logos — different files — isn't affected.)
+2. The renderer computes one rendered size **per image URL** and reuses it. If you reference the **same** file at two different sizes, both come out the same. Add a throwaway query parameter to make each distinct (`…/068…?n=1`, `…/068…?n=2`). DocGen's `{%}` tags do this automatically, so prefer the tag unless you specifically need raw markup. (A grid of _different_ logos — different files — isn't affected.)
 
 ### 7.8 Barcodes & QR codes
 
@@ -850,7 +852,7 @@ QR codes are generated natively in Salesforce with Level Q error correction and 
 
 ### 7.9 Signatures
 
-See [§10](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#10-e-signatures-v3) for the full signature feature. Tag syntax:
+See [§10](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#10-e-signatures-v3) for the full signature feature. Tag syntax:
 
 ```
 {@Signature_Buyer}                  v2 — typed full signature (default)
@@ -865,7 +867,7 @@ See [§10](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserG
 - **Role**: any string (Buyer, Seller, Witness, Loan_Officer, etc.). Underscores become spaces in the UI.
 - **Order**: sequence number per-role (optional, defaults to 1). Used for sequential signing and multi-placement per signer.
 - **Type**: `Full` | `Initials` | `Date` | `DatePick` (optional, defaults to `Full`).
-- **Style** (optional): add `:inline` as a final suffix (e.g. `{@Signature_Buyer:1:Full:inline}`, `{@Signature_Buyer:1:Date:inline}`) to render a **compact in-place mark** instead of the stamp card. See [§10.7.2](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#1072-stamp-card-vs-inline--how-a-signature-renders).
+- **Style** (optional): add `:inline` as a final suffix (e.g. `{@Signature_Buyer:1:Full:inline}`, `{@Signature_Buyer:1:Date:inline}`) to render a **compact in-place mark** instead of the stamp card. See [§10.7.2](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#1072-stamp-card-vs-inline--how-a-signature-renders).
 
 Pre-signing, tags are preserved in the output (not replaced). Post-signing, each tag position carries the signer's mark as a **stamp card** — drawn ink or typed name in a signature font, with a "Signed by X · date" caption (see §10.10). Date tags stamp the signed date as text.
 
@@ -905,9 +907,9 @@ Notes:
 
 ### 7.10 Rich text fields
 
-When a field value contains HTML (`<p>`, `<div>`, `<br>`, `<b>`, `<i>`, `<u>`, `<strong>`, `<em>`, `<span>`, `<img>`, `<a>`), Portwood preserves the formatting in the output — paragraphs, line breaks, bold/italic/underline, hyperlinks, and embedded images all carry through. Works in **Word templates** (DOCX or PDF output) and **HTML templates** (PDF output). PowerPoint strips HTML to plain text.
+When a field value contains HTML (`<p>`, `<div>`, `<br>`, `<b>`, `<i>`, `<u>`, `<strong>`, `<em>`, `<span>`, `<img>`, `<a>`), DocGen preserves the formatting in the output — paragraphs, line breaks, bold/italic/underline, hyperlinks, and embedded images all carry through. Works in **Word templates** (DOCX or PDF output) and **HTML templates** (PDF output). PowerPoint strips HTML to plain text.
 
-**Inline images in rich text** (the kind you paste directly into a Rich Text Area field) render across all three target formats — Word→PDF, Word→DOCX, and HTML→PDF — when you generate from the runner on a record page. Behind the scenes Portwood handles three flavors of image source automatically:
+**Inline images in rich text** (the kind you paste directly into a Rich Text Area field) render across all three target formats — Word→PDF, Word→DOCX, and HTML→PDF — when you generate from the runner on a record page. Behind the scenes DocGen handles three flavors of image source automatically:
 
 - **Lightning inline images** (`/servlet/rtaImage?...&refid=…`) — refids that resolve to a `ContentVersion` (068/069 prefix) are rewritten to relative `/sfc/servlet.shepherd/…` URLs. `0EM` Lightning ContentReference refids aren't queryable, so they keep their absolute `*.file.force.com` URL — works in authenticated server-side rendering, but not in environments that lack reach to the file subdomain.
 - **Inline data URIs** (`<img src="data:image/...">`) — DOCX and Word→PDF embed them; HTML→PDF drops them (Flying Saucer's `Blob.toPdf` can't decode data URIs).
@@ -918,7 +920,7 @@ A few caveats:
 - The **Generate Sample** button in the template builder doesn't render inline rich-text images — they show as broken placeholders. Test the real output via the runner instead.
 - For pixel-perfect images, use the `{%Image:N}` tag with an attached File rather than inline rich text — DOCX image quality is slightly lossy when sourced from rich-text inline images.
 - Inline-image rotation isn't preserved. Rotate the source before pasting.
-- **Pre-size images before pasting.** Lightning's rich text editor doesn't write `width=`/`height=`/`style=` to the HTML it stores — even when you drag-resize the image in the editor, the displayed size never makes it into the saved markup. (In Chrome, drag-resize is disabled outright; Firefox lets you drag but the resize still doesn't persist.) Portwood falls back to a 4-inch default for DOCX output and to natural pixel dimensions for PDF output, so a phone photo pasted at 4000×3000 will render correctly in DOCX but bleed off the page in PDF. The reliable fix is to **resize the image to your intended dimensions in an editor BEFORE pasting** — once it's in the rich text field, the size is locked to whatever the source pixels were. For pixel-precise sizing across both formats, prefer `{%Image:N}` with `:WxH` (§7.7).
+- **Pre-size images before pasting.** Lightning's rich text editor doesn't write `width=`/`height=`/`style=` to the HTML it stores — even when you drag-resize the image in the editor, the displayed size never makes it into the saved markup. (In Chrome, drag-resize is disabled outright; Firefox lets you drag but the resize still doesn't persist.) DocGen falls back to a 4-inch default for DOCX output and to natural pixel dimensions for PDF output, so a phone photo pasted at 4000×3000 will render correctly in DOCX but bleed off the page in PDF. The reliable fix is to **resize the image to your intended dimensions in an editor BEFORE pasting** — once it's in the rich text field, the size is locked to whatever the source pixels were. For pixel-precise sizing across both formats, prefer `{%Image:N}` with `:WxH` (§7.7).
 
 Plain multiline (long text, textarea) fields work too — newlines in the field value render as proper line breaks in the output across all three targets. No manual `<br>` needed.
 
@@ -926,7 +928,7 @@ Plain multiline (long text, textarea) fields work too — newlines in the field 
 
 Two ways to add a full-page watermark or background image to your PDF output:
 
-**Option A: Upload via the template builder (recommended).** In the template editor, click the **Watermark / Background** tab and upload a pre-sized image. This bypasses Word's Watermark dialog entirely and gives you exact pixel-level control over the output. A **Watermark strength** control (Light 15% / Medium 30% / Strong 50% / Original) fades the image — the opacity is baked into the stored PNG because Flying Saucer has no CSS opacity, and Portwood keeps the unfaded original so changing the strength after upload re-fades from it rather than compounding. The new setting applies immediately and survives a page reload (v3.57+).
+**Option A: Upload via the template builder (recommended).** In the template editor, click the **Watermark / Background** tab and upload a pre-sized image. This bypasses Word's Watermark dialog entirely and gives you exact pixel-level control over the output. A **Watermark strength** control (Light 15% / Medium 30% / Strong 50% / Original) fades the image — the opacity is baked into the stored PNG because Flying Saucer has no CSS opacity, and DocGen keeps the unfaded original so changing the strength after upload re-fades from it rather than compounding. The new setting applies immediately and survives a page reload (v3.57+).
 
 **Option B: Insert via Word's Design → Watermark dialog.** Word's built-in watermark works too, with these constraints:
 
@@ -995,7 +997,7 @@ Works in sync generation, bulk runs, giant-query PDFs (headers/footers/title blo
 
 Salesforce's PDF engine (Flying Saucer) only ships with four fonts (Helvetica, Times, Courier, Arial Unicode MS) and does not render arbitrary Wingdings or Symbol glyphs. Approved custom static TrueType faces are supported through **Assets → Custom Fonts**. Most "decorative" Word symbols (Wingdings checkboxes, custom dingbats) silently render as a blank box.
 
-Portwood handles this for you in two ways:
+DocGen handles this for you in two ways:
 
 1. **Word checkbox glyphs** (Insert → Symbol → Wingdings 0xFE / 0xA8, or Word content-control checkboxes) are auto-translated to their Unicode equivalents at PDF render time.
 2. **Unicode symbols** typed directly in Word, Google Docs, Notion, or any HTML template are auto-wrapped in an Arial Unicode MS span so they render instead of dropping to tofu.
@@ -1077,15 +1079,15 @@ Or in tabular form for surveys / inspection forms (the inverse section `{^Field}
 
 #### What does NOT work
 
-- **Wingdings / Webdings glyphs** other than checkboxes — Flying Saucer can't render them at all. Portwood translates the common checkbox/check codepoints (Wingdings F0A8, F0FE, F0FD, F0FB, F0FC, F0A2; Wingdings 2 F050–F053, F0A3, F0A4); anything else falls back to a neutral □ placeholder.
+- **Wingdings / Webdings glyphs** other than checkboxes — Flying Saucer can't render them at all. DocGen translates the common checkbox/check codepoints (Wingdings F0A8, F0FE, F0FD, F0FB, F0FC, F0A2; Wingdings 2 F050–F053, F0A3, F0A4); anything else falls back to a neutral □ placeholder.
 - **Emoji** (😀 🎉 etc.) — out of Arial Unicode MS coverage, render as tofu in PDF. Use the Unicode symbols above instead.
-- **Unapproved or unsupported fonts** — use an approved static TrueType face for PDF, or native DOCX output where the recipient has the font installed. See [custom fonts](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#custom-fonts).
+- **Unapproved or unsupported fonts** — use an approved static TrueType face for PDF, or native DOCX output where the recipient has the font installed. See [custom fonts](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#custom-fonts).
 
 ### 7.15 Classic Approvals related list — `{#Approvals}` (v1.92+)
 
 Render the host record's Salesforce **Classic Approvals** process history (submission, every approval/rejection step) directly in a generated document. Common use cases: Purchase Orders showing every approver up the chain in the final PDF, NDAs stamped with each signatory's role + timestamp, change-management forms with the approval audit trail rendered alongside the form data.
 
-**Opt-in via Query_Config\_\_c.** Add the standalone word `Approvals` somewhere in the template's Query_Config**c (case-insensitive, word-boundary — `MyApprovalsList**c`doesn't activate it). When Portwood sees the token, it queries`ProcessInstance`+`ProcessInstanceStep`for the host record and exposes the flattened step list as a child collection at the`Approvals` key.
+**Opt-in via Query_Config\_\_c.** Add the standalone word `Approvals` somewhere in the template's Query_Config**c (case-insensitive, word-boundary — `MyApprovalsList**c`doesn't activate it). When DocGen sees the token, it queries`ProcessInstance`+`ProcessInstanceStep`for the host record and exposes the flattened step list as a child collection at the`Approvals` key.
 
 Example Query_Config\_\_c entry:
 
@@ -1135,4 +1137,4 @@ Use `{%font:asset-key:revision}` only inside a quoted inline `style` attribute, 
 
 Use one font tag per element. Do not write `font-family:{%font:…}` or combine it with another font-family/weight/style override; the tag supplies those declarations. You can add font size, color, and other non-font-face styling. The face must have passed native PDF review; a missing, ambiguous, or unapproved revision can fail validation. Test retired/deleted font dependencies before changing them.
 
-For page furniture, use [CSS page-counter spans](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#running-headers-footers) rather than putting a font tag and literal page-number tokens in the same header/footer. This registry controls native PDF rendering, not a recipient's Office font installation. See [Upload and approve a custom font](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#custom-fonts).
+For page furniture, use [CSS page-counter spans](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#running-headers-footers) rather than putting a font tag and literal page-number tokens in the same header/footer. This registry controls native PDF rendering, not a recipient's Office font installation. See [Upload and approve a custom font](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#custom-fonts).

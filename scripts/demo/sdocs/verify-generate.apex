@@ -1,7 +1,8 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
 // SDocs-replacement demo — prove both templates actually render.
 //
-// Uses portwoodglobal.DocGenService.generateDocument, which is `global` and
+// Uses duradocgen.DocGenService.generateDocument, which is `global` and
 // therefore the only generation entry point visible in a SUBSCRIBER org. The
 // repo's e2e-*.apex suites call DocGenController / processXmlForTest, which are
 // `public` and invisible here by construction — do not reach for them.
@@ -12,10 +13,10 @@
 // ============================================================================
 
 Map<String, Id> tpl = new Map<String, Id>();
-for (portwoodglobal__DocGen_Template__c t : [
+for (duradocgen__DocGen_Template__c t : [
     SELECT Id, Name
-    FROM portwoodglobal__DocGen_Template__c
-    WHERE portwoodglobal__Category__c = 'Project Delivery'
+    FROM duradocgen__DocGen_Template__c
+    WHERE duradocgen__Category__c = 'Project Delivery'
 ]) {
     tpl.put(t.Name, t.Id);
 }
@@ -34,7 +35,7 @@ for (
         // Returns a ContentDOCUMENT id (069…), not a ContentVersion (068…).
         // Querying ContentVersion by it throws "List has no rows", which reads
         // like a generation failure and is really a wrong key prefix.
-        Id docId = portwoodglobal.DocGenService.generateDocument(tid, p.Id);
+        Id docId = duradocgen.DocGenService.generateDocument(tid, p.Id);
         ContentVersion cv = [
             SELECT Id, Title, ContentSize, FileExtension
             FROM ContentVersion

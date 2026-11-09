@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // Real in-org AI generation, end to end: DocGen prompt -> Einstein via ConnectApi
 // -> Flying Saucer validator.
 //
@@ -20,7 +21,7 @@ String WHAT_I_WANT =
     'and a grand total row, and a footer note.';
 
 String prompt =
-    'You are writing an HTML document template for Portwood DocGen. DocGen replaces {merge tags} ' +
+    'You are writing an HTML document template for DocGen. DocGen replaces {merge tags} ' +
     'with Salesforce data, then renders the HTML to PDF with the Flying Saucer engine.\n\n' +
     'DATA SHAPE - use ONLY these fields:\n' +
     '- Base object: Opportunity\n  - {Name}\n  - {Amount} (currency)\n  - {CloseDate} (date)\n' +

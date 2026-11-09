@@ -1,11 +1,13 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Make a document for the Salesforce record you are looking at.
 
-**Before you start:** You have Portwood User or Admin access. Your administrator has [added Portwood Runner](#add-to-record-page), and there is an active template for this record type.
+**Before you start:** You have DocGen User or Admin access. Your administrator has [added DocGen Runner](#add-to-record-page), and there is an active template for this record type.
 
 #### Make the document
 
 1. Open the record, such as an Account or Opportunity.
-2. Find **Portwood Runner**.
+2. Find **DocGen Runner**.
 3. Choose the template. Use its category filter if the list is long.
 4. Choose where the file should go:
 

@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <fullName>Action_Type__c</fullName>
     <description
-    >Portwood record action kind. Document generates or downloads a document. Email generates a document, saves it to the source record, and sends it as an email attachment.</description>
+    >DocGen record action kind. Document generates or downloads a document. Email generates a document, saves it to the source record, and sends it as an email attachment.</description>
     <fieldManageability>DeveloperControlled</fieldManageability>
     <label>Action Type</label>
     <required>false</required>

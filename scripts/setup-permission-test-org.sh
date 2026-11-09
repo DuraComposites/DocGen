@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Modified by Dura Composites Ltd.
 #
 # DocGen — spin up a permission-test scratch org, end to end, in one command.
 #
@@ -25,7 +26,7 @@
 # renders blank for real users and works fine for you. Reproducing that needs users
 # whose access comes only from the DocGen permission sets.
 #
-# NOTE ON NAMESPACE: default mode creates the org WITH the portwoodglobal namespace so
+# NOTE ON NAMESPACE: default mode creates the org WITH the duradocgen namespace so
 # namespace-sensitive behaviour (LWS sandbox, prefixed SObject keys) is representative.
 # --install mode does the opposite on purpose — a subscriber does not own the namespace,
 # it receives it from the package.
@@ -34,7 +35,7 @@ set -euo pipefail
 
 ALIAS="docgen-permtest"
 DURATION="30"
-DEVHUB="Portwood Global - Production"
+DEVHUB="prod"
 DEF_FILE="config/permission-test-scratch-def.json"
 RECREATE="false"
 INSTALL_VERSION=""
@@ -72,7 +73,7 @@ if sf org display --target-org "$ALIAS" >/dev/null 2>&1; then
 else
     echo "==> Creating scratch org"
     # Install mode creates the org WITHOUT the namespace: a subscriber org does not
-    # own portwoodglobal, it receives it from the package. Creating it namespaced
+    # own duradocgen, it receives it from the package. Creating it namespaced
     # would let namespace-visibility bugs pass that a real customer would hit.
     ns_flag=()
     if [[ -n "$INSTALL_VERSION" ]]; then

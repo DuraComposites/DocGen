@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // global (not public) so the @InvocableMethod is visible in subscriber-org Flow
 // Builder — this is a managed package, where public Apex is invisible to subscribers.
 // Inputs are primitives (no Apex-Defined Flow variable), so no @AuraEnabled needed.
@@ -16,7 +17,7 @@ global without sharing class DocGenSignatureSubmitter { // NOPMD AvoidGlobalModi
         global String errorMessage;
     }
 
-    @InvocableMethod(label='Submit Signed Signature' category='Portwood')
+    @InvocableMethod(label='Submit Signed Signature' category='DocGen')
     // CxSAST: USER_MODE not viable in managed package (namespace resolution breaks unqualified field names); CRUD/FLS enforced by permission sets
     global static List<FlowOutput> submitSignature(List<FlowInput> inputs) {
         List<FlowOutput> results = new List<FlowOutput>();

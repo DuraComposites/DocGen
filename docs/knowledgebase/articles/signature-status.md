@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 See every signature request on a record as a timeline: when it was sent, who opened it and when, reminders, resends, and how it ended.
 
 **Before you start:** You are a Salesforce administrator who can edit Lightning record pages. Signers use the public signing page set up in [Set up external signing](#setup-signatures).
@@ -44,7 +46,7 @@ Until a request is finished, a line under the summary gives its plan, such as **
 
 For drawing approvals, a line under the timeline says how many attached documents each signer opened and marked up.
 
-Requests sent before these entries were recorded show what Portwood kept at the time: the latest reminder only, and the time of a revoke from the request's history.
+Requests sent before these entries were recorded show what DocGen kept at the time: the latest reminder only, and the time of a revoke from the request's history.
 
 #### What counts as a visit
 
@@ -60,6 +62,6 @@ Visits record the time, the kind of device and the browser's user agent. No IP a
 
 #### If the card is empty or shows an error
 
-The card runs as the viewing user. **Portwood User** and **Portwood Admin** include what it needs. With your own permission sets, give read access to the Portwood Signature Request, Signer, Signature Audit, Signature Attachment, Signer Attachment, Signer Visit and Signature Event objects, the fields the card shows, and the `DocGenSignatureStatusController` Apex class. To extend links and change reminders, also give the **Change Sent Signature Requests** custom permission.
+The card runs as the viewing user. **DocGen User** and **DocGen Admin** include what it needs. With your own permission sets, give read access to the DocGen Signature Request, Signer, Signature Audit, Signature Attachment, Signer Attachment, Signer Visit and Signature Event objects, the fields the card shows, and the `DocGenSignatureStatusController` Apex class. To extend links and change reminders, also give the **Change Sent Signature Requests** custom permission.
 
 Requests are matched on the record they were sent from. A request sent from another record appears on that record, or under it on a parent page set up as above.

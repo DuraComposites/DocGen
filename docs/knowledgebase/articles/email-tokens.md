@@ -1,8 +1,10 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Signing-email tokens belong to the **Email Templates** editor. They are not the document's Salesforce field-query syntax. Their values are supplied by the type of email being sent.
 
 #### Choose the email before choosing a token
 
-Open **Portwood → Email Templates**, pick the **Brand**, then the email type. The editor offers these insertable tokens for each type:
+Open **DocGen → Email Templates**, pick the **Brand**, then the email type. The editor offers these insertable tokens for each type:
 
 | Email                     | Editor tokens                                                                                                                                                                                           |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -21,13 +23,13 @@ Values in HTML bodies are HTML-escaped. Shared assets use the separate `{%asset:
 
 #### Upgraded from an earlier version? Add the Signature Request Revoked type
 
-The **Signature Request Revoked** email goes to signers who had not signed when a request is revoked. Salesforce does not add new values to an existing packaged picklist when a package is upgraded, so an org that **upgraded** to 3.62 or later, rather than installing fresh, does not list this email type and does not get its default template record. The revoke email still sends, using Portwood's built-in text. A fresh install already has the type and the record.
+The **Signature Request Revoked** email goes to signers who had not signed when a request is revoked. Salesforce does not add new values to an existing packaged picklist when a package is upgraded, so an org that **upgraded** to 3.62 or later, rather than installing fresh, does not list this email type and does not get its default template record. The revoke email still sends, using DocGen's built-in text. A fresh install already has the type and the record.
 
 To customize the revoke email in an upgraded org:
 
 1. In Setup, open **Object Manager → Email Template → Fields & Relationships → Type**.
 2. Under **Values**, add a value with the API name `Signature_Revoked` and the label `Signature Request Revoked (to signers)`. The API name must match exactly.
-3. Open **Portwood → Email Templates**, choose **Signature Request Revoked**, edit it, and save.
+3. Open **DocGen → Email Templates**, choose **Signature Request Revoked**, edit it, and save.
 
 Every other email type can be customized without this step.
 

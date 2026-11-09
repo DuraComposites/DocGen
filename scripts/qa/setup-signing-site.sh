@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Modified by Dura Composites Ltd.
 # Dura Composites Ltd. (new file)
 #
 # Public guest signing in a QA org, end to end:
@@ -127,7 +128,7 @@ if [[ "$DEMO" == true ]]; then
     $LINK
 
   Or send your own from Salesforce: open the Drawing Approval Demo account,
-  Signatures → New signature request → Portwood template.
+  Signatures → New signature request → DocGen template.
   Re-run this script for a fresh link.
 
 EOF

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <brand>
         <logo>DocGenAppLogo</logo>
         <logoVersion>1</logoVersion>
@@ -11,7 +12,7 @@
     <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
     <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
     <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
-    <label>Portwood</label>
+    <label>DocGen</label>
     <navType>Standard</navType>
     <tabs>DocGen_Command_Hub</tabs>
     <tabs>DocGen_Template__c</tabs>

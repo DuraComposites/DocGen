@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // CxSAST: without sharing required for guest user signing context; access gated by cryptographic token
 public without sharing class DocGenSignatureService {
     public class SignatureException extends Exception {
@@ -167,7 +168,7 @@ public without sharing class DocGenSignatureService {
         String brandColor = String.isNotBlank(settings.Signature_Email_Brand_Color__c)
             ? settings.Signature_Email_Brand_Color__c
             : '#0176D3';
-        String companyName = String.isNotBlank(settings.Company_Name__c) ? settings.Company_Name__c : 'Portwood';
+        String companyName = String.isNotBlank(settings.Company_Name__c) ? settings.Company_Name__c : 'DocGen';
 
         // Query audit records for IP addresses and timestamps
         Map<Id, DocGen_Signature_Audit__c> signerAuditMap = new Map<Id, DocGen_Signature_Audit__c>();
@@ -424,12 +425,12 @@ public without sharing class DocGenSignatureService {
                 WHERE Id = :templateId
                 WITH SYSTEM_MODE
                 LIMIT 1
-            ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by Portwood permission sets
+            ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by DocGen permission sets
             if (!tmpls.isEmpty()) {
                 return DocGenFieldWritebackService.parseConfig(tmpls[0].Form_Fields_Config__c);
             }
         } catch (Exception e) {
-            System.debug(LoggingLevel.WARN, 'Portwood: cert field defs load failed: ' + e.getMessage());
+            System.debug(LoggingLevel.WARN, 'DocGen: cert field defs load failed: ' + e.getMessage());
         }
         return new List<DocGenFieldWritebackService.FormFieldDef>();
     }
@@ -602,7 +603,7 @@ public without sharing class DocGenSignatureService {
             // Corrupt/unreadable snapshot — fall back to live merge rather than fail signing.
             System.debug(
                 LoggingLevel.WARN,
-                'Portwood: frozen snapshot unreadable, falling back to live merge: ' + e.getMessage()
+                'DocGen: frozen snapshot unreadable, falling back to live merge: ' + e.getMessage()
             );
             return null;
         }
@@ -703,7 +704,7 @@ public without sharing class DocGenSignatureService {
                 Database.delete(docs, false, AccessLevel.SYSTEM_MODE);
             }
         } catch (Exception e) {
-            System.debug(LoggingLevel.WARN, 'Portwood: frozen snapshot purge skipped: ' + e.getMessage());
+            System.debug(LoggingLevel.WARN, 'DocGen: frozen snapshot purge skipped: ' + e.getMessage());
         }
     }
 
@@ -799,7 +800,7 @@ public without sharing class DocGenSignatureService {
                 }
             } catch (Exception titleErr) {
                 // Title resolution is best-effort — keep the template/fallback name.
-                System.debug(LoggingLevel.WARN, 'Portwood signed-file title format failed: ' + titleErr.getMessage());
+                System.debug(LoggingLevel.WARN, 'DocGen signed-file title format failed: ' + titleErr.getMessage());
             }
         }
         return fileName;
@@ -1227,12 +1228,12 @@ public without sharing class DocGenSignatureService {
         if (attachmentError != null) {
             throw new SignatureException(attachmentError);
         }
-        // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+        // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
         req.Signature_Data__c = typedName;
-        // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+        // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
         req.Status__c = 'In Progress';
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
-        update req; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by Portwood permission sets
+        update req; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by DocGen permission sets
 
         if (Test.isRunningTest()) {
             try {
@@ -1253,14 +1254,14 @@ public without sharing class DocGenSignatureService {
                     EncodingUtil.base64Encode(pdfBlob),
                     'pdf'
                 );
-                // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+                // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
                 req.Status__c = 'Signed';
-                // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+                // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
                 req.Signature_Data__c = null;
                 /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
-                update req; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by Portwood permission sets
+                update req; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by DocGen permission sets
             } catch (Exception e) {
-                System.debug(LoggingLevel.ERROR, 'Portwood: Test path signature error: ' + e.getMessage());
+                System.debug(LoggingLevel.ERROR, 'DocGen: Test path signature error: ' + e.getMessage());
             }
         } else {
             System.enqueueJob(new SignaturePdfQueueable(req.Id));
@@ -1449,7 +1450,7 @@ public without sharing class DocGenSignatureService {
                     WITH SYSTEM_MODE
                 ];
                 for (DocGen_Signature_Audit__c a : audits) {
-                    // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+                    // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
                     a.Document_Hash_SHA256__c = pdfHash;
                 }
                 if (!audits.isEmpty()) {
@@ -1463,7 +1464,7 @@ public without sharing class DocGenSignatureService {
                 }
 
                 // Mark request as signed
-                // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+                // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
                 req.Status__c = 'Signed';
                 req.Protected_Signed_Content_Document_Id__c = protectedSignedContentDocumentId;
                 // v2.0.1 — per-field FLS enforcement (Checkmarx "FLS Update").
@@ -1485,25 +1486,19 @@ public without sharing class DocGenSignatureService {
                 try {
                     DocGenSignatureEmailService.sendAllSignedNotification(requestId, pdfBlob, fileName);
                 } catch (Exception notifEx) {
-                    System.debug(
-                        LoggingLevel.WARN,
-                        'Portwood: All-signed notification failed: ' + notifEx.getMessage()
-                    );
+                    System.debug(LoggingLevel.WARN, 'DocGen: All-signed notification failed: ' + notifEx.getMessage());
                 }
                 try {
                     DocGenSignatureEmailService.sendSignerCompletionEmails(requestId, pdfBlob, fileName);
                 } catch (Exception notifEx) {
-                    System.debug(
-                        LoggingLevel.WARN,
-                        'Portwood: Signer completion email failed: ' + notifEx.getMessage()
-                    );
+                    System.debug(LoggingLevel.WARN, 'DocGen: Signer completion email failed: ' + notifEx.getMessage());
                 }
 
                 // Clean up temp images
                 cleanupTempImages(requestId);
             } catch (Exception e) {
                 String errMsg = e.getTypeName() + ': ' + e.getMessage() + '\n' + e.getStackTraceString();
-                System.debug(LoggingLevel.ERROR, 'Portwood: Signature PDF failed for ' + req.Id + ': ' + errMsg);
+                System.debug(LoggingLevel.ERROR, 'DocGen: Signature PDF failed for ' + req.Id + ': ' + errMsg);
                 DocGen_Signature_Audit__c errAudit = new DocGen_Signature_Audit__c();
                 errAudit.Signature_Request__c = req.Id;
                 errAudit.Signer_Name__c = 'SYSTEM';
@@ -1516,7 +1511,7 @@ public without sharing class DocGenSignatureService {
                 );
                 /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
                 Database.insert(new List<DocGen_Signature_Audit__c>{ errAudit }, false, AccessLevel.SYSTEM_MODE);
-                // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+                // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
                 req.Status__c = 'Viewed';
                 // v2.0.1 — per-field FLS enforcement (Checkmarx "FLS Update").
                 DocGenFlsGuard.assertUpdateable(req, new Set<String>{ 'Status__c' });
@@ -1551,10 +1546,7 @@ public without sharing class DocGenSignatureService {
                     }
                 }
             } catch (Exception e) {
-                System.debug(
-                    LoggingLevel.ERROR,
-                    'Portwood: Failed to clean up temp signature images: ' + e.getMessage()
-                );
+                System.debug(LoggingLevel.ERROR, 'DocGen: Failed to clean up temp signature images: ' + e.getMessage());
             }
         }
     }
@@ -1686,10 +1678,7 @@ public without sharing class DocGenSignatureService {
                         }
                     } catch (Exception titleErr) {
                         // Title resolution is best-effort — fall back to the default file name
-                        System.debug(
-                            LoggingLevel.WARN,
-                            'Portwood packet title format failed: ' + titleErr.getMessage()
-                        );
+                        System.debug(LoggingLevel.WARN, 'DocGen packet title format failed: ' + titleErr.getMessage());
                     }
                 }
 
@@ -1746,7 +1735,7 @@ public without sharing class DocGenSignatureService {
                         } catch (Exception wbEx) {
                             System.debug(
                                 LoggingLevel.WARN,
-                                'Portwood: field writeback event publish failed: ' + wbEx.getMessage()
+                                'DocGen: field writeback event publish failed: ' + wbEx.getMessage()
                             );
                         }
                     }
@@ -1766,7 +1755,7 @@ public without sharing class DocGenSignatureService {
                     WITH SYSTEM_MODE
                 ];
                 for (DocGen_Signature_Audit__c a : audits) {
-                    // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+                    // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
                     a.Document_Hash_SHA256__c = pdfHash;
                 }
                 if (!audits.isEmpty()) {
@@ -1781,10 +1770,10 @@ public without sharing class DocGenSignatureService {
 
                 // Mark signed. #156: reclaim the frozen-snapshot CV (signed PDF produced);
                 // Snapshot_Hash__c stays as the retained tamper-evidence.
-                // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+                // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
                 req.Status__c = 'Signed';
                 req.Protected_Signed_Content_Document_Id__c = protectedSignedContentDocumentId;
-                // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+                // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
                 req.Signature_Data__c = null;
                 Id frozenCvToPurge = (Id) req.Frozen_Document_CV_Id__c;
                 req.Frozen_Document_CV_Id__c = null;
@@ -1813,25 +1802,16 @@ public without sharing class DocGenSignatureService {
                 try {
                     DocGenSignatureEmailService.sendAllSignedNotification(requestId, pdfBlob, fileName);
                 } catch (Exception notifEx) {
-                    System.debug(
-                        LoggingLevel.WARN,
-                        'Portwood: All-signed notification failed: ' + notifEx.getMessage()
-                    );
+                    System.debug(LoggingLevel.WARN, 'DocGen: All-signed notification failed: ' + notifEx.getMessage());
                 }
                 try {
                     DocGenSignatureEmailService.sendSignerCompletionEmails(requestId, pdfBlob, fileName);
                 } catch (Exception notifEx) {
-                    System.debug(
-                        LoggingLevel.WARN,
-                        'Portwood: Signer completion email failed: ' + notifEx.getMessage()
-                    );
+                    System.debug(LoggingLevel.WARN, 'DocGen: Signer completion email failed: ' + notifEx.getMessage());
                 }
             } catch (Exception e) {
                 String errMsg = e.getTypeName() + ': ' + e.getMessage() + '\n' + e.getStackTraceString();
-                System.debug(
-                    LoggingLevel.ERROR,
-                    'Portwood: Template signature PDF failed for ' + req.Id + ': ' + errMsg
-                );
+                System.debug(LoggingLevel.ERROR, 'DocGen: Template signature PDF failed for ' + req.Id + ': ' + errMsg);
                 DocGen_Signature_Audit__c errAudit = new DocGen_Signature_Audit__c();
                 errAudit.Signature_Request__c = req.Id;
                 errAudit.Signer_Name__c = 'SYSTEM';
@@ -1844,7 +1824,7 @@ public without sharing class DocGenSignatureService {
                 );
                 /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
                 Database.insert(new List<DocGen_Signature_Audit__c>{ errAudit }, false, AccessLevel.SYSTEM_MODE);
-                // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+                // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
                 req.Status__c = 'Viewed';
                 // v2.0.1 — per-field FLS enforcement (Checkmarx "FLS Update").
                 DocGenFlsGuard.assertUpdateable(req, new Set<String>{ 'Status__c' });
@@ -2046,7 +2026,7 @@ public without sharing class DocGenSignatureService {
                 WHERE Signature_Request__c = :reqId AND Status__c = 'Signed'
                 WITH SYSTEM_MODE
                 ORDER BY Document_Index__c ASC, Sequence_Order__c ASC
-            ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by Portwood permission sets
+            ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by DocGen permission sets
 
             // Oversized/legacy requests (no Frozen_Document__c) reached this point via a
             // LIVE re-merge (or a data-snapshot re-merge), so the body carries the ORIGINAL

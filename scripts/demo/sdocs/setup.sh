@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
+# Modified by Dura Composites Ltd.
 #
 # SDocs-replacement demo — one command from nothing to a presentable org.
 #
 #   ./scripts/demo/sdocs/setup.sh                          # refresh an existing org
-#   ./scripts/demo/sdocs/setup.sh portwood-sdocs --create  # create it first
+#   ./scripts/demo/sdocs/setup.sh docgen-sdocs --create  # create it first
 #
 # WHAT THIS BUILDS
 # ----------------
@@ -12,7 +13,7 @@
 # approvals, some pull related lists off the project; users forget to attach the
 # e-sig template so we built a Flow to auto-attach it."
 #
-#   - Portwood v3.54.0 installed as a REAL SUBSCRIBER INSTALL (not a source
+#   - DocGen v3.54.0 installed as a REAL SUBSCRIBER INSTALL (not a source
 #     deploy) — the customer sees what a customer gets, namespace and all.
 #   - Demo_Project__c with three related lists (milestones, deliverables,
 #     change orders) and ~35 seeded child records across three projects.
@@ -34,13 +35,13 @@
 # through the `global` API, exactly like a customer's own Apex would.
 set -euo pipefail
 
-ORG="${1:-portwood-sdocs}"
-[[ "$ORG" == --* ]] && ORG="portwood-sdocs"
+ORG="${1:-docgen-sdocs}"
+[[ "$ORG" == --* ]] && ORG="docgen-sdocs"
 CREATE=false
 DAYS=30
-HUB="${DOCGEN_DEVHUB:-Portwood Global - Production}"
+HUB="${DOCGEN_DEVHUB:-prod}"
 # v3.54.0 — the current shipped version. Bump this when a newer one promotes.
-PKG="${PORTWOOD_PACKAGE:-04tVx0000010Y4LIAU}"
+PKG="${DOCGEN_PACKAGE:-04tVx0000010Y4LIAU}"
 
 for ((i = 1; i <= $#; i++)); do
     case "${!i}" in
@@ -60,7 +61,7 @@ say() { printf '\n\033[1m▸ %s\033[0m\n' "$1"; }
 # ── 1. the org ───────────────────────────────────────────────────────────────
 if [[ "$CREATE" == true ]]; then
     say "Creating scratch org '$ORG' (${DAYS}d, hub: $HUB)"
-    # --no-namespace: a subscriber does not OWN portwoodglobal, it receives the
+    # --no-namespace: a subscriber does not OWN duradocgen, it receives the
     # namespace from the package. Creating this org namespaced would let
     # visibility bugs pass that a real customer would hit.
     sf org create scratch \
@@ -71,7 +72,7 @@ if [[ "$CREATE" == true ]]; then
         --no-namespace \
         --wait 30
 
-    say "Installing Portwood $PKG (real subscriber install — takes ~5 min)"
+    say "Installing DocGen $PKG (real subscriber install — takes ~5 min)"
     sf package install --target-org "$ORG" --package "$PKG" \
         --security-type AdminsOnly --no-prompt --publish-wait 20 --wait 60
 fi
@@ -79,8 +80,8 @@ fi
 # ── 2. permissions ───────────────────────────────────────────────────────────
 # AFTER the install, never before: assigning first (or forgetting) makes
 # anonymous-Apex FLS report "No such column" on fields that plainly exist.
-say "Assigning Portwood permission sets"
-for ps in portwoodglobal__DocGen_Admin portwoodglobal__DocGen_User; do
+say "Assigning DocGen permission sets"
+for ps in duradocgen__DocGen_Admin duradocgen__DocGen_User; do
     if out="$(sf org assign permset --target-org "$ORG" --name "$ps" 2>&1)"; then
         echo "   $ps assigned"
     elif printf '%s' "$out" | grep -qiE 'duplicate|already assigned'; then
@@ -132,7 +133,7 @@ done
 # ── 5. templates ─────────────────────────────────────────────────────────────
 # No DOCGEN_DEMO_NS override any more. The installer used to need one here
 # because it took the namespace from `sf org display`, which reports NOTHING for
-# a subscriber org — the org does not own portwoodglobal, it received it — so the
+# a subscriber org — the org does not own duradocgen, it received it — so the
 # generated Apex referenced bare DocGen_Template__c and created zero templates.
 # It now PROBES the org for whichever prefix the object really carries, which is
 # the only thing that distinguishes a real install from a --no-namespace scratch
@@ -160,7 +161,7 @@ cat <<EOF
 
   sf org open --target-org $ORG
 
-  Open the "Portwood Projects" app and pick P-2041 (Meridian Health Systems).
+  Open the "DocGen Projects" app and pick P-2041 (Meridian Health Systems).
   Talk track: scripts/demo/sdocs/DEMO-SCRIPT.md
 
   Between rehearsals:

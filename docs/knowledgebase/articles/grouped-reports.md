@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Use one dataset and `{#GroupBy}` when the categories can change. Use deliberately filtered query aliases when each section has a different data-selection rule.
 
 #### One table per stage
@@ -34,7 +36,7 @@ Renaming `{#QuoteLineItems}` to `{#Purchase}` does not select purchase items. `P
 
 #### Keep table HTML valid
 
-Do not place naked loop/IF text directly between `<table>`, `<tbody>`, and `<tr>`. Browsers can move that text outside the table before Portwood processes it. Keep row-loop markers in cells, and place group markers outside complete tables. After switching between visual editing and HTML, inspect the saved markup and preview again.
+Do not place naked loop/IF text directly between `<table>`, `<tbody>`, and `<tr>`. Browsers can move that text outside the table before DocGen processes it. Keep row-loop markers in cells, and place group markers outside complete tables. After switching between visual editing and HTML, inspect the saved markup and preview again.
 
 #### Respect scope
 

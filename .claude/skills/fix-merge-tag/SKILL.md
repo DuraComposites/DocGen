@@ -1,7 +1,9 @@
 ---
 name: fix-merge-tag
-description: Fix a Portwood merge-tag or parser bug correctly across all of its resolution paths. Use when changing tag parsing, section/loop tags, conditionals, aggregates, or chart buckets — a fix in one path silently does not reach the others.
+description: Fix a DocGen merge-tag or parser bug correctly across all of its resolution paths. Use when changing tag parsing, section/loop tags, conditionals, aggregates, or chart buckets — a fix in one path silently does not reach the others.
 ---
+
+<!-- Modified by Dura Composites Ltd. -->
 
 # Fixing a merge-tag bug
 

@@ -1,3 +1,4 @@
+<!-- Modified by Dura Composites Ltd. -->
 <apex:page
     showHeader="false"
     standardStylesheets="false"
@@ -11,9 +12,12 @@
         <head>
             <meta charset="utf-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <title>Portwood User Guide</title>
-            <meta http-equiv="refresh" content="0; url=https://portwood.dev/guide" />
-            <link rel="canonical" href="https://portwood.dev/guide" />
+            <title>DocGen User Guide</title>
+            <meta
+                http-equiv="refresh"
+                content="0; url=https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md"
+            />
+            <link rel="canonical" href="https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md" />
             <style>
                 body {
                     margin: 0;
@@ -79,16 +83,15 @@
         </head>
         <body>
             <div class="card">
-                <h1>The Portwood User Guide has moved</h1>
+                <h1>The DocGen User Guide has moved</h1>
                 <p>
                     Setup walkthroughs, merge-tag syntax, e-signature configuration, PDF features, Flow integration, and
-                    troubleshooting now live on the web — always up to date with the latest release.
+                    troubleshooting are in the User Guide on GitHub.
                 </p>
-                <a class="cta" href="https://portwood.dev/guide">Open the User Guide ↗</a>
-                <p class="fineprint">
-                    Need implementation help or training? Visit
-                    <a href="https://portwood.dev/support">portwood.dev/support</a>.
-                </p>
+                <a class="cta" href="https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md"
+                    >Open the User Guide ↗</a
+                >
+                <p class="fineprint">Need help or training? Ask your Salesforce administrator.</p>
             </div>
         </body>
     </html>

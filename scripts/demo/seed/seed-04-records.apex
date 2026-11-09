@@ -1,5 +1,6 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
-// Portwood DocGen DEMO — Seed 04: Properties, Certificates, Statements
+// DocGen DEMO — Seed 04: Properties, Certificates, Statements
 //   Powers: real-estate purchase agreement & lease, certificates (completion /
 //   award / verification), financial account statement.
 // Idempotent: clears each Demo object then re-inserts.
@@ -67,12 +68,12 @@ List<Demo_Certificate__c> certs = new List<Demo_Certificate__c>{
         Recipient_Name__c = 'Maria Gonzalez',
         Recipient_Email__c = 'maria.gonzalez@example.com',
         Course_Name__c = 'Salesforce Document Automation — Professional Track',
-        Issuer__c = 'Portwood Global Solutions',
+        Issuer__c = 'Example Consulting Group',
         Issuer_Title__c = 'Director of Training',
         Issue_Date__c = today.addDays(-2),
         Expiration_Date__c = today.addDays(728),
         Certificate_Number__c = 'PWG-CERT-2026-00417',
-        Verification_URL__c = 'https://verify.portwood.dev/c/PWG-CERT-2026-00417',
+        Verification_URL__c = 'https://verify.example.com/c/PWG-CERT-2026-00417',
         Credential_Level__c = 'Professional',
         Score__c = 94,
         Hours__c = 40
@@ -82,11 +83,11 @@ List<Demo_Certificate__c> certs = new List<Demo_Certificate__c>{
         Recipient_Name__c = 'Andre Wallace',
         Recipient_Email__c = 'andre.wallace@example.com',
         Course_Name__c = 'Advanced Template Design Workshop',
-        Issuer__c = 'Portwood Global Solutions',
+        Issuer__c = 'Example Consulting Group',
         Issuer_Title__c = 'Lead Instructor',
         Issue_Date__c = today.addDays(-9),
         Certificate_Number__c = 'PWG-CERT-2026-00391',
-        Verification_URL__c = 'https://verify.portwood.dev/c/PWG-CERT-2026-00391',
+        Verification_URL__c = 'https://verify.example.com/c/PWG-CERT-2026-00391',
         Credential_Level__c = 'Expert',
         Score__c = 99,
         Hours__c = 24
@@ -101,7 +102,7 @@ List<Demo_Certificate__c> certs = new List<Demo_Certificate__c>{
         Issue_Date__c = today.addDays(-15),
         Expiration_Date__c = today.addDays(1080),
         Certificate_Number__c = 'NW-OSHA-2026-1182',
-        Verification_URL__c = 'https://verify.portwood.dev/c/NW-OSHA-2026-1182',
+        Verification_URL__c = 'https://verify.example.com/c/NW-OSHA-2026-1182',
         Credential_Level__c = 'Foundation',
         Hours__c = 10
     )

@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Tests for DocGenButtonController.
  *
@@ -5,7 +6,7 @@
  * is injected via the configOverride seam (CMDT records cannot be DML-inserted in
  * tests). This exercises the full controller flow — config resolution, file
  * read-back, inline base64 vs. download-URL branches, and error handling — without
- * actually invoking Portwood.
+ * actually invoking DocGen.
  */
 @IsTest
 private class DocGenButtonControllerTest {
@@ -393,7 +394,7 @@ private class DocGenButtonControllerTest {
         Test.stopTest();
 
         System.assertEquals(false, dto.success, 'Unknown config should fail');
-        System.assert(dto.errorMessage.contains('No active Portwood Button'), 'Expected config-not-found message');
+        System.assert(dto.errorMessage.contains('No active DocGen Button'), 'Expected config-not-found message');
     }
 
     @IsTest

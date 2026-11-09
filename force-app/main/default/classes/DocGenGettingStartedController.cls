@@ -1,4 +1,5 @@
-/** Lightweight capability probe shared by Portwood authoring panels. */
+// Modified by Dura Composites Ltd.
+/** Lightweight capability probe shared by DocGen authoring panels. */
 public with sharing class DocGenGettingStartedController {
     @AuraEnabled(cacheable=true)
     public static Map<String, Object> getReadiness() {

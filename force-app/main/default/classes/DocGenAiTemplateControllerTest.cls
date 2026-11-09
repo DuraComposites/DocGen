@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Proves the whole pipeline minus the model: provider -> staging field ->
  * validator -> ContentVersion -> readable by the Designer's existing loader.
@@ -393,7 +394,7 @@ private class DocGenAiTemplateControllerTest {
 
     @isTest
     static void providerClassNameComesFromSettings() {
-        // An admin can point Portwood at their own class without editing Apex.
+        // An admin can point DocGen at their own class without editing Apex.
         System.assertEquals(
             'DocGenEinsteinProvider',
             DocGenAiProviderFactory.configuredProviderClass(),
@@ -421,7 +422,7 @@ private class DocGenAiTemplateControllerTest {
         // Named but wrong. Reporting "AI unavailable" would send an admin
         // hunting a missing entitlement that is not missing.
         DocGenAiProvider p = new DocGenAiProviderFactory.DocGenUnavailableProvider(
-            'The class "Foo" does not implement the DocGenAiProvider interface, so Portwood cannot use it.'
+            'The class "Foo" does not implement the DocGenAiProvider interface, so DocGen cannot use it.'
         );
         System.assertEquals(false, p.isAvailable());
         Test.startTest();

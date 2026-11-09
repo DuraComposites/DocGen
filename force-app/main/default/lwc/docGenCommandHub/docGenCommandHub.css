@@ -466,7 +466,7 @@
 }
 
 /* User-guide redirect card — replaces the in-app Learning Center.
-   Single CTA pointing at portwood.dev/guide; sized to read as a hero
+   Single CTA pointing at the User Guide; sized to read as a hero
    on first paint. */
 .guide-redirect-card {
     max-width: 720px;

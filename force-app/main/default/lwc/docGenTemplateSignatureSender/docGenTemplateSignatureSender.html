@@ -15,7 +15,7 @@
                     name="selectTemplate"
                     label="Select Template"
                     value=""
-                    placeholder="Choose a Portwood template..."
+                    placeholder="Choose a DocGen template..."
                     options={availableTemplateOptions}
                     onchange={handleTemplateSelected}
                 >
@@ -255,7 +255,7 @@
                     <lightning-textarea
                         name="emailMessage"
                         label="Custom Email Message (optional)"
-                        field-level-help="Replaces the default message in the signature request email for this send only. The branded layout and the signing button are always kept. Leave blank to use the configured Email Template. Edit the templates themselves under Portwood Command Hub → Email Templates."
+                        field-level-help="Replaces the default message in the signature request email for this send only. The branded layout and the signing button are always kept. Leave blank to use the configured Email Template. Edit the templates themselves under DocGen Command Hub → Email Templates."
                         placeholder="Add a personal note for the signer…"
                         value={emailMessage}
                         onchange={handleEmailMessageChange}

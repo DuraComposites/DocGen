@@ -10,7 +10,7 @@
   so a Flow was built to auto-attach it — and that Flow is itself now a
   maintenance burden.
 
-  With Portwood there is nothing to attach. The signature fields live in the
+  With DocGen there is nothing to attach. The signature fields live in the
   template body, so a generated document is already signable. That reduces the
   whole automation to a single action: pick a template, pick a record, name the
   signers. Everything below the entry criteria is ONE action call and one field
@@ -28,6 +28,7 @@
   and reviewable in the repo. It opens and edits normally in Flow Builder.
 -->
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <apiVersion>62.0</apiVersion>
     <description
     >When a project is set to Pending Client Approval, generate the approval document and send it to the client contact for signature. Demo of the SDocs replacement story.</description>
@@ -160,10 +161,10 @@
     <!-- The entire integration. One action. -->
     <actionCalls>
         <name>Create_Signature_Request</name>
-        <label>Portwood — Create Signature Request</label>
+        <label>DocGen — Create Signature Request</label>
         <locationX>176</locationX>
         <locationY>407</locationY>
-        <actionName>portwoodglobal__DocGenSignatureFlowAction</actionName>
+        <actionName>duradocgen__DocGenSignatureFlowAction</actionName>
         <actionType>apex</actionType>
         <connector>
             <targetReference>Was_It_Created</targetReference>
@@ -278,7 +279,7 @@
 
     <variables>
         <name>clientSigner</name>
-        <apexClass>portwoodglobal__DocGenSigner</apexClass>
+        <apexClass>duradocgen__DocGenSigner</apexClass>
         <dataType>Apex</dataType>
         <isCollection>false</isCollection>
         <isInput>false</isInput>
@@ -286,7 +287,7 @@
     </variables>
     <variables>
         <name>signerList</name>
-        <apexClass>portwoodglobal__DocGenSigner</apexClass>
+        <apexClass>duradocgen__DocGenSigner</apexClass>
         <dataType>Apex</dataType>
         <isCollection>true</isCollection>
         <isInput>false</isInput>

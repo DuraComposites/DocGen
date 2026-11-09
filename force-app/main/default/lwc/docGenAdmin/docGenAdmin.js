@@ -114,7 +114,7 @@ import TYPE_FIELD from '@salesforce/schema/DocGen_Template__c.Type__c';
 import DOCGEN_VERSION_OBJECT from '@salesforce/schema/DocGen_Template_Version__c';
 import VERSION_TYPE_FIELD from '@salesforce/schema/DocGen_Template_Version__c.Type__c';
 import BASE_OBJECT_FIELD from '@salesforce/schema/DocGen_Template__c.Base_Object_API__c';
-// #369 — which Portwood Brand this template's signature emails use
+// #369 — which DocGen Brand this template's signature emails use
 import BRAND_FIELD from '@salesforce/schema/DocGen_Template__c.Brand__c';
 import QUERY_CONFIG_FIELD from '@salesforce/schema/DocGen_Template__c.Query_Config__c';
 import DESC_FIELD from '@salesforce/schema/DocGen_Template__c.Description__c';
@@ -258,7 +258,7 @@ const F = {
     // #161 follow-up — dedicated storage for Signer Inputs form-field config.
     // The field has no @salesforce/schema import yet (backend ships it in
     // parallel), so resolve its namespace from an already-resolved field's
-    // prefix (e.g. `portwoodglobal__` in subscriber orgs, '' in staging).
+    // prefix (e.g. `duradocgen__` in subscriber orgs, '' in staging).
     FormFieldsConfig:
         QUERY_CONFIG_FIELD.fieldApiName.slice(0, QUERY_CONFIG_FIELD.fieldApiName.length - 'Query_Config__c'.length) +
         'Form_Fields_Config__c',
@@ -490,7 +490,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
     editTemplateId;
     editTemplateName;
     editTemplateCategory;
-    // #369 — which Portwood Brand this template's signature emails use
+    // #369 — which DocGen Brand this template's signature emails use
     @track editTemplateBrand = '';
     @track brandOptions = [];
     @track editTemplateType;
@@ -1494,7 +1494,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             // CxSAST: CSRF protection handled by Salesforce Aura/LWC framework
             const count = await createSampleTemplates();
             this.showToast(
-                'Welcome to Portwood!',
+                'Welcome to DocGen!',
                 count + ' sample templates installed. Open any template to see how merge tags work.',
                 'success'
             );
@@ -4770,7 +4770,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
     /**
      * Names EVERY field that needs the value, not just the first one (#303).
      *
-     * The old message named only "Portwood Template > Type". Saving also writes
+     * The old message named only "DocGen Template > Type". Saving also writes
      * the version record's own restricted Type picklist, so an admin who did
      * exactly what the message said still hit
      * "Type: bad value for restricted picklist field: Canvas" on save.
@@ -4782,10 +4782,10 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
 
         const fields = [];
         if (onTemplate.length) {
-            fields.push('Portwood Template > Type');
+            fields.push('DocGen Template > Type');
         }
         if (onVersion.length) {
-            fields.push('Portwood Template Version > Type');
+            fields.push('DocGen Template Version > Type');
         }
 
         return (
@@ -4813,14 +4813,14 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
         if (this.missingTypeValues.length && tmplApi) {
             links.push({
                 objectApiName: tmplApi,
-                label: 'Portwood Template > Type',
+                label: 'DocGen Template > Type',
                 url: base + tmplApi + '/FieldsAndRelationships/view'
             });
         }
         if (this.missingVersionTypeValues.length && versApi) {
             links.push({
                 objectApiName: versApi,
-                label: 'Portwood Template Version > Type',
+                label: 'DocGen Template Version > Type',
                 url: base + versApi + '/FieldsAndRelationships/view'
             });
         }
@@ -5131,13 +5131,13 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             } else if (
                 /INSUFFICIENT_ACCESS|FIELD_INTEGRITY|not writeable|INVALID_FIELD_FOR_INSERT_UPDATE/i.test(detail)
             ) {
-                hint = ' — Check that the Portwood Admin permission set is assigned to your user.';
+                hint = ' — Check that the DocGen Admin permission set is assigned to your user.';
             } else if (/DUPLICATE_VALUE/i.test(detail)) {
                 hint = ' — The API Name is already used by another template. Change it and retry.';
             }
             this.showToast('Could not create template', detail + hint, 'error', 'sticky');
             // eslint-disable-next-line no-console
-            console.error('Portwood createTemplate failed', error);
+            console.error('DocGen createTemplate failed', error);
         }
     }
 
@@ -5167,14 +5167,14 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
     _missingTypeFieldsForValue(value) {
         const fields = [];
         if (this._orgTypeValues && this._orgTypeValues.length && !this._orgTypeValues.includes(value)) {
-            fields.push('Portwood Template > Type');
+            fields.push('DocGen Template > Type');
         }
         if (
             this._orgVersionTypeValues &&
             this._orgVersionTypeValues.length &&
             !this._orgVersionTypeValues.includes(value)
         ) {
-            fields.push('Portwood Template Version > Type');
+            fields.push('DocGen Template Version > Type');
         }
         return fields;
     }
@@ -5388,7 +5388,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             // Basic validation
             const parsed = JSON.parse(jsonStr);
             if (!parsed.template || !parsed.docgenExportVersion) {
-                this.showToast('Invalid File', 'This file is not a valid Portwood export.', 'error');
+                this.showToast('Invalid File', 'This file is not a valid DocGen export.', 'error');
                 return;
             }
             // CxSAST: CSRF protection handled by Salesforce Aura/LWC framework
@@ -5711,7 +5711,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
                         activateVariant: isActive ? 'neutral' : 'brand',
                         // Namespace-safe disable flag for the Activate/Delete buttons —
                         // raw 'Is_Active__c' keys don't exist on subscriber-org rows
-                        // (they're portwoodglobal__-prefixed there).
+                        // (they're duradocgen__-prefixed there).
                         disableAction: !!isActive,
                         bodyCvId: v[F.VerCvId] || '',
                         bodyCvFileName: ''
@@ -5952,7 +5952,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
     }
 
     // Namespace-aware truthy check — F.QueryConfig resolves to the namespaced
-    // field name in subscriber orgs (e.g. portwoodglobal__Query_Config__c), so
+    // field name in subscriber orgs (e.g. duradocgen__Query_Config__c), so
     // the modal must read via this getter rather than `previewVersion.Query_Config__c`.
     get hasPreviewVersionQuery() {
         const v = this.previewVersion?.[F.QueryConfig];
@@ -6150,7 +6150,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
                 // Preserve the original image if the source is no longer
                 // readable. This keeps unrelated template edits saveable.
                 // eslint-disable-next-line no-console
-                console.warn('Portwood: rich-text ' + (region || 'chrome') + ' image migration failed', error);
+                console.warn('DocGen: rich-text ' + (region || 'chrome') + ' image migration failed', error);
             }
         }
         return rewritten;
@@ -6810,7 +6810,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
                         }
                     }
                 } catch (imgErr) {
-                    console.warn('Portwood admin: Failed to fetch image CV ' + cvId, imgErr);
+                    console.warn('DocGen admin: Failed to fetch image CV ' + cvId, imgErr);
                 }
             }
         }
@@ -6831,7 +6831,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
                         }
                     }
                 } catch (urlErr) {
-                    console.warn('Portwood admin: rich text image extract failed for ' + url, urlErr);
+                    console.warn('DocGen admin: rich text image extract failed for ' + url, urlErr);
                 }
             }
         }
@@ -6952,7 +6952,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             }
         } catch (err) {
             // eslint-disable-next-line no-console
-            console.warn('Portwood size guard failed (continuing):', err);
+            console.warn('DocGen size guard failed (continuing):', err);
         }
 
         this.showToast('Success', 'File Uploaded: ' + file.name, 'success');
@@ -9853,7 +9853,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             // Was silently swallowed, which hid the handles never rendering at all.
             // Still non-fatal, but no longer invisible.
             // eslint-disable-next-line no-console
-            console.warn('Portwood: table overlay failed', e);
+            console.warn('DocGen: table overlay failed', e);
         }
     };
     _overlayLastRun = 0;
@@ -16448,7 +16448,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
                 if (!stored) {
                     this.showToast(
                         'Re-upload to change the wash',
-                        'This watermark was uploaded before Portwood started keeping the original, so the opacity is baked in. Upload the image again to apply ' +
+                        'This watermark was uploaded before DocGen started keeping the original, so the opacity is baked in. Upload the image again to apply ' +
                             pct +
                             '%.',
                         'warning'
@@ -16644,7 +16644,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
         try {
             const ChartCtor = await this._ensureChartJsForAdmin();
             if (!ChartCtor) {
-                console.warn('Portwood admin: Chart.js did not expose window.Chart; using the Apex chart path.');
+                console.warn('DocGen admin: Chart.js did not expose window.Chart; using the Apex chart path.');
             }
             if (ChartCtor) {
                 const clientResult = await prepareChartsClientSide({ templateId, recordId, ChartCtor });
@@ -16653,7 +16653,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
                 }
             }
         } catch (e) {
-            console.warn('Portwood admin: client-side chart path failed; using Apex chart path', e);
+            console.warn('DocGen admin: client-side chart path failed; using Apex chart path', e);
         }
 
         try {
@@ -16678,12 +16678,12 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
                         cvIds.push(cvId);
                     }
                 } catch (chartErr) {
-                    console.warn('Portwood admin: chart prep failed for signature ' + req.signature, chartErr);
+                    console.warn('DocGen admin: chart prep failed for signature ' + req.signature, chartErr);
                 }
             }
             return { map, cvIds };
         } catch (e) {
-            console.warn('Portwood admin: prepareChartImages failed; charts will text-fallback', e);
+            console.warn('DocGen admin: prepareChartImages failed; charts will text-fallback', e);
             return { map: {}, cvIds: [] };
         }
     }
@@ -16703,7 +16703,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
         try {
             await deleteChartImages({ cvIds });
         } catch (cleanupErr) {
-            console.warn('Portwood admin: chart CV cleanup failed', cleanupErr);
+            console.warn('DocGen admin: chart CV cleanup failed', cleanupErr);
         }
     }
 }

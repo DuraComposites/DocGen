@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
+# Modified by Dura Composites Ltd.
 #
-# Portwood — functional smoke test for a REAL package install, driven entirely over
+# DocGen — functional smoke test for a REAL package install, driven entirely over
 # the REST API.
 #
-#   ./scripts/edition-smoke-test.sh --target-org portwood-pe
+#   ./scripts/edition-smoke-test.sh --target-org docgen-pe
 #
 # WHY THIS EXISTS AND NOT scripts/e2e-*.apex:
 #
@@ -17,7 +18,7 @@
 #   What IS reachable in a subscriber org on any edition: the REST Actions API over
 #   the package's `global` @InvocableMethod surface. This script builds a template
 #   from scratch with plain record DML and then renders it through
-#   portwoodglobal__DocGenFlowAction — the same entry point a customer's Flow uses.
+#   duradocgen__DocGenFlowAction — the same entry point a customer's Flow uses.
 #
 # It proves the install is functional end to end: object + field metadata landed,
 # the permission set grants what the merge engine needs, ContentVersion plumbing
@@ -25,7 +26,7 @@
 
 set -euo pipefail
 
-ORG="portwood-pe"
+ORG="docgen-pe"
 KEEP="false"
 
 while [[ $# -gt 0 ]]; do
@@ -65,12 +66,12 @@ echo "==> Org: $ORG  |  Edition: $edition  |  API v$api_version"
 
 echo "==> 1. Seeding an Account to merge from"
 account_id="$(sf data create record --target-org "$ORG" -s Account \
-    -v "Name='Portwood Smoke Co' Industry=Technology" --json \
+    -v "Name='DocGen Smoke Co' Industry=Technology" --json \
     | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["id"])')"
 check "Account created" "true"
 
 echo "==> 2. Uploading the HTML template body as a ContentVersion"
-tmp_dir="$(mktemp -d -t portwood-smoke-XXXXXX)"
+tmp_dir="$(mktemp -d -t docgen-smoke-XXXXXX)"
 [[ "$KEEP" == "true" ]] || trap 'rm -rf "$tmp_dir"' EXIT
 
 # Deliberately plain CSS 2.1 — Flying Saucer silently ignores flex/grid/calc/vars.
@@ -85,7 +86,7 @@ cat > "$tmp_dir/body.html" <<'HTML'
     </style>
   </head>
   <body>
-    <h1>Portwood Edition Smoke Test</h1>
+    <h1>DocGen Edition Smoke Test</h1>
     <table>
       <tr><td>Account</td><td>{Name}</td></tr>
       <tr><td>Industry</td><td>{Industry}</td></tr>
@@ -97,7 +98,7 @@ HTML
 
 cv_body="$(python3 -c 'import base64,sys; print(base64.b64encode(open(sys.argv[1],"rb").read()).decode())' "$tmp_dir/body.html")"
 cat > "$tmp_dir/cv.json" <<JSON
-{"Title":"portwood_smoke_body","PathOnClient":"portwood_smoke_body.html","VersionData":"${cv_body}"}
+{"Title":"docgen_smoke_body","PathOnClient":"docgen_smoke_body.html","VersionData":"${cv_body}"}
 JSON
 
 cv_id="$(sf api request rest "/services/data/v${api_version}/sobjects/ContentVersion" \
@@ -106,22 +107,22 @@ cv_id="$(sf api request rest "/services/data/v${api_version}/sobjects/ContentVer
 check "Template body ContentVersion created" "true"
 
 echo "==> 3. Creating the template + active version"
-template_id="$(sf data create record --target-org "$ORG" -s portwoodglobal__DocGen_Template__c \
-    -v "Name='Portwood Edition Smoke' portwoodglobal__Base_Object_API__c=Account portwoodglobal__Type__c=HTML portwoodglobal__Output_Format__c=PDF portwoodglobal__Is_Active__c=true" --json \
+template_id="$(sf data create record --target-org "$ORG" -s duradocgen__DocGen_Template__c \
+    -v "Name='DocGen Edition Smoke' duradocgen__Base_Object_API__c=Account duradocgen__Type__c=HTML duradocgen__Output_Format__c=PDF duradocgen__Is_Active__c=true" --json \
     | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["id"])')"
 
-version_id="$(sf data create record --target-org "$ORG" -s portwoodglobal__DocGen_Template_Version__c \
-    -v "portwoodglobal__Template__c=$template_id portwoodglobal__Content_Version_Id__c=$cv_id portwoodglobal__Base_Object_API__c=Account portwoodglobal__Type__c=HTML portwoodglobal__Output_Format__c=PDF portwoodglobal__Is_Active__c=true" --json \
+version_id="$(sf data create record --target-org "$ORG" -s duradocgen__DocGen_Template_Version__c \
+    -v "duradocgen__Template__c=$template_id duradocgen__Content_Version_Id__c=$cv_id duradocgen__Base_Object_API__c=Account duradocgen__Type__c=HTML duradocgen__Output_Format__c=PDF duradocgen__Is_Active__c=true" --json \
     | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["id"])')"
 check "Template + version records created" "true"
 
-echo "==> 4. Generating a PDF through portwoodglobal__DocGenFlowAction (REST Actions API)"
+echo "==> 4. Generating a PDF through duradocgen__DocGenFlowAction (REST Actions API)"
 cat > "$tmp_dir/action.json" <<JSON
-{"inputs":[{"templateId":"${template_id}","recordId":"${account_id}","saveToRecord":true,"documentTitle":"Portwood Edition Smoke Output"}]}
+{"inputs":[{"templateId":"${template_id}","recordId":"${account_id}","saveToRecord":true,"documentTitle":"DocGen Edition Smoke Output"}]}
 JSON
 
 action_out="$(sf api request rest \
-    "/services/data/v${api_version}/actions/custom/apex/portwoodglobal__DocGenFlowAction" \
+    "/services/data/v${api_version}/actions/custom/apex/duradocgen__DocGenFlowAction" \
     --target-org "$ORG" --method POST --body "@$tmp_dir/action.json" 2>&1 || true)"
 
 echo "$action_out" > "$tmp_dir/action-out.json"
@@ -168,9 +169,9 @@ else
     # streams mean a raw grep can miss it, so fall back to pdftotext when present.
     if command -v pdftotext >/dev/null 2>&1; then
         pdftotext "$tmp_dir/out.pdf" "$tmp_dir/out.txt" 2>/dev/null || true
-        grep -q "Portwood Smoke Co" "$tmp_dir/out.txt" 2>/dev/null \
+        grep -q "DocGen Smoke Co" "$tmp_dir/out.txt" 2>/dev/null \
             && check "Merge tag {Name} resolved in rendered PDF" "true" \
-            || check "Merge tag {Name} resolved in rendered PDF" "false" "'Portwood Smoke Co' not in extracted text"
+            || check "Merge tag {Name} resolved in rendered PDF" "false" "'DocGen Smoke Co' not in extracted text"
         grep -q "{Name}" "$tmp_dir/out.txt" 2>/dev/null \
             && check "No unresolved merge tags leaked" "false" "literal {Name} found in output" \
             || check "No unresolved merge tags leaked" "true"
@@ -184,7 +185,7 @@ if [[ "$KEEP" == "true" ]]; then
     echo "  (--keep) left behind: account=$account_id template=$template_id"
     echo "  artifacts in $tmp_dir"
 else
-    sf data delete record --target-org "$ORG" -s portwoodglobal__DocGen_Template__c -i "$template_id" >/dev/null 2>&1 || true
+    sf data delete record --target-org "$ORG" -s duradocgen__DocGen_Template__c -i "$template_id" >/dev/null 2>&1 || true
     sf data delete record --target-org "$ORG" -s Account -i "$account_id" >/dev/null 2>&1 || true
     echo "  removed smoke records"
 fi

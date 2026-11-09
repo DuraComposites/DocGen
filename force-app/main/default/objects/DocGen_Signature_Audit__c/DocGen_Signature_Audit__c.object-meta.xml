@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
@@ -13,13 +14,13 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>ControlledByParent</externalSharingModel>
-    <label>Portwood Signature Audit</label>
+    <label>DocGen Signature Audit</label>
     <nameField>
         <displayFormat>AUD-{000000}</displayFormat>
         <label>Audit Number</label>
         <type>AutoNumber</type>
     </nameField>
-    <pluralLabel>Portwood Signature Audits</pluralLabel>
+    <pluralLabel>DocGen Signature Audits</pluralLabel>
     <searchLayouts />
     <sharingModel>ControlledByParent</sharingModel>
     <visibility>Public</visibility>

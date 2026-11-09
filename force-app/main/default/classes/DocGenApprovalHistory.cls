@@ -1,6 +1,7 @@
+// Modified by Dura Composites Ltd.
 /**
  * Issue #66 — loads Classic Approval history for a record and exposes it as a
- * standard Portwood merge-data list, so template authors can use:
+ * standard DocGen merge-data list, so template authors can use:
  *
  *   {#Approvals}
  *     {ActorName} ({ActorTitle}) — {StepStatus} — {CreatedDate}

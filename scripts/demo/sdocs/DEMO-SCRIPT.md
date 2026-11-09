@@ -1,8 +1,10 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 # Demo script — replacing SDocs for project documents & e-signature
 
 **Audience:** Kathy and her team.
 **Length:** 15 minutes of demo, 10 of discussion.
-**Org:** `portwood-sdocs` (`sf org open --target-org portwood-sdocs`), Portwood **v3.54.0** installed as a real managed-package install.
+**Org:** `docgen-sdocs` (`sf org open --target-org docgen-sdocs`), DocGen **v3.54.0** installed as a real managed-package install.
 
 ---
 
@@ -18,7 +20,7 @@ There are three separate asks buried in that paragraph. Address them in this ord
 | 2   | "pull data from related lists off the project" | Can you do the hard ones?              |
 | 3   | "users forget… so I built a flow"              | Can you make the failure mode go away? |
 
-**The thesis, in one sentence:** in Portwood the e-signature fields live inside the template, so there is no second artifact to attach — which means there is nothing to forget, and the Flow she built to compensate collapses into a single action.
+**The thesis, in one sentence:** in DocGen the e-signature fields live inside the template, so there is no second artifact to attach — which means there is nothing to forget, and the Flow she built to compensate collapses into a single action.
 
 Say that sentence early. Everything after it is evidence.
 
@@ -28,26 +30,26 @@ Say that sentence early. Everything after it is evidence.
 
 ```bash
 # 1. Put the org back to a clean pre-demo state (do this every time)
-sf apex run --target-org portwood-sdocs -f scripts/demo/sdocs/reset.apex
+sf apex run --target-org docgen-sdocs -f scripts/demo/sdocs/reset.apex
 
 # 2. Open the org
-sf org open --target-org portwood-sdocs
+sf org open --target-org docgen-sdocs
 ```
 
-Then in the browser: **App Launcher → Portwood Projects → Demo Projects tab → P-2041 Patient Portal Modernization** (Meridian Health Systems). Leave that tab open.
+Then in the browser: **App Launcher → DocGen Projects → Demo Projects tab → P-2041 Patient Portal Modernization** (Meridian Health Systems). Leave that tab open.
 
 **Have a second browser window ready in incognito.** That is where the client signs.
 
 ### The one thing that will bite you
 
-A fresh scratch org has **no Org-Wide Email Address**, so Portwood creates the signature request and the signing links but does not send the invitation email. You will see this on the request record:
+A fresh scratch org has **no Org-Wide Email Address**, so DocGen creates the signature request and the signing links but does not send the invitation email. You will see this on the request record:
 
-> Emails not sent — no Org-Wide Email Address configured. Set one in Portwood > Signatures settings.
+> Emails not sent — no Org-Wide Email Address configured. Set one in DocGen > Signatures settings.
 
 The signing experience is completely intact. Get the link directly:
 
 ```bash
-sf apex run --target-org portwood-sdocs -f scripts/demo/sdocs/print-signing-url.apex
+sf apex run --target-org docgen-sdocs -f scripts/demo/sdocs/print-signing-url.apex
 ```
 
 Paste the `SIGN-URL open` line into the incognito window. Do not hand-edit the URL — the script picks the correct signing page for you.
@@ -62,7 +64,7 @@ If you want real email on stage, configure an Org-Wide Email Address **before** 
 
 Land on **P-2041 Patient Portal Modernization**. Scroll the related lists.
 
-> "This is a project record with the three related lists you described — milestones, deliverables, change orders. Nothing here is Portwood. This is just your data. Portwood is the panel on the right."
+> "This is a project record with the three related lists you described — milestones, deliverables, change orders. Nothing here is DocGen. This is just your data. DocGen is the panel on the right."
 
 Point at **Generate Document** in the sidebar. Three templates listed.
 
@@ -102,7 +104,7 @@ Three pages come back. Walk them:
 
 > "The certificate showed three, not four. The template filters to approved change orders only — that rule lives in the template's query, not in the body and not in code. Which is why the table and the revised contract value can never disagree with each other."
 
-If someone asks about scale: the same mechanism handles thousands of child rows; past ~2,000 Portwood switches to a different query strategy automatically and keeps repeating table headers across pages.
+If someone asks about scale: the same mechanism handles thousands of child rows; past ~2,000 DocGen switches to a different query strategy automatically and keeps repeating table headers across pages.
 
 ---
 
@@ -132,7 +134,7 @@ This path leaves **email PIN verification ON**, so you will hit "Verify your ema
 ```bash
 # 1. type the signer's email on the page → Send Verification Code
 # 2. then:
-sf apex run --target-org portwood-sdocs -f scripts/demo/sdocs/set-known-pin.apex
+sf apex run --target-org docgen-sdocs -f scripts/demo/sdocs/set-known-pin.apex
 # 3. enter 123456 on screen.  Do NOT click Resend afterwards.
 ```
 
@@ -142,7 +144,7 @@ Sign as Dana. Notice she is shown **2 fields, not 4** — only her role's placem
 
 When both are done, open the PDF on the record:
 
-- Both stamps sit in their own cells — _Signed by Dana Whitfield · Portwood_ on the left, _Signed by Alan Reyes · Portwood_ on the right
+- Both stamps sit in their own cells — _Signed by Dana Whitfield · DocGen_ on the left, _Signed by Alan Reyes · DocGen_ on the right
 - The Certificate of Completion lists **both** signers with their roles, emails, timestamps, IP addresses and consent records
 
 > "Sequential ordering, per-role fields, one certificate covering both parties. That is all declared by four tags in the template."
@@ -158,7 +160,7 @@ Open **Setup → Flows → Project — Auto-Send for Approval**. Show the canvas
 1. Start — when a project's Status changes to _Pending Client Approval_
 2. Get the client contact
 3. Build the signer
-4. **Portwood — Create Signature Request**
+4. **DocGen — Create Signature Request**
 5. Stamp the project (audit)
 
 > "Compare this to what you have today. There is no 'generate the document' step. There is no file lookup, no ContentDocumentLink, no 'find the e-sig template and attach it' branch. That one action generates the document from the template and requests the signature — because the signature fields were in the template the whole time. Your users cannot forget to attach something that was never a separate thing."
@@ -176,7 +178,7 @@ Refresh. The record now shows **Approval Sent On** = today and a **Last Signatur
 **Then sign it.** Get the link:
 
 ```bash
-sf apex run --target-org portwood-sdocs -f scripts/demo/sdocs/print-signing-url.apex
+sf apex run --target-org docgen-sdocs -f scripts/demo/sdocs/print-signing-url.apex
 ```
 
 Paste into incognito. The client sees the fully merged document with **SIGN HERE** and **DATE** markers. Click **Start Signing** → type or draw the name → **Save & Next** → the date auto-fills → **Finish & Submit** with the ESIGN consent checkbox.
@@ -185,7 +187,7 @@ Back in Salesforce, refresh P-2088:
 
 - Signature Request status → **Signed**
 - A PDF named _Approval Request - P-2088 - Northwind Logistics Group_ is now on the project's Files
-- Open it: the signature is stamped in place ("Signed by Marcus Ellery · Portwood"), and there is a **Certificate of Completion** page with the signer's email, timestamp, IP address, consent record, an ESIGN/UETA attestation, and a SHA-256 hash of the signed PDF for tamper evidence.
+- Open it: the signature is stamped in place ("Signed by Marcus Ellery · DocGen"), and there is a **Certificate of Completion** page with the signer's email, timestamp, IP address, consent record, an ESIGN/UETA attestation, and a SHA-256 hash of the signed PDF for tamper evidence.
 
 > "That certificate is generated for you. It is the thing your legal team will ask about."
 
@@ -226,23 +228,23 @@ Anything that can run a Flow — a button, an approval process, a scheduled path
 
 - **Emails need an Org-Wide Email Address.** In this scratch org there isn't one, so links are generated but not emailed. In their org this is a one-time setup.
 - **Email PIN verification is OFF in the Flow, ON in the record-page sender.** The Flow turns it off (`requireEmailVerification = false`) because a Flow run cannot pause for someone to read a code; the sender component leaves it on. Neither can deliver the code without an OWA, so use `set-known-pin.apex` to plant `123456` when you want to walk through the verification step. In their org, with an OWA configured, both send for real.
-- **v3.54.0 bug, already fixed in the repo, not yet in a released build:** the classic typed-name signing page (`/apex/portwoodglobal__DocGenSignature`) cannot complete a signature — it hangs on "Saving your signature…" because its `saveSignature` remoting call passes five arguments to a six-argument method (regression from #161). **This demo does not touch that page** — the Create Signature Request action sets `Source_Document_Id__c`, which routes signers to the guided PDF viewer, and that path is verified working end to end. Ship the fix before any customer lands on the classic path.
+- **v3.54.0 bug, already fixed in the repo, not yet in a released build:** the classic typed-name signing page (`/apex/duradocgen__DocGenSignature`) cannot complete a signature — it hangs on "Saving your signature…" because its `saveSignature` remoting call passes five arguments to a six-argument method (regression from #161). **This demo does not touch that page** — the Create Signature Request action sets `Source_Document_Id__c`, which routes signers to the guided PDF viewer, and that path is verified working end to end. Ship the fix before any customer lands on the classic path.
 
 ---
 
 ## What this org contains
 
-| Thing                                                                     | Where                                                   |
-| ------------------------------------------------------------------------- | ------------------------------------------------------- |
-| 3 projects, 14 milestones, 14 deliverables, 7 change orders               | Portwood Projects app                                   |
-| `Project Approval Request` — 1 page, 1 signature                          | Portwood Templates                                      |
-| `Project Acceptance Certificate` — 3 pages, 3 related lists, 2 signatures | Portwood Templates                                      |
-| `Project — Auto-Send for Approval`                                        | Setup → Flows                                           |
-| Template bodies                                                           | `DEMO TEMPLATES/html/prof-services/project-*.html`      |
-| Rebuild from scratch                                                      | `./scripts/demo/sdocs/setup.sh portwood-sdocs --create` |
-| Reset between rehearsals                                                  | `scripts/demo/sdocs/reset.apex`                         |
-| Get the current signing link                                              | `scripts/demo/sdocs/print-signing-url.apex`             |
-| Plant a known email PIN (`123456`)                                        | `scripts/demo/sdocs/set-known-pin.apex`                 |
+| Thing                                                                     | Where                                                 |
+| ------------------------------------------------------------------------- | ----------------------------------------------------- |
+| 3 projects, 14 milestones, 14 deliverables, 7 change orders               | DocGen Projects app                                   |
+| `Project Approval Request` — 1 page, 1 signature                          | DocGen Templates                                      |
+| `Project Acceptance Certificate` — 3 pages, 3 related lists, 2 signatures | DocGen Templates                                      |
+| `Project — Auto-Send for Approval`                                        | Setup → Flows                                         |
+| Template bodies                                                           | `DEMO TEMPLATES/html/prof-services/project-*.html`    |
+| Rebuild from scratch                                                      | `./scripts/demo/sdocs/setup.sh docgen-sdocs --create` |
+| Reset between rehearsals                                                  | `scripts/demo/sdocs/reset.apex`                       |
+| Get the current signing link                                              | `scripts/demo/sdocs/print-signing-url.apex`           |
+| Plant a known email PIN (`123456`)                                        | `scripts/demo/sdocs/set-known-pin.apex`               |
 
 **Showcase record:** P-2041 (Meridian Health Systems) — richest related lists, use it for Beats 2 and 3.
 **Automation record:** P-2088 (Northwind Logistics Group) — used by Beat 4 so P-2041 stays clean.

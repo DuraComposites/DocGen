@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Authoring kit for the HTML-first template creation wizard.
  *
@@ -9,7 +10,7 @@
  *    HTML template body with the author's real merge fields injected, ready
  *    to save as v1 and generate on first click.
  *  - buildAiPrompt(shape, options) — assembles a copy-paste LLM prompt with
- *    the full Portwood tag cheat sheet, the Flying Saucer rendering constraints,
+ *    the full DocGen tag cheat sheet, the Flying Saucer rendering constraints,
  *    and the template's actual schema.
  *
  * Every starter obeys the Flying Saucer envelope: CSS 2.1 only (no flex/grid/
@@ -213,7 +214,7 @@ ${detailRows(detailFields)}
     </table>
 ${sections}
 
-    <div class="footer-note">Generated with Portwood &#8226; {Today:MM/dd/yyyy}</div>`;
+    <div class="footer-note">Generated with DocGen &#8226; {Today:MM/dd/yyyy}</div>`;
     return docShell('Record Report', inner);
 }
 
@@ -424,7 +425,7 @@ export const STARTERS = [
         key: 'agreement',
         label: 'Agreement (Signature-ready)',
         icon: 'utility:signature',
-        description: 'Numbered terms with a two-party e-signature block wired to Portwood signature tags.'
+        description: 'Numbered terms with a two-party e-signature block wired to DocGen signature tags.'
     },
     {
         key: 'certificate',
@@ -497,7 +498,7 @@ export function buildAiPrompt(shape, options) {
     const opts = options || {};
     const lines = [];
     lines.push(
-        'You are writing an HTML document template for Portwood, a native Salesforce document-generation package. The template is a single self-contained HTML file. Portwood replaces {merge tags} with Salesforce record data, then renders the HTML to PDF with the Flying Saucer engine.'
+        'You are writing an HTML document template for DocGen, a native Salesforce document-generation package. The template is a single self-contained HTML file. DocGen replaces {merge tags} with Salesforce record data, then renders the HTML to PDF with the Flying Saucer engine.'
     );
     lines.push('');
     lines.push('HARD RENDERING CONSTRAINTS (Flying Saucer = CSS 2.1 plus a small CSS 3 subset):');
@@ -519,7 +520,7 @@ export function buildAiPrompt(shape, options) {
         '- Every {...} pair is treated as a merge tag: unknown names render as empty text, and an unclosed { fails the merge. For literal braces use &#123; and &#125;.'
     );
     lines.push('');
-    lines.push('PORTWOOD MERGE TAG SYNTAX:');
+    lines.push('DOCGEN MERGE TAG SYNTAX:');
     lines.push(
         '- Field: {FieldName} — e.g. {Name}, {Status__c}. Parent lookups dot through: {Account.Name}, {Owner.Profile.Name}. Null renders as empty string.'
     );
@@ -553,7 +554,7 @@ export function buildAiPrompt(shape, options) {
         '- Barcodes & QR codes (rendered server-side — no fonts, no external services, no <img> of your own): {*FieldName} = Code 128 barcode of the field value; {*FieldName:code128:300x80} = Code 128 sized 300x80px; {*FieldName:qr} = QR code; {*FieldName:qr:200} = QR at 200px. ONLY code128 and qr are supported — any other type renders nothing, silently. QR handles URLs and long text and survives low print quality best; Code 128 suits short IDs and serials. Place the tag alone in its own cell/block with white space around it — do not shrink below the default or scanners will struggle. Any queried field works, e.g. {*Id}, {*Name}, {*Tracking_Number__c}.'
     );
     lines.push(
-        '- Charts — ONE-LINE TAG, this is the path to use: {Chart:RelationshipName:FieldToGroupBy:style:opt=value&opt=value}, on its own line as a block-level element. Portwood aggregates the child records server-side and renders it as a real image, so you do NOT style it — no wrapper markup, no CSS bars. Styles: bar (horizontal, best for long labels), column (vertical), pie, donut, line, area, and the cross-tab styles stacked, clustered, pivot (these three REQUIRE groupBy=). Default style is bar. Modifiers, joined with &: title=Text (header drawn above the chart), width=420, height=240, colors=#1e40af,#b91c1c (6-char hex, cycles), groupBy=SecondField__c (second dimension), colSort=A,B,C (column order), where=SOQL fragment, split=; (multi-select field). Examples: {Chart:Survey_Responses__r:Answer__c:bar:title=Responses by Answer} and {Chart:Survey_Responses__r:Answer__c:stacked:groupBy=Location__c&title=Answer by Location}. Inside a {#Rel} loop the chart’s relationship resolves against the record being iterated, giving one chart per row.'
+        '- Charts — ONE-LINE TAG, this is the path to use: {Chart:RelationshipName:FieldToGroupBy:style:opt=value&opt=value}, on its own line as a block-level element. DocGen aggregates the child records server-side and renders it as a real image, so you do NOT style it — no wrapper markup, no CSS bars. Styles: bar (horizontal, best for long labels), column (vertical), pie, donut, line, area, and the cross-tab styles stacked, clustered, pivot (these three REQUIRE groupBy=). Default style is bar. Modifiers, joined with &: title=Text (header drawn above the chart), width=420, height=240, colors=#1e40af,#b91c1c (6-char hex, cycles), groupBy=SecondField__c (second dimension), colSort=A,B,C (column order), where=SOQL fragment, split=; (multi-select field). Examples: {Chart:Survey_Responses__r:Answer__c:bar:title=Responses by Answer} and {Chart:Survey_Responses__r:Answer__c:stacked:groupBy=Location__c&title=Answer by Location}. Inside a {#Rel} loop the chart’s relationship resolves against the record being iterated, giving one chart per row.'
     );
     lines.push(
         '- Charts — hand-authored fallback, use ONLY when the one-line tag cannot produce the layout asked for: {#ChartBucket:Rel:Field} {key} {count} {percent} {/ChartBucket} groups child records by Field and repeats the body per bucket, so you style it yourself as CSS bars (a <div> whose width uses {percent}). Keep it CSS-only; no SVG or canvas.'
@@ -600,7 +601,7 @@ export function buildAiPrompt(shape, options) {
         }
         lines.push('');
         // #248 — the single most common thing an LLM gets wrong when generating a
-        // Portwood template: it puts the loop tags on their own lines wrapping the
+        // DocGen template: it puts the loop tags on their own lines wrapping the
         // <table>, which repeats the whole table instead of the row.
         lines.push('REPEATING TABLES — READ THIS TWICE, IT IS THE MOST COMMON MISTAKE:');
         lines.push(
@@ -705,7 +706,7 @@ export function buildAiPrompt(shape, options) {
         );
         lines.push('');
         lines.push(
-            'QUESTIONS? The full Portwood UserGuide covers every merge tag, format suffix, and PDF rendering rule — look it up if anything here is unclear: https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md'
+            'QUESTIONS? The full DocGen UserGuide covers every merge tag, format suffix, and PDF rendering rule — look it up if anything here is unclear: https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md'
         );
         return lines.join('\n');
     }
@@ -725,11 +726,11 @@ export function buildAiPrompt(shape, options) {
     );
     lines.push('2. Professional print-ready design within the CSS 2.1 constraints above.');
     lines.push(
-        '3. Only bind to field names listed in DATA SHAPE. On top of those you may use any tag from PORTWOOD MERGE TAG SYNTAX above — {RowNumber}, {#GroupBy}/{GroupName}, {#IF}, aggregates, {Chart:...}, {Today}/{Now}, {RunningUser.*} — since those are built into the engine and need no field of their own.'
+        '3. Only bind to field names listed in DATA SHAPE. On top of those you may use any tag from DOCGEN MERGE TAG SYNTAX above — {RowNumber}, {#GroupBy}/{GroupName}, {#IF}, aggregates, {Chart:...}, {Today}/{Now}, {RunningUser.*} — since those are built into the engine and need no field of their own.'
     );
     lines.push('');
     lines.push(
-        'QUESTIONS? The full Portwood UserGuide covers every merge tag, format suffix, and PDF rendering rule — look it up if anything here is unclear: https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md'
+        'QUESTIONS? The full DocGen UserGuide covers every merge tag, format suffix, and PDF rendering rule — look it up if anything here is unclear: https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md'
     );
     return lines.join('\n');
 }
@@ -1093,7 +1094,7 @@ export function buildBlockPalette(shape) {
             '<td style="width: 48%; vertical-align: bottom">{@Signature_Company_Representative:2:Full}' +
             '<div style="border-top: 1pt solid #333333; margin-top: 4pt; padding-top: 3pt; color: #666666; font-size: 9pt">Company &#8226; Date: {@Signature_Company_Representative:2:Date}</div></td>' +
             '</tr></table>\n',
-        title: 'E-signature areas for both parties, wired to Portwood signing'
+        title: 'E-signature areas for both parties, wired to DocGen signing'
     });
     // Special characters — the UserGuide set, all covered by the PDF
     // engine's Arial Unicode fallback. Text glyphs only: color emoji

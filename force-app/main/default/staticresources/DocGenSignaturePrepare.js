@@ -1,7 +1,8 @@
+// Modified by Dura Composites Ltd.
 /* Authenticated, record-bound Visualforce editor. Vendored libraries only. */
 (function () {
     'use strict';
-    var env = window.PortwoodPreparation;
+    var env = window.DocGenPreparation;
     var $ = function (id) { return document.getElementById(id); };
     var escapeHtml = function (value) {
         return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
@@ -32,7 +33,7 @@
     }
     function notify(action) {
         if (/^https:\/\/[a-z0-9.-]+\.(lightning\.force\.com|salesforce\.com)$/.test(env.parentOrigin)) {
-            window.parent.postMessage({ channel: 'portwood-signatures', nonce: env.nonce, action: action }, env.parentOrigin);
+            window.parent.postMessage({ channel: 'docgen-signatures', nonce: env.nonce, action: action }, env.parentOrigin);
         }
     }
     function error(err) { $('error').textContent = err.message || String(err); $('error').hidden = false; }
@@ -48,7 +49,7 @@
             requireVerification: state.requireVerification, prefill: state.prefill, subject: state.subject,
             message: state.message, delivery: state.delivery, brandId: state.brandId };
     }
-    function namespaceValue(row, name) { return row[name] == null ? row['portwoodglobal__' + name] : row[name]; }
+    function namespaceValue(row, name) { return row[name] == null ? row['duradocgen__' + name] : row[name]; }
     function missingSignatures() {
         return state.recipients.filter(function (person) {
             return !state.fields.some(function (field) { return field.recipientKey === person.key && field.type === 'Full'; });
@@ -372,7 +373,7 @@
     window.addEventListener('message', function (event) {
         var message = event.data;
         if (event.source !== window.parent || event.origin !== env.parentOrigin || !message ||
-            message.channel !== 'portwood-signatures' || message.nonce !== env.nonce ||
+            message.channel !== 'docgen-signatures' || message.nonce !== env.nonce ||
             message.action !== 'source' || (message.value !== 'upload' && message.value !== 'files') || !$('controls')) return;
         if (busy) pendingSource = message.value;
         else switchSource(message.value);

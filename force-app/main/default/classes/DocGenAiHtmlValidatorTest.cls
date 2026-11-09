@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Every assertion here encodes a MEASURED Flying Saucer behaviour, not a guess.
  * Sources: UserGuide 5.7.3 / 15.11, scripts/css-capability-probe.apex and the
@@ -195,7 +196,7 @@ private class DocGenAiHtmlValidatorTest {
     @isTest
     static void visualforceStyleTagsAreRewritten() {
         // A model writing Salesforce markup reaches for {!Field} — that is what
-        // most Salesforce templating looks like. Portwood has no bang.
+        // most Salesforce templating looks like. DocGen has no bang.
         DocGenAiHtmlValidator.Result r = DocGenAiHtmlValidator.sanitize(
             '<p>{!Account.Name} — {!Industry}</p><p>{Name}</p>'
         );

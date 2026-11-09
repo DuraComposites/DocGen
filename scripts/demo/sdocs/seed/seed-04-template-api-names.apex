@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
 // SDocs-replacement demo — give the two templates stable API Names.
 //
@@ -15,13 +16,13 @@ Map<String, String> apiNames = new Map<String, String>{
     'Project Acceptance Certificate' => 'Project_Acceptance_Certificate'
 };
 
-List<portwoodglobal__DocGen_Template__c> ups = new List<portwoodglobal__DocGen_Template__c>();
-for (portwoodglobal__DocGen_Template__c t : [
-    SELECT Id, Name, portwoodglobal__API_Name__c
-    FROM portwoodglobal__DocGen_Template__c
+List<duradocgen__DocGen_Template__c> ups = new List<duradocgen__DocGen_Template__c>();
+for (duradocgen__DocGen_Template__c t : [
+    SELECT Id, Name, duradocgen__API_Name__c
+    FROM duradocgen__DocGen_Template__c
     WHERE Name IN :apiNames.keySet()
 ]) {
-    t.portwoodglobal__API_Name__c = apiNames.get(t.Name);
+    t.duradocgen__API_Name__c = apiNames.get(t.Name);
     ups.add(t);
     System.debug('SEED-04 ' + t.Name + ' -> API_Name=' + apiNames.get(t.Name) + ' (' + t.Id + ')');
 }

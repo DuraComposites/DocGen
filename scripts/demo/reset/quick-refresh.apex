@@ -1,13 +1,14 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
-// Portwood DocGen DEMO — QUICK REFRESH
+// DocGen DEMO — QUICK REFRESH
 //   Frees storage WITHOUT destroying the demo. Deletes:
 //     • every generated document (PDF/DOCX/PPTX) attached to a demo base record
 //     • all signature requests / signers / audits / placements for demo records
 //     • DocGen job rows for the demo templates
 //   KEEPS: all templates, template bodies, and seeded demo data.
-// Run: sf apex run --target-org dave@portwood.dev.demo -f "DEMO TEMPLATES/reset/quick-refresh.apex"
+// Run: sf apex run --target-org dave@example.com.demo -f "DEMO TEMPLATES/reset/quick-refresh.apex"
 // ============================================================================
-String NS = 'portwoodglobal__';
+String NS = 'duradocgen__';
 Set<String> DEMO_ACCT_NAMES = new Set<String>{
     'Northwind Traders',
     'Summit Components Inc.',
@@ -26,7 +27,7 @@ for (Opportunity o : [SELECT Id FROM Opportunity WHERE AccountId IN :acctIds])
 for (Pricebook2 p : [
     SELECT Id
     FROM Pricebook2
-    WHERE Name IN ('Portwood 2026 Wholesale Catalog', 'Portwood Mega Catalog (Giant Demo)')
+    WHERE Name IN ('DocGen 2026 Wholesale Catalog', 'DocGen Mega Catalog (Giant Demo)')
 ])
     demoIds.add(p.Id);
 for (Demo_Event__c e : [SELECT Id FROM Demo_Event__c])

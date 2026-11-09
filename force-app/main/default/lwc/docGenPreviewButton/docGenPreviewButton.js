@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import { LightningElement, api } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -10,8 +11,8 @@ const DELIVERY_PREVIEW = 'PREVIEW';
  * docGenPreviewButton
  * -------------------
  * Headless record action: generates the document and opens it in Salesforce's file preview,
- * with no dialog. It uses the record's first active Portwood Button whose Delivery Mode is
- * Preview. The regular Portwood Button action (c:docGenButton) always shows a dialog, and
+ * with no dialog. It uses the record's first active DocGen Button whose Delivery Mode is
+ * Preview. The regular DocGen Button action (c:docGenButton) always shows a dialog, and
  * closing that dialog cancels the preview it opened, so a "preview only" button that leaves
  * nothing behind has to be a headless action.
  */
@@ -31,8 +32,8 @@ export default class DocGenPreviewButton extends NavigationMixin(LightningElemen
             if (previewButtons.length === 0) {
                 this.toast(
                     'No preview button',
-                    'No active Portwood Button on this record has Delivery Mode set to Preview. ' +
-                        'Set one in Command Hub → Buttons, or use the regular Portwood Button action.',
+                    'No active DocGen Button on this record has Delivery Mode set to Preview. ' +
+                        'Set one in Command Hub → Buttons, or use the regular DocGen Button action.',
                     'warning'
                 );
                 return;

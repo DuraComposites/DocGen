@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // DocGen E2E Test 07-syntax3 — Running-user merge tags (v1.77+)
 // Run: sf apex run --target-org <org> -f scripts/e2e-07-syntax3.apex
 // Depends on: nothing (uses DocGenService.processXmlForTest directly)
@@ -269,7 +270,7 @@ try {
         new Map<String, Object>()
     );
     String missing = DocGenService.processXmlForTest(
-        'Before {!$Label.Portwood_Label_That_Does_Not_Exist} after',
+        'Before {!$Label.DocGen_Label_That_Does_Not_Exist} after',
         new Map<String, Object>()
     );
     String title = DocGenService.generateDocTitle(

@@ -1,5 +1,6 @@
+// Modified by Dura Composites Ltd.
 /**
- * Makes AI-written HTML safe for the Portwood PDF engine, and SAYS what it changed.
+ * Makes AI-written HTML safe for the DocGen PDF engine, and SAYS what it changed.
  *
  * Flying Saucer (behind Blob.toPdf) is CSS 2.1 plus a small, undocumented CSS 3
  * subset. Modern CSS is not rejected — it is silently ignored, so the page still
@@ -670,7 +671,7 @@ public with sharing class DocGenAiHtmlValidator {
     }
 
     // -----------------------------------------------------------------------
-    // 10. The single most common structural mistake a model makes with Portwood:
+    // 10. The single most common structural mistake a model makes with DocGen:
     //     putting the loop tags on their own lines around a <tr> instead of
     //     inside its cells. Text placed directly inside a <table> is
     //     foster-parented out by the HTML parser, so the loop never expands the
@@ -761,7 +762,7 @@ public with sharing class DocGenAiHtmlValidator {
     private void checkMergeTags() {
         // A model writing Salesforce markup reaches for Visualforce/Flow syntax
         // — {!Account.Name} — because that is what most Salesforce templating
-        // looks like. Portwood does not use the bang. Measured 2026-07-26: a real
+        // looks like. DocGen does not use the bang. Measured 2026-07-26: a real
         // wizard generation emitted two bare {!} placeholders.
         // {!Field} converts cleanly; a bare {!} carries no field name at all.
         Integer namedBang = 0;
@@ -781,7 +782,7 @@ public with sharing class DocGenAiHtmlValidator {
                 'repaired',
                 'Visualforce-style merge tag',
                 namedBang,
-                'Portwood uses {Field}, not the Visualforce {!Field}. Rewrote them — check the field names are ones your Query Config actually returns.'
+                'DocGen uses {Field}, not the Visualforce {!Field}. Rewrote them — check the field names are ones your Query Config actually returns.'
             );
         }
 

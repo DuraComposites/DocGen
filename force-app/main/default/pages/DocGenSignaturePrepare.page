@@ -1,3 +1,4 @@
+<!-- Modified by Dura Composites Ltd. -->
 <apex:page
     controller="DocGenSignaturePreparationController"
     showHeader="false"
@@ -522,7 +523,7 @@
             </div>
             <div class="busy" id="busy" role="status" hidden="hidden">Loading</div>
             <script>
-                window.PortwoodPreparation = {
+                window.DocGenPreparation = {
                     recordId: '{!JSENCODE($CurrentPage.parameters.recordId)}',
                     source: '{!JSENCODE($CurrentPage.parameters.source)}',
                     draftId: '{!JSENCODE($CurrentPage.parameters.draftId)}',

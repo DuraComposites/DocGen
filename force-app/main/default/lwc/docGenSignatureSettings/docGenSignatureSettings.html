@@ -1,4 +1,5 @@
 <template>
+    <!-- Modified by Dura Composites Ltd. -->
     <lightning-card title="Signature Settings" icon-name="standard:signature_request">
         <div slot="actions">
             <lightning-button variant="brand" label={saveLabel} onclick={handleSave} disabled={isSaving}>
@@ -107,7 +108,7 @@
                                     onclick={handleRefreshChecks}
                                 ></lightning-button>
                                 <a
-                                    href="https://portwood.dev/guide#e-signatures"
+                                    href="https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#setup-signatures"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     class="slds-m-left_small"
@@ -146,7 +147,7 @@
                     </div>
                 </div>
 
-                <!-- Email branding moved to Portwood Command Hub → Email Templates (per-template
+                <!-- Email branding moved to DocGen Command Hub → Email Templates (per-template
                      subject/body/branding + live preview). Org-wide fallback values are
                      preserved on save below but no longer edited here. -->
 

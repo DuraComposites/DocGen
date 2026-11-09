@@ -1,18 +1,20 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 # Advanced automation and signing compatibility
 
-This advanced reference accompanies the [task-based knowledgebase](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md). Retained from the existing guide and reviewed against the 3.60.0 source. Use the task articles for current installation and user workflows.
+This advanced reference accompanies the [task-based knowledgebase](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md). Retained from the existing guide and reviewed against the 3.60.0 source. Use the task articles for current installation and user workflows.
 
 ### 11.7 Recipe — Send a document for signature on the PDF viewer page
 
-> **Deprecated (v3.21+).** "Portwood: Send Existing Document for Signature" still works — it now routes to the same guided PDF signing as everything else — but new Flows should use **Portwood: Create Signature Request** (§11.6), which covers this scenario with more options (email message/subject, verification settings, Template API Name). This recipe stays for existing Flows.
+> **Deprecated (v3.21+).** "DocGen: Send Existing Document for Signature" still works — it now routes to the same guided PDF signing as everything else — but new Flows should use **DocGen: Create Signature Request** (§11.6), which covers this scenario with more options (email message/subject, verification settings, Template API Name). This recipe stays for existing Flows.
 
-Use **Portwood: Send Existing Document for Signature** (`DocGenSignaturePdfFlowAction`) when you want the signer to review the **real, fully rendered PDF in the browser** (rather than the typed-name placement page) and have the completed document land back on the record. Pass a **Template Id**: Portwood snapshots the record's merge data at send-time and, on completion, re-renders the document from that snapshot (immune to later record edits), appends a signing-certificate page, and attaches the signed PDF to the related record's Files. This supports the [`{#Signatures}` loop block](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#signature-loop-block--signatures-variable-signer-count) — one signature layout that repeats per signer. The template must have a **Base Object** and **Query Config** set.
+Use **DocGen: Send Existing Document for Signature** (`DocGenSignaturePdfFlowAction`) when you want the signer to review the **real, fully rendered PDF in the browser** (rather than the typed-name placement page) and have the completed document land back on the record. Pass a **Template Id**: DocGen snapshots the record's merge data at send-time and, on completion, re-renders the document from that snapshot (immune to later record edits), appends a signing-certificate page, and attaches the signed PDF to the related record's Files. This supports the [`{#Signatures}` loop block](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#signature-loop-block--signatures-variable-signer-count) — one signature layout that repeats per signer. The template must have a **Base Object** and **Query Config** set.
 
-> **Deprecated action input:** This old Flow action ignores its `Content Version Id` input and requires a Template Id. This does not describe the whole signing product: the current uploaded-PDF preparation UI supports existing PDFs with manually placed fields. See [Send an uploaded PDF](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#sign-uploaded-pdf).
+> **Deprecated action input:** This old Flow action ignores its `Content Version Id` input and requires a Template Id. This does not describe the whole signing product: the current uploaded-PDF preparation UI supports existing PDFs with manually placed fields. See [Send an uploaded PDF](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#sign-uploaded-pdf).
 
-**Trigger:** any Flow (record-triggered, screen, or scheduled). Build the `signers` collection exactly as in [§11.6](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#116-recipe--send-a-contract-for-signature-on-opportunity-approval) (an Apex-Defined `DocGenSigner` collection — `name` + `email` required; `role`, `contactId` optional).
+**Trigger:** any Flow (record-triggered, screen, or scheduled). Build the `signers` collection exactly as in [§11.6](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#116-recipe--send-a-contract-for-signature-on-opportunity-approval) (an Apex-Defined `DocGenSigner` collection — `name` + `email` required; `role`, `contactId` optional).
 
-**Step — Portwood: Send Existing Document for Signature.**
+**Step — DocGen: Send Existing Document for Signature.**
 
 | Input                 | Value                                                        |
 | --------------------- | ------------------------------------------------------------ |
@@ -56,7 +58,7 @@ On the guided PDF signing path you can ask each signer for extra information **b
 
 ### 11.8 Recipe — Pass pre-built JSON data instead of querying
 
-The **Generate Document** action accepts an optional **JSON Data** input. When present, Portwood skips its own SOQL retrieval and uses the supplied JSON directly. Use cases:
+The **Generate Document** action accepts an optional **JSON Data** input. When present, DocGen skips its own SOQL retrieval and uses the supplied JSON directly. Use cases:
 
 - External API response that you've already fetched and parsed
 - Cross-object data your query config can't express
@@ -79,9 +81,9 @@ Wire this to a Flow Text Variable populated upstream — typically by an Apex ac
 
 ### 11.9 Recipe — Custom signing UI (advanced, legacy requests only)
 
-> **Corrected 2026-07-30 (guide revision, no package change).** Earlier revisions of this section did not state which kind of signature request these three actions work with. The submit/finalize actions work **only** against a **legacy single-signer** request — one whose signing token lives on the request record itself. Those submit/finalize actions **cannot** submit a signature into a request created by **Portwood: Create Signature Request** ([§11.6](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#116-recipe--send-a-contract-for-signature-on-opportunity-approval)) or **Send Existing Document for Signature** ([§11.7](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#117-recipe--send-a-document-for-signature-on-the-pdf-viewer-page)) — the current v3 multi-signer path, and what almost every Flow built since v3.0 uses. If you want to capture a signature inside your own portal or screen Flow, use [§11.6.1](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#1161-sign-in-session--capture-the-signature-in-your-own-portal-or-screen-flow) instead: it is the supported route, and it is the only one that produces an audit trail and a Certificate of Completion.
+> **Corrected 2026-07-30 (guide revision, no package change).** Earlier revisions of this section did not state which kind of signature request these three actions work with. The submit/finalize actions work **only** against a **legacy single-signer** request — one whose signing token lives on the request record itself. Those submit/finalize actions **cannot** submit a signature into a request created by **DocGen: Create Signature Request** ([§11.6](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#116-recipe--send-a-contract-for-signature-on-opportunity-approval)) or **Send Existing Document for Signature** ([§11.7](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#117-recipe--send-a-document-for-signature-on-the-pdf-viewer-page)) — the current v3 multi-signer path, and what almost every Flow built since v3.0 uses. If you want to capture a signature inside your own portal or screen Flow, use [§11.6.1](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#1161-sign-in-session--capture-the-signature-in-your-own-portal-or-screen-flow) instead: it is the supported route, and it is the only one that produces an audit trail and a Certificate of Completion.
 
-Three helper actions exist for orgs that want to build their own signing experience instead of using the bundled Visualforce pages — for example, an embedded signature pad inside an existing customer portal. **These require package v2.6.0 or later** (earlier versions shipped them but they weren't exposed to subscriber Flows). In Flow Builder, search "Portwood" and pick the action by its label:
+Three helper actions exist for orgs that want to build their own signing experience instead of using the bundled Visualforce pages — for example, an embedded signature pad inside an existing customer portal. **These require package v2.6.0 or later** (earlier versions shipped them but they weren't exposed to subscriber Flows). In Flow Builder, search "DocGen" and pick the action by its label:
 
 - **Validate Signature Token** (`DocGenSignatureValidator`) — validates a secure token from the signing URL and returns signer name, document title, and a preview URL. Call this when your custom page first loads.
 - **Submit Signed Signature** (`DocGenSignatureSubmitter`) — accepts the secure token plus the base64-encoded signature and submits it. A lighter-weight alternative to Finalize.
@@ -95,17 +97,17 @@ Three helper actions exist for orgs that want to build their own signing experie
 | The **request's own** `Secure_Token__c` on a v3 request         | ✅ returns `isValid = true` | ❌ falls into the legacy typed-name path with no per-signer placements → an error on the audit record and no document is produced. |
 | A **legacy single-signer** request token                        | ✅                          | ✅ works as documented                                                                                                             |
 
-**Why.** On a v3 request each signer's signing token lives on the **Portwood Signer** child record, and the request's own `Secure_Token__c` is the **certificate verification** token printed on the Certificate of Completion — not a signing token. Validate Signature Token resolves both shapes; Submit and Finalize resolve only the request-level token. That asymmetry is exactly why a Flow can validate cleanly and then produce nothing.
+**Why.** On a v3 request each signer's signing token lives on the **DocGen Signer** child record, and the request's own `Secure_Token__c` is the **certificate verification** token printed on the Certificate of Completion — not a signing token. Validate Signature Token resolves both shapes; Submit and Finalize resolve only the request-level token. That asymmetry is exactly why a Flow can validate cleanly and then produce nothing.
 
 #### 11.9.2 Not supported — injecting a captured signature image into a v3 signer
 
-There is **no** action that takes a base64 signature you captured yourself and records it as a v3 signer's signature. Audit data (timestamp, IP address, consent hash, document hash, certificate entry) is only created for a mark drawn or typed through Portwood's own signing surface — see [§10.9](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#109-audit-trail).
+There is **no** action that takes a base64 signature you captured yourself and records it as a v3 signer's signature. Audit data (timestamp, IP address, consent hash, document hash, certificate entry) is only created for a mark drawn or typed through DocGen's own signing surface — see [§10.9](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#109-audit-trail).
 
 If you have already captured a signature image and only need it to **appear** in the document, that works — but it is a picture, not a signed signature:
 
 1. Use an appropriate Apex/upload step to create a **ContentVersion** (`Title`, `PathOnClient` = `signature.png`, binary `VersionData` decoded from base64). Do not assume a Flow Text variable can be assigned directly to the Blob field.
 2. Store the returned `068…` Id in a text field on the record.
-3. Reference it in the template with `{%Your_Field__c}` ([§7.7](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#77-images)).
+3. Reference it in the template with `{%Your_Field__c}` ([§7.7](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#77-images)).
 
 That image renders wherever you place it, has **no** audit record, and does **not** appear on the Certificate of Completion. Use it for a pre-printed mark (e.g. an authorized signatory reproduced on many documents); do not use it where the signature has to be legally defensible.
 
@@ -118,11 +120,11 @@ For a legacy single-signer request:
 3. Display the preview. Capture the signature in a Lightning component, base64-encode the PNG.
 4. **Action: Finalize Signature Image** with `{!token}` and `{!base64Png}` — done.
 
-Most customers don't need this. Use the bundled signing pages ([§11.6.1](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#1161-sign-in-session--capture-the-signature-in-your-own-portal-or-screen-flow) for the in-session variant) unless you have a specific reason to embed.
+Most customers don't need this. Use the bundled signing pages ([§11.6.1](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#1161-sign-in-session--capture-the-signature-in-your-own-portal-or-screen-flow) for the in-session variant) unless you have a specific reason to embed.
 
 ### 11.10 Polling an async job from a screen Flow
 
-Bulk and Giant Query actions return a `jobId`. Read `portwoodglobal__DocGen_Job__c` through Get Records or an authorized user-mode query. The [asynchronous-job walkthrough](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md#async-jobs) lists the actual stored states, result fields, partial-success handling, and screen refresh loop.
+Bulk and Giant Query actions return a `jobId`. Read `duradocgen__DocGen_Job__c` through Get Records or an authorized user-mode query. The [asynchronous-job walkthrough](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#async-jobs) lists the actual stored states, result fields, partial-success handling, and screen refresh loop.
 
 Screen Flows do not support Wait elements. Use a Screen/Refresh loop for an interactive check, or a supported asynchronous automation pattern for unattended completion. Do not add a tight polling loop in one transaction. `DocGenBulkController.getJobStatus` is a package-internal endpoint and cannot be called by subscriber Apex.
 

@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
 // SDocs-replacement demo — prove the auto-send Flow actually fires.
 //
@@ -45,43 +46,43 @@ if (after.Last_Signature_Request_Id__c == null) {
     System.debug('FLOW-TEST FAIL — no signature request id stamped on the project');
 } else {
     Id reqId = (Id) after.Last_Signature_Request_Id__c;
-    for (portwoodglobal__DocGen_Signature_Request__c r : [
-        SELECT Id, Name, portwoodglobal__Status__c, portwoodglobal__Related_Record_Id__c
-        FROM portwoodglobal__DocGen_Signature_Request__c
+    for (duradocgen__DocGen_Signature_Request__c r : [
+        SELECT Id, Name, duradocgen__Status__c, duradocgen__Related_Record_Id__c
+        FROM duradocgen__DocGen_Signature_Request__c
         WHERE Id = :reqId
     ]) {
         System.debug(
             'FLOW-TEST REQUEST ' +
                 r.Name +
                 ' status=' +
-                r.portwoodglobal__Status__c +
+                r.duradocgen__Status__c +
                 ' related=' +
-                r.portwoodglobal__Related_Record_Id__c
+                r.duradocgen__Related_Record_Id__c
         );
     }
-    for (portwoodglobal__DocGen_Signer__c s : [
+    for (duradocgen__DocGen_Signer__c s : [
         SELECT
             Id,
-            portwoodglobal__Signer_Name__c,
-            portwoodglobal__Signer_Email__c,
-            portwoodglobal__Role_Name__c,
-            portwoodglobal__Status__c,
-            portwoodglobal__Secure_Token__c
-        FROM portwoodglobal__DocGen_Signer__c
-        WHERE portwoodglobal__Signature_Request__c = :reqId
+            duradocgen__Signer_Name__c,
+            duradocgen__Signer_Email__c,
+            duradocgen__Role_Name__c,
+            duradocgen__Status__c,
+            duradocgen__Secure_Token__c
+        FROM duradocgen__DocGen_Signer__c
+        WHERE duradocgen__Signature_Request__c = :reqId
     ]) {
         System.debug(
             'FLOW-TEST SIGNER ' +
-                s.portwoodglobal__Signer_Name__c +
+                s.duradocgen__Signer_Name__c +
                 ' <' +
-                s.portwoodglobal__Signer_Email__c +
+                s.duradocgen__Signer_Email__c +
                 '>' +
                 ' role=' +
-                s.portwoodglobal__Role_Name__c +
+                s.duradocgen__Role_Name__c +
                 ' status=' +
-                s.portwoodglobal__Status__c +
+                s.duradocgen__Status__c +
                 ' token=' +
-                (String.isBlank(s.portwoodglobal__Secure_Token__c) ? 'MISSING' : 'present')
+                (String.isBlank(s.duradocgen__Secure_Token__c) ? 'MISSING' : 'present')
         );
     }
     // The generated document should be linked to the project, not floating.
