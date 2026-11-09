@@ -2924,21 +2924,34 @@
                     // colour or width restyled every stroke before it (highlighter strokes saved as
                     // red pen lines). Each stroke is finished as it ends, and let go of: it keeps the
                     // style it was drawn with, and PDF.js lays a fresh drawing for the next stroke.
+                    //
+                    // It must run after PDF.js has ended the stroke, which it does in listeners on
+                    // the drawing's canvas. Run before them (as a capture listener with a promise
+                    // callback did), the first stroke looked empty and stayed open, and the second
+                    // was then committed half-drawn and lost: every other stroke vanished.
                     function wireStrokeCommit(st) {
                         function finish(e) {
                             if (!st.markup || (st.tool !== 'pen' && st.tool !== 'highlight') || !st.uiManager) return;
                             var div = e.target && e.target.closest ? e.target.closest('.inkEditor') : null;
                             var editor = div ? st.uiManager.getEditor(div.id) : null;
-                            if (!editor) return;
-                            // After PDF.js has handled the event and ended the stroke.
-                            Promise.resolve().then(function () {
-                                if (editor.isEmpty() || !editor.isInEditMode()) return;
-                                editor.commit();
-                                st.uiManager.unselect(editor);
-                            });
+                            if (!editor || editor.isEmpty() || !editor.isInEditMode()) return;
+                            editor.commit();
+                            st.uiManager.unselect(editor);
                         }
-                        st.scroller.addEventListener('pointerup', finish, true);
-                        st.scroller.addEventListener('pointerleave', finish, true);
+                        // pointerup bubbles: listen on the way back up, after the canvas's own
+                        // listener, and commit at once, so a quick next stroke can't land in it.
+                        st.scroller.addEventListener('pointerup', finish);
+                        // pointerleave doesn't bubble, so catch it on the way down and wait for
+                        // the event to finish.
+                        st.scroller.addEventListener(
+                            'pointerleave',
+                            function (e) {
+                                setTimeout(function () {
+                                    finish(e);
+                                }, 0);
+                            },
+                            true
+                        );
                     }
 
                     // ---- shapes ----
