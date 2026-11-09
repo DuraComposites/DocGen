@@ -1064,6 +1064,14 @@
                 .dg-att-scroller .pdfViewer {
                     padding: 8px 0;
                 }
+                /* PDF.js lays out its pages, layers and marks for the browser's default box model.
+                   Under this page's border-box rule a page's border ate into the drawing, so the
+                   drawing showed about 1% smaller than the layer marks are placed on, and a finished
+                   mark's border ate into its canvas, so a stroke shrank a little as the mouse came up. */
+                .dg-att-scroller .pdfViewer,
+                .dg-att-scroller .pdfViewer * {
+                    box-sizing: content-box;
+                }
                 /* #412 M2 — markup tools. While drawing, one finger draws, so the box stops panning
                    natively; two-finger pinch still zooms. */
                 .dg-att-scroller.dg-marking {
