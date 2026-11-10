@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 @IsTest
 private class DocGenFontTest {
     @TestSetup
@@ -7,7 +8,7 @@ private class DocGenFontTest {
             Alias = 'fontau',
             Email = 'font-author@example.invalid',
             EmailEncodingKey = 'UTF-8',
-            LastName = 'Portwood Font Author QA',
+            LastName = 'DocGen Font Author QA',
             LanguageLocaleKey = 'en_US',
             LocaleSidKey = 'en_US',
             TimeZoneSidKey = 'America/New_York',
@@ -19,7 +20,7 @@ private class DocGenFontTest {
         insert new PermissionSetAssignment(AssigneeId = author.Id, PermissionSetId = userPs);
         User admin = author.clone(false, false, false, false);
         admin.Alias = 'fontad';
-        admin.LastName = 'Portwood Font Admin QA';
+        admin.LastName = 'DocGen Font Admin QA';
         admin.Username = 'fontadmin' + UserInfo.getOrganizationId() + System.now().getTime() + '@example.invalid';
         insert admin;
         Id adminPs = [SELECT Id FROM PermissionSet WHERE Name = 'DocGen_Admin' LIMIT 1].Id;
@@ -374,7 +375,7 @@ private class DocGenFontTest {
     static void authorCanUseVerifiedFontsWithoutManagementPermission() {
         System.runAs(fontAdmin()) {
             String key = verified();
-            User author = [SELECT Id FROM User WHERE LastName = 'Portwood Font Author QA' LIMIT 1];
+            User author = [SELECT Id FROM User WHERE LastName = 'DocGen Font Author QA' LIMIT 1];
             System.runAs(author) {
                 System.assert(!FeatureManagement.checkPermission('Manage_DocGen_Fonts'));
                 System.assert(!DocGenFontController.getFontFaces().isEmpty());
@@ -441,7 +442,7 @@ private class DocGenFontTest {
                     .startsWith('/sfc/dist/version/download/')
             );
             System.assertEquals(1, [SELECT COUNT() FROM ContentVersion]);
-            User author = [SELECT Id FROM User WHERE LastName = 'Portwood Font Author QA' LIMIT 1];
+            User author = [SELECT Id FROM User WHERE LastName = 'DocGen Font Author QA' LIMIT 1];
             System.runAs(author) {
                 try {
                     DocGenFontController.getFontJobStatus(job);
@@ -473,7 +474,7 @@ private class DocGenFontTest {
     @IsTest
     static void rejectAnotherUsersPrivateFont() {
         System.runAs(fontAdmin()) {
-            User author = [SELECT Id FROM User WHERE LastName = 'Portwood Font Author QA' LIMIT 1];
+            User author = [SELECT Id FROM User WHERE LastName = 'DocGen Font Author QA' LIMIT 1];
             Id documentId;
             System.runAs(author) {
                 ContentVersion cv = new ContentVersion(
@@ -583,7 +584,7 @@ private class DocGenFontTest {
         System.runAs(fontAdmin()) {
             String key = verified();
             String tag = fontTag(key);
-            User author = [SELECT Id FROM User WHERE LastName = 'Portwood Font Author QA' LIMIT 1];
+            User author = [SELECT Id FROM User WHERE LastName = 'DocGen Font Author QA' LIMIT 1];
             System.runAs(author) {
                 System.assertEquals(tag, DocGenFontController.getFontFaces()[0].get('mergeTag'));
                 String source = '<p style="' + tag + ';font-size:12pt">Şahin 漢</p>';

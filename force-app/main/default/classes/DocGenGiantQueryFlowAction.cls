@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Invocable action for generating documents that may have large child datasets.
  * Auto-detects whether Giant Query (async batch) is needed.
@@ -18,7 +19,7 @@
  */
 global with sharing class DocGenGiantQueryFlowAction { // NOPMD AvoidGlobalModifier — global required for @InvocableMethod visibility in subscriber orgs
     global class Request {
-        @InvocableVariable(label='Template ID' required=true description='The Portwood Template record ID')
+        @InvocableVariable(label='Template ID' required=true description='The DocGen Template record ID')
         global Id templateId;
 
         @InvocableVariable(label='Record ID' required=true description='The source record ID to merge data from')
@@ -43,7 +44,7 @@ global with sharing class DocGenGiantQueryFlowAction { // NOPMD AvoidGlobalModif
 
         @InvocableVariable(
             label='Job ID'
-            description='The Portwood Job record ID (async Giant Query only — poll for completion)'
+            description='The DocGen Job record ID (async Giant Query only — poll for completion)'
         )
         global Id jobId;
 
@@ -119,7 +120,7 @@ global with sharing class DocGenGiantQueryFlowAction { // NOPMD AvoidGlobalModif
                                 ' template produces a document too large for synchronous generation (' +
                                 route.reason +
                                 '). The Auto Giant Query Flow action can only background-process Word templates — ' +
-                                'generate it from the Portwood Runner instead.'
+                                'generate it from the DocGen Runner instead.'
                         );
                     }
                     // Only V3 (tree) query configs are auto-routed to the batch.
@@ -132,15 +133,15 @@ global with sharing class DocGenGiantQueryFlowAction { // NOPMD AvoidGlobalModif
                             'This template is too large for synchronous generation (' +
                                 route.reason +
                                 '). Background generation from this Flow action needs a tree-style (V3) query ' +
-                                'configuration — re-save the template in the Query Builder, or generate it from the Portwood Runner.'
+                                'configuration — re-save the template in the Query Builder, or generate it from the DocGen Runner.'
                         );
                     }
                     if (route.giantNodeConfig == null) {
                         throw new DocGenException(
                             'This document is too large to generate inside the Flow (' +
                                 route.reason +
-                                ') and Portwood could not prepare it for background generation. Reduce the fields ' +
-                                'queried for the large related list, or generate it from the Portwood Runner.'
+                                ') and DocGen could not prepare it for background generation. Reduce the fields ' +
+                                'queried for the large related list, or generate it from the DocGen Runner.'
                         );
                     }
                     if (System.isBatch() || System.isFuture() || System.isQueueable() || System.isScheduled()) {
@@ -254,10 +255,10 @@ global with sharing class DocGenGiantQueryFlowAction { // NOPMD AvoidGlobalModif
         // Create Job record
         DocGen_Job__c job = new DocGen_Job__c(
             Status__c = 'Draft',
-            // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+            // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
             Template__c = templateId,
             Label__c = 'Giant Query PDF (Flow)',
-            // CxSAST: FLS enforced by Portwood permission sets; package-internal custom objects
+            // CxSAST: FLS enforced by DocGen permission sets; package-internal custom objects
             Parent_Record_Id__c = String.valueOf(recordId)
         );
         insert job; // NOPMD ApexCRUDViolation — package-internal; CRUD controlled by permission sets

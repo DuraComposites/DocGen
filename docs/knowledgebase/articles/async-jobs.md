@@ -1,23 +1,25 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 An accepted background job is not a finished document. Store the returned **Job ID** and wait for the job's terminal state before using a File or telling someone generation is complete.
 
 #### Read the actual job record
 
-In subscriber Apex and Flow, use **Portwood Job** (`portwoodglobal__DocGen_Job__c`) with the access granted to the running user. These are useful API fields:
+In subscriber Apex and Flow, use **DocGen Job** (`duracomp__DocGen_Job__c`) with the access granted to the running user. These are useful API fields:
 
-| Field                                                                | Meaning                                       |
-| -------------------------------------------------------------------- | --------------------------------------------- |
-| `portwoodglobal__Status__c`                                          | Persisted job state                           |
-| `portwoodglobal__Total_Records__c`                                   | Intended record count                         |
-| `portwoodglobal__Success_Count__c`, `portwoodglobal__Error_Count__c` | Outcome counts                                |
-| `portwoodglobal__Error_Log__c`                                       | Recorded error details                        |
-| `portwoodglobal__Merged_PDF_CV__c`                                   | Combined output ContentVersion, when produced |
+| Field                                                    | Meaning                                       |
+| -------------------------------------------------------- | --------------------------------------------- |
+| `duracomp__Status__c`                                    | Persisted job state                           |
+| `duracomp__Total_Records__c`                             | Intended record count                         |
+| `duracomp__Success_Count__c`, `duracomp__Error_Count__c` | Outcome counts                                |
+| `duracomp__Error_Log__c`                                 | Recorded error details                        |
+| `duracomp__Merged_PDF_CV__c`                             | Combined output ContentVersion, when produced |
 
 ```apex
-portwoodglobal__DocGen_Job__c job = [
-    SELECT portwoodglobal__Status__c, portwoodglobal__Success_Count__c,
-        portwoodglobal__Error_Count__c, portwoodglobal__Merged_PDF_CV__c,
-        portwoodglobal__Error_Log__c
-    FROM portwoodglobal__DocGen_Job__c
+duracomp__DocGen_Job__c job = [
+    SELECT duracomp__Status__c, duracomp__Success_Count__c,
+        duracomp__Error_Count__c, duracomp__Merged_PDF_CV__c,
+        duracomp__Error_Log__c
+    FROM duracomp__DocGen_Job__c
     WHERE Id = :jobId WITH USER_MODE LIMIT 1
 ];
 ```

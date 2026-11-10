@@ -1,9 +1,11 @@
 ---
 name: html-template-authoring
-description: Author or repair a Portwood HTML template that renders correctly through Blob.toPdf (Flying Saucer). Use when writing a new template, converting a design to a template, or fixing one whose PDF output doesn't match the source — collapsed layout, missing images, wrong fonts, broken charts.
+description: Author or repair a DocGen HTML template that renders correctly through Blob.toPdf (Flying Saucer). Use when writing a new template, converting a design to a template, or fixing one whose PDF output doesn't match the source — collapsed layout, missing images, wrong fonts, broken charts.
 ---
 
-# Authoring HTML templates for Portwood
+<!-- Modified by Dura Composites Ltd. -->
+
+# Authoring HTML templates for DocGen
 
 **HTML is the recommended source format.** It skips the DOCX→HTML parse and lands more
 reliably in the renderer. Steer new authors here, and chart authors here without

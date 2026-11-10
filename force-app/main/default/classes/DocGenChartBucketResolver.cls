@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * DocGenChartBucketResolver
  *
@@ -630,7 +631,7 @@ public with sharing class DocGenChartBucketResolver {
         } catch (Exception e) {
             System.debug(
                 LoggingLevel.WARN,
-                'Portwood: unusable client bucket payload for ' + relName + '.' + fieldApi + ' — ' + e.getMessage()
+                'DocGen: unusable client bucket payload for ' + relName + '.' + fieldApi + ' — ' + e.getMessage()
             );
             return null;
         }

@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Some approvals are about documents that already exist: a set of engineering drawings on an Issued Drawing record, a specification, a site survey. You can show those PDFs to signers **alongside** the signing template, without re-generating or merging them. The template becomes the approval form ("I approve the drawings listed below"), and each attached PDF is shown as its own document on the signing page.
 
 **Turning it on.** Attached documents are off until a template opts in. In Command Hub → My Templates, edit the approval template and set **Attached Documents (e-sign)**:
@@ -10,7 +12,7 @@ The setting is enforced for the Signature Sender and the Flow action alike. A te
 
 Attached documents need **Decline** available, because the signer approves or declines what they reviewed. A send with attached documents is refused while **Hide Decline Button** is on, either on the template or org-wide in Signature Settings, and the template editor warns about it.
 
-**Sending.** In the Signature Sender, pick a template that takes attached documents. An **Attach PDFs from this record** list appears: tick the files (or **Select all**) and choose whether they come **Before** or **After** the template. For a Required template, **Send** stays disabled until at least one is ticked. **Preview** lists the attached documents in the order signers will see them, and **View files** opens them in Salesforce's file viewer. From Flow, pass **Attached Documents** (ContentDocument or ContentVersion Ids) and, optionally, **Attached Documents Position** to **Portwood: Create Signature Request**.
+**Sending.** In the Signature Sender, pick a template that takes attached documents. An **Attach PDFs from this record** list appears: tick the files (or **Select all**) and choose whether they come **Before** or **After** the template. For a Required template, **Send** stays disabled until at least one is ticked. **Preview** lists the attached documents in the order signers will see them, and **View files** opens them in Salesforce's file viewer. From Flow, pass **Attached Documents** (ContentDocument or ContentVersion Ids) and, optionally, **Attached Documents Position** to **DocGen: Create Signature Request**.
 
 **Pinning.** Each file is pinned to the exact version it had at send time. Uploading a new version later doesn't change what the signer sees; to send the new revision, send a new request. If a pinned file is deleted, or its content no longer matches, the signer is told to contact the sender instead of being shown something else.
 
@@ -24,11 +26,11 @@ Attached documents need **Decline** available, because the signer approves or de
 - By default, up to **100** attached documents per request, **20 MB** each and **200 MB** in total. Change these in **Signature Settings → Attached Documents** (up to 200 documents and 50 MB each). Each document downloads to the signer in one piece; sizes above 20 MB are untested.
 - Single-template sends only (not packets). Not available for templates that sign through a `{#Signatures}` loop block; use `{@Signature_…}` tags, or no signature tags at all.
 - Requests with attached documents always finalize on the signing page itself; the server-side re-render fallback is not used for them.
-- Guest access to the attached documents goes through the Site's Apex REST endpoint (`/services/apexrest/…/signature-attachment`), keyed by the signer's own link token and gated by the same email PIN, expiry and status rules as the signing page. The **Portwood Guest Signature** permission set grants the class access it needs.
+- Guest access to the attached documents goes through the Site's Apex REST endpoint (`/services/apexrest/…/signature-attachment`), keyed by the signer's own link token and gated by the same email PIN, expiry and status rules as the signing page. The **DocGen Guest Signature** permission set grants the class access it needs.
 - **Where to see it.** A signature request's **Signature Attachments** related list shows what was attached: title, version, position and SHA-256. Each signer's **Signer Attachments** related list shows when each document was delivered to them and when they opened it, and the signer's **Attached Documents Reviewed At** field shows when they confirmed their review.
-- **Your own permission sets?** If you use your own permission sets instead of Portwood's:
-    - give senders create and read on Portwood Signature Attachment and Portwood Signer Attachment;
-    - give admins edit on the template's Attached Documents field, and on the three Attached Documents limit fields in Portwood Settings;
+- **Your own permission sets?** If you use your own permission sets instead of DocGen's:
+    - give senders create and read on DocGen Signature Attachment and DocGen Signer Attachment;
+    - give admins edit on the template's Attached Documents field, and on the three Attached Documents limit fields in DocGen Settings;
     - give the Site guest user access to the `DocGenSignatureAttachmentRest` Apex class.
 
     Sends without attached documents need none of these.

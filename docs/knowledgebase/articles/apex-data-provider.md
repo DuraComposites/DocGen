@@ -1,4 +1,6 @@
-A provider prepares the dataset before Portwood merges it. Use one for calculated values, deliberately shaped reports, or data that the visual query builder cannot express.
+<!-- Modified by Dura Composites Ltd. -->
+
+A provider prepares the dataset before DocGen merges it. Use one for calculated values, deliberately shaped reports, or data that the visual query builder cannot express.
 
 #### 1. Implement both required methods
 
@@ -9,9 +11,9 @@ global interface DocGenDataProvider {
 }
 ```
 
-Your class implements `portwoodglobal.DocGenDataProvider`; expose both methods as global. `getData()` supplies values and `getFieldNames()` supplies the authoring field list. The old one-method example was incomplete.
+Your class implements `duracomp.DocGenDataProvider`; expose both methods as global. `getData()` supplies values and `getFieldNames()` supplies the authoring field list. The old one-method example was incomplete.
 
-Use the complete [KBAccountProvider class](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/knowledgebase/examples/apex/KBAccountProvider.cls) and its [metadata file](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/knowledgebase/examples/apex/KBAccountProvider.cls-meta.xml). It uses `with sharing` and `WITH USER_MODE`, selects standard Account/Contact fields, limits the Contact query to 100, and implements both methods. The ContactCount is the count of those returned rows, not a claim to count unlimited Contacts.
+Use the complete [KBAccountProvider class](https://github.com/DuraComposites/DocGen/blob/main/docs/knowledgebase/examples/apex/KBAccountProvider.cls) and its [metadata file](https://github.com/DuraComposites/DocGen/blob/main/docs/knowledgebase/examples/apex/KBAccountProvider.cls-meta.xml). It uses `with sharing` and `WITH USER_MODE`, selects standard Account/Contact fields, limits the Contact query to 100, and implements both methods. The ContactCount is the count of those returned rows, not a claim to count unlimited Contacts.
 
 #### 2. Understand the data shape
 

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <label>DocGen Demo</label>
-    <description>Access to Portwood DocGen demonstration objects, fields, and tabs.</description>
+    <description>Access to DocGen demonstration objects, fields, and tabs.</description>
     <hasActivationRequired>false</hasActivationRequired>
     <objectPermissions>
         <object>Demo_Event__c</object>

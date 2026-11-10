@@ -1,5 +1,6 @@
+// Modified by Dura Composites Ltd.
 // Dura Composites Ltd. (new file)
-// Each Portwood code path that now records a timeline event, driven through Portwood's own
+// Each DocGen code path that now records a timeline event, driven through DocGen's own
 // entry points: the reminder job, resend, revoke and a signer opening an expired link.
 @IsTest
 private class DocGenSignatureEventsTest {

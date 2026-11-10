@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 The global action classes can be called by subscriber Apex as well as Flow. Build their published request types and inspect the returned result for every input.
 
 #### Action directory
@@ -15,13 +17,13 @@ See the generated [global declarations](#apex-surface) for every published DTO f
 #### Generate through a request object
 
 ```apex
-portwoodglobal.DocGenFlowAction.Request input = new portwoodglobal.DocGenFlowAction.Request();
+duracomp.DocGenFlowAction.Request input = new duracomp.DocGenFlowAction.Request();
 input.templateApiName = 'KB_Account_Brief';
 input.recordId = accountId;
 input.saveToRecord = true;
-List<portwoodglobal.DocGenFlowAction.Response> results =
-    portwoodglobal.DocGenFlowAction.generateDocument(
-        new List<portwoodglobal.DocGenFlowAction.Request>{input});
+List<duracomp.DocGenFlowAction.Response> results =
+    duracomp.DocGenFlowAction.generateDocument(
+        new List<duracomp.DocGenFlowAction.Request>{input});
 if (!results[0].success) {
     System.debug(LoggingLevel.ERROR, results[0].errorMessage);
 }
@@ -34,21 +36,21 @@ The Generate Document request above was compiled and executed against the instal
 #### Build current signers
 
 ```apex
-portwoodglobal.DocGenSigner signer = new portwoodglobal.DocGenSigner();
+duracomp.DocGenSigner signer = new duracomp.DocGenSigner();
 signer.name = 'Jordan Rivera';
 signer.email = 'jordan@example.com'; // replace with an intended recipient you control for testing
 signer.role = 'Customer'; // matches {@Signature_Customer} in the practice template
-portwoodglobal.DocGenSignatureFlowAction.Request input =
-    new portwoodglobal.DocGenSignatureFlowAction.Request();
+duracomp.DocGenSignatureFlowAction.Request input =
+    new duracomp.DocGenSignatureFlowAction.Request();
 input.templateApiName = 'KB_Signing_Practice';
 input.relatedRecordId = accountId;
-input.signerRecords = new List<portwoodglobal.DocGenSigner>{signer};
+input.signerRecords = new List<duracomp.DocGenSigner>{signer};
 input.signingOrder = 'Single';
 input.sendEmails = false;
 input.requireEmailVerification = false; // deliberate no-code test; choose your real policy
-List<portwoodglobal.DocGenSignatureFlowAction.Result> results =
-    portwoodglobal.DocGenSignatureFlowAction.generate(
-        new List<portwoodglobal.DocGenSignatureFlowAction.Request>{input});
+List<duracomp.DocGenSignatureFlowAction.Result> results =
+    duracomp.DocGenSignatureFlowAction.generate(
+        new List<duracomp.DocGenSignatureFlowAction.Request>{input});
 // Check success/errorMessage before consuming signatureRequestId or signerUrls.
 ```
 

@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // Dura Composites Ltd. (new file)
 /**
  * Backs the Signature Status card (LWC docGenSignatureStatus): every signature request on a
@@ -6,7 +7,7 @@
  *   - opened: DocGen_Signer_Visit__c (automated visits left out), with device and page loads;
  *   - reminder sent, link resent, revoked, expired link opened, and a user changing the link's
  *     expiry or the reminders after sending: DocGen_Signature_Event__c;
- *   - signed and declined: DocGen_Signature_Audit__c (Portwood writes one for both), with the
+ *   - signed and declined: DocGen_Signature_Audit__c (DocGen writes one for both), with the
  *     decline reason from the signer;
  *   - link expired: the expiry time, when the request is still open (DocGenSignatureExpiry);
  *   - fallbacks for requests from before the event log: the signer's latest reminder, and the
@@ -583,7 +584,7 @@ public with sharing class DocGenSignatureStatusController {
         return out;
     }
 
-    /** When each signer signed or declined: Portwood writes a signature audit for both. */
+    /** When each signer signed or declined: DocGen writes a signature audit for both. */
     private static Map<Id, Datetime> auditTimesFor(Set<Id> requestIds) {
         Map<Id, Datetime> out = new Map<Id, Datetime>();
         for (DocGen_Signature_Audit__c a : [

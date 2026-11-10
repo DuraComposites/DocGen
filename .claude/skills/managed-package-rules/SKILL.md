@@ -1,11 +1,13 @@
 ---
 name: managed-package-rules
-description: Constraints that only bite in a real managed-package install of Portwood — global visibility, Flow Apex-Defined types, namespace-prefixed keys, USER_MODE on internal reads, immutable API names. Use when adding Apex a subscriber must see, building a Flow action, or debugging something that works in a scratch org but fails in a package install.
+description: Constraints that only bite in a real managed-package install of DocGen — global visibility, Flow Apex-Defined types, namespace-prefixed keys, USER_MODE on internal reads, immutable API names. Use when adding Apex a subscriber must see, building a Flow action, or debugging something that works in a scratch org but fails in a package install.
 ---
+
+<!-- Modified by Dura Composites Ltd. -->
 
 # Managed-package constraints
 
-Portwood ships as **Managed 2GP**, namespace `portwoodglobal`. A large class of bugs
+DocGen ships as **Managed 2GP**, namespace `duracomp`. A large class of bugs
 exists only in a real subscriber install and **cannot be reproduced in a no-namespace
 scratch org**. If something works in dev and fails in an install, start here.
 
@@ -34,7 +36,7 @@ scratch org** — a no-namespace staging org cannot show you the failure.
 ## API names are frozen forever
 
 Everything shipped is immutable: `DocGen_Template__c`, `DocGenService`, `DocGen_Admin`,
-the `portwoodglobal` namespace, the `Canvas` picklist value. Display names (labels,
+the `duracomp` namespace, the `Canvas` picklist value. Display names (labels,
 descriptions, user-visible strings) can change; API names cannot.
 
 Two scheduled job names deliberately keep their old strings because they're matched by
@@ -48,7 +50,7 @@ feature — the workaround is inert stubs.
 
 In a subscriber org, SObject field keys come back **namespace-prefixed**:
 
-- `row.Field__c` is `undefined` in a shipped package — it's `row.portwoodglobal__Field__c`.
+- `row.Field__c` is `undefined` in a shipped package — it's `row.duracomp__Field__c`.
   Use `@salesforce/schema` imports or a normalizing mapper in LWC.
 - `getPopulatedFieldsAsMap()` keys are prefixed too. Prefer direct field access.
 
@@ -56,7 +58,7 @@ Neither reproduces in a no-namespace org. A namespaced build is the real gate.
 
 ## `WITH USER_MODE` on internal reads
 
-Portwood's internal ContentVersions (`docgen_tmpl_html_*`, `docgen_tmpl_xml_*`) have
+DocGen's internal ContentVersions (`docgen_tmpl_html_*`, `docgen_tmpl_xml_*`) have
 `ContentDocumentLink.Visibility = InternalUsers`, which is **invisible under
 `USER_MODE`** — the read silently returns empty and the caller falls back to something
 degraded. Use the FLS-guard + `WITH SYSTEM_MODE` hybrid for these.
@@ -78,7 +80,7 @@ plainly exists. Use `SYSTEM_MODE` plus an FLS guard for internal config reads.
 
 ## No external callouts
 
-Portwood is 100% native — no external services, APIs, or callouts, and document data
+DocGen is 100% native — no external services, APIs, or callouts, and document data
 never leaves the org. Client-side libraries are **vendored as pinned static resources**,
 not pulled from npm at build time. If you add or update one: keep it patched, retain its
 license/NOTICE, and disclose it.

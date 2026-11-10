@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import { LightningElement, api } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -94,7 +95,7 @@ export default class DocGenSignatureSender extends NavigationMixin(LightningElem
     get modalTitle() {
         if (this.showSourceChooser) return 'New signature request';
         if (this.isComplete) return 'Signature request created';
-        return this.source === 'templates' ? 'Prepare a Portwood template' : 'Prepare your PDF';
+        return this.source === 'templates' ? 'Prepare a DocGen template' : 'Prepare your PDF';
     }
     async refreshRequests() {
         try {
@@ -111,7 +112,7 @@ export default class DocGenSignatureSender extends NavigationMixin(LightningElem
                 }));
             this.drafts = (context.drafts || []).map((draft) => ({
                 id: draft.Id,
-                title: draft.Document_Title_Format__c || draft.portwoodglobal__Document_Title_Format__c || draft.Name
+                title: draft.Document_Title_Format__c || draft.duracomp__Document_Title_Format__c || draft.Name
             }));
             this.error = null;
         } catch (err) {
@@ -209,7 +210,7 @@ export default class DocGenSignatureSender extends NavigationMixin(LightningElem
         const frame = this.template.querySelector('iframe.preparation-frame');
         if (!frame || !this.editorOrigin || !this._pendingSource) return;
         frame.contentWindow.postMessage(
-            { channel: 'portwood-signatures', nonce: this.nonce, action: 'source', value: this._pendingSource },
+            { channel: 'docgen-signatures', nonce: this.nonce, action: 'source', value: this._pendingSource },
             this.editorOrigin
         );
         this._pendingSource = null;
@@ -221,7 +222,7 @@ export default class DocGenSignatureSender extends NavigationMixin(LightningElem
             !frame ||
             event.source !== frame.contentWindow ||
             !message ||
-            message.channel !== 'portwood-signatures' ||
+            message.channel !== 'docgen-signatures' ||
             message.nonce !== this.nonce
         )
             return;

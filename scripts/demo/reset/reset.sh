@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+# Modified by Dura Composites Ltd.
 # ============================================================================
-# Portwood DocGen DEMO — reset wrapper.
+# DocGen DEMO — reset wrapper.
 #
 #   refresh : QUICK REFRESH — delete generated documents + signature artifacts
 #             to free storage. KEEPS all templates and seeded data. Run this

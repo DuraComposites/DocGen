@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Use a simple page-number tag for a simple footer. Use CSS counters when you need page numbers alongside multiple formatted lines, logos, or other HTML.
 
 #### The simple footer
@@ -33,7 +35,7 @@ In the current engine, literal `{PageNumber}` or `{TotalPages}` in a header/foot
 </div>
 ```
 
-Without the literal counter tags, Portwood uses a running HTML element for page furniture. The pseudo-elements supply the counters while keeping the HTML structure intact. The 3.60.0 lab verified both footer lines and the correct `Page 1 of 4` through `Page 4 of 4` values.
+Without the literal counter tags, DocGen uses a running HTML element for page furniture. The pseudo-elements supply the counters while keeping the HTML structure intact. The 3.60.0 lab verified both footer lines and the correct `Page 1 of 4` through `Page 4 of 4` values.
 
 #### Make room for it
 
@@ -51,4 +53,4 @@ Keep counters in page furniture. These are PDF layout counters, not record field
 | Custom font and literal counters fail | Use running HTML plus CSS counters and test the approved font specimen           |
 | Header image is missing               | Confirm image access and dimensions in the actual render path                    |
 
-This recipe adapts Dave's [two-line footer answer in Portwood Community](https://portwoodcommunity.slack.com/archives/C0B37JT11RA/p1792162191491549), checked against `wrapHtmlForPdf` and a real 3.60.0 PDF.
+This recipe adapts a two-line footer answer from the upstream project's community, checked against `wrapHtmlForPdf` and a real 3.60.0 PDF.

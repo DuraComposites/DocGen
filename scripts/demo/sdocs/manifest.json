@@ -1,6 +1,6 @@
 {
     "_comment": "SDocs-replacement demo. Three templates: the simple approval letter and the dynamic related-list document (the two shapes the customer described), plus a Canvas-designer invoice that shows the pixel-placement editor rather than the HTML path. Installed with: node scripts/demo/install/install.mjs <org> --manifest=scripts/demo/sdocs/manifest.json  (namespace is probed from the org; no DOCGEN_DEMO_NS needed)",
-    "namespace": "portwoodglobal__",
+    "namespace": "duracomp__",
     "templates": [
         {
             "key": "proj-approval-request",

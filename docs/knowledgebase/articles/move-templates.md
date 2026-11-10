@@ -1,4 +1,6 @@
-Move a working template from a sandbox to production, or share it with another Portwood org.
+<!-- Modified by Dura Composites Ltd. -->
+
+Move a working template from a sandbox to production, or share it with another DocGen org.
 
 #### Export from the first org
 
@@ -10,7 +12,7 @@ The bundle includes the active version and its document, template settings, supp
 
 #### Import into the other org
 
-1. Make sure a compatible Portwood version is installed.
+1. Make sure a compatible DocGen version is installed.
 2. Open **My Templates → Your Templates → Import Template**.
 3. Select the `.docgen.json` bundle.
 4. Open the imported template and review its settings.
@@ -27,6 +29,6 @@ The bundle includes the active version and its document, template settings, supp
 
 #### Give automation a stable name
 
-Set the template's **API Name** to a unique value such as `Account_Brief`. Use it in supported Flow actions and Portwood buttons so you do not have to replace a template record ID after moving between orgs.
+Set the template's **API Name** to a unique value such as `Account_Brief`. Use it in supported Flow actions and DocGen buttons so you do not have to replace a template record ID after moving between orgs.
 
 **You are done when:** The imported template generates correctly in the destination and its users and automations can find the intended template.

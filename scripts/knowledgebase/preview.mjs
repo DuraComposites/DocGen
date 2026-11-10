@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Modified by Dura Composites Ltd.
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -63,7 +64,7 @@ export async function startPreview({ website = path.join(root, 'website'), port 
                     content
                         .toString()
                         .replaceAll(
-                            'https://github.com/Portwood-Global-Solutions/Portwood/blob/main/',
+                            'https://github.com/DuraComposites/DocGen/blob/main/',
                             `${address}/source/`
                         )
                 );

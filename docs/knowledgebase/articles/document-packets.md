@@ -1,10 +1,12 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Put several documents into one PDF, or combine PDFs already saved on a record.
 
 **Before you start:** Use a desktop browser. Your administrator must enable the runner's packet or PDF-combining controls.
 
 #### Make a packet from templates
 
-1. Open the Salesforce record and find Portwood Runner.
+1. Open the Salesforce record and find DocGen Runner.
 2. Choose **Document Packet**.
 3. Move the required templates into the packet list.
 4. Put them in the order you want readers to see them.

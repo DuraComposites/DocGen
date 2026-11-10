@@ -1,8 +1,9 @@
+// Modified by Dura Composites Ltd.
 /**
  * Guest endpoint that streams one attached document (#412) to the signing page as raw PDF bytes.
  *
  *   GET {Site}/services/apexrest/[ns/]signature-attachment?index=N
- *   X-Portwood-Token: <the signer's 64-hex secure token>
+ *   X-DocGen-Token: <the signer's 64-hex secure token>
  *
  * Apex REST rather than Visualforce remoting because remoting caps a response at ~15 MB of
  * base64 (≈5.5 MB of PDF) — engineering drawings run to 16 MB and more. The page calls this on
@@ -13,7 +14,7 @@
  * DocGenSignatureAttachments.serve; this class only translates to and from HTTP.
  *
  *   POST {Site}/services/apexrest/[ns/]signature-attachment?index=N   (#412 M2)
- *   X-Portwood-Token: <token>, X-Portwood-Markup-Base: <SHA-256 of the copy the marks were added
+ *   X-DocGen-Token: <token>, X-DocGen-Markup-Base: <SHA-256 of the copy the marks were added
  *   to>, body: the marked-up PDF (raw bytes)
  *
  * The POST saves the signer's marked-up copy of document N to the related record, replacing their
@@ -28,9 +29,9 @@
 @RestResource(urlMapping='/signature-attachment/*')
 global without sharing class DocGenSignatureAttachmentRest { // NOPMD AvoidGlobalModifier — Apex REST resources must be global
     @TestVisible
-    private static final String TOKEN_HEADER = 'X-Portwood-Token';
+    private static final String TOKEN_HEADER = 'X-DocGen-Token';
     @TestVisible
-    private static final String MARKUP_BASE_HEADER = 'X-Portwood-Markup-Base';
+    private static final String MARKUP_BASE_HEADER = 'X-DocGen-Markup-Base';
 
     @HttpGet
     global static void fetchAttachment() {
@@ -62,7 +63,7 @@ global without sharing class DocGenSignatureAttachmentRest { // NOPMD AvoidGloba
         res.statusCode = 200;
         res.addHeader('Content-Type', 'application/pdf');
         res.addHeader('Content-Disposition', 'inline; filename="' + safeFileName(result.title) + '.pdf"');
-        res.addHeader('X-Portwood-Sha256', result.sha256);
+        res.addHeader('X-DocGen-Sha256', result.sha256);
         res.responseBody = result.bytes;
     }
 

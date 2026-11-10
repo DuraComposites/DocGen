@@ -45,9 +45,9 @@
             "disposition": "Covered in task article or linked detailed reference"
         },
         {
-            "heading": "2. What Portwood does",
-            "githubAnchor": "2-what-portwood-does",
-            "siteAnchor": "2-what-portwood-does",
+            "heading": "2. What DocGen does",
+            "githubAnchor": "2-what-docgen-does",
+            "siteAnchor": "2-what-docgen-does",
             "article": "choose-format",
             "disposition": "Covered in task article or linked detailed reference"
         },
@@ -55,21 +55,21 @@
             "heading": "3. Install & post-install setup",
             "githubAnchor": "3-install--post-install-setup",
             "siteAnchor": "3-install-post-install-setup",
-            "article": "install-portwood",
+            "article": "install-docgen",
             "disposition": "Covered in task article or linked detailed reference"
         },
         {
             "heading": "Install the package",
             "githubAnchor": "install-the-package",
             "siteAnchor": "install-the-package",
-            "article": "install-portwood",
+            "article": "install-docgen",
             "disposition": "Covered in task article or linked detailed reference"
         },
         {
             "heading": "Post-install checklist",
             "githubAnchor": "post-install-checklist",
             "siteAnchor": "post-install-checklist",
-            "article": "install-portwood",
+            "article": "install-docgen",
             "disposition": "Covered in task article or linked detailed reference"
         },
         {
@@ -94,9 +94,9 @@
             "disposition": "Covered in task article or linked detailed reference"
         },
         {
-            "heading": "Adding custom fields to Portwood objects?",
-            "githubAnchor": "adding-custom-fields-to-portwood-objects",
-            "siteAnchor": "adding-custom-fields-to-portwood-objects",
+            "heading": "Adding custom fields to DocGen objects?",
+            "githubAnchor": "adding-custom-fields-to-docgen-objects",
+            "siteAnchor": "adding-custom-fields-to-docgen-objects",
             "article": "manage-access",
             "disposition": "Covered in task article or linked detailed reference"
         },
@@ -1399,13 +1399,13 @@
             "heading": "13.3 Blob.toPdf Release Update",
             "githubAnchor": "133-blobtopdf-release-update",
             "siteAnchor": "133-blobtopdf-release-update",
-            "article": "install-portwood",
+            "article": "install-docgen",
             "disposition": "Covered in task article or linked detailed reference"
         },
         {
-            "heading": "13.4 Custom fields on Portwood objects",
-            "githubAnchor": "134-custom-fields-on-portwood-objects",
-            "siteAnchor": "134-custom-fields-on-portwood-objects",
+            "heading": "13.4 Custom fields on DocGen objects",
+            "githubAnchor": "134-custom-fields-on-docgen-objects",
+            "siteAnchor": "134-custom-fields-on-docgen-objects",
             "article": "manage-access",
             "disposition": "Covered in task article or linked detailed reference"
         },
@@ -1567,7 +1567,7 @@
             "heading": "15.12 A value is missing from the Type picklist (Canvas, HTML, Excel)",
             "githubAnchor": "1512-a-value-is-missing-from-the-type-picklist-canvas-html-excel",
             "siteAnchor": "1512-a-value-is-missing-from-the-type-picklist-canvas-html-excel",
-            "article": "upgrade-portwood",
+            "article": "upgrade-docgen",
             "disposition": "Covered in task article or linked detailed reference"
         },
         {

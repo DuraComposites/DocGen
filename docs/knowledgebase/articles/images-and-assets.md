@@ -1,8 +1,10 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Upload a logo once and reuse it across templates.
 
 #### Add a shared image
 
-1. Open **Portwood → Assets**.
+1. Open **DocGen → Assets**.
 2. Add an image, give it a clear name, and choose a stable asset key such as `company-logo`.
 3. Upload the image file and save it.
 4. Use the asset's copy or insert controls when placing it in a template.
@@ -19,9 +21,9 @@ Keep logos small enough for their intended print size. A very large photograph c
 
 #### Use a picture stored on a record
 
-Portwood also supports image fields and attached record images through image merge tags. Use the template's copy-paste tag tools to get the correct form for your data. Include the image field in the query when the tag reads a field.
+DocGen also supports image fields and attached record images through image merge tags. Use the template's copy-paste tag tools to get the correct form for your data. Include the image field in the query when the tag reads a field.
 
-Use the [image tag reference](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/reference/merge-tags.md#77-images) for numbered attached images, field images, and exact sizing.
+Use the [image tag reference](https://github.com/DuraComposites/DocGen/blob/main/docs/reference/merge-tags.md#77-images) for numbered attached images, field images, and exact sizing.
 
 #### Replace a shared logo
 

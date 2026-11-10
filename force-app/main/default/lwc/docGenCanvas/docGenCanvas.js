@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import { LightningElement, api, track } from 'lwc';
 import getHtmlTemplateBody from '@salesforce/apex/DocGenController.getHtmlTemplateBody';
 import saveAndPublishHtmlBody from '@salesforce/apex/DocGenController.saveAndPublishHtmlBody';
@@ -138,7 +139,7 @@ function fontFamilyDisplayName(html) {
 }
 
 /**
- * Canvas editor — a Canva-style artboard for Portwood's Canvas template type.
+ * Canvas editor — a Canva-style artboard for DocGen's Canvas template type.
  *
  * DELIBERATELY NET NEW, not a mode inside docGenAdmin. That component is ~15k lines
  * built on treating a contenteditable DOM as the document, which is what produced the
@@ -771,7 +772,7 @@ export default class DocGenCanvas extends LightningElement {
 
     get exportFileName() {
         const base = String(this.baseObject || 'canvas').replace(/[^A-Za-z0-9_-]+/g, '-');
-        return 'portwood-' + base.toLowerCase() + '-canvas.html';
+        return 'docgen-' + base.toLowerCase() + '-canvas.html';
     }
 
     async handleImportFile(event) {
@@ -1299,7 +1300,7 @@ export default class DocGenCanvas extends LightningElement {
             {
                 id: 'image',
                 label: 'Image',
-                title: 'Add an image from Portwood Assets',
+                title: 'Add an image from DocGen Assets',
                 action: 'tool',
                 d: 'M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M8.5 9.5h.01'
             },
@@ -2486,7 +2487,7 @@ export default class DocGenCanvas extends LightningElement {
         try {
             const rows = (await getTemplateVersions({ templateId: this.templateId })) || [];
             this.versions = rows.map((v) => {
-                const isActive = v.Is_Active__c === true || v.portwoodglobal__Is_Active__c === true;
+                const isActive = v.Is_Active__c === true || v.duracomp__Is_Active__c === true;
                 const when = v.CreatedDate ? new Date(v.CreatedDate).toLocaleString() : '';
                 return {
                     label: (isActive ? '★ ' : '') + (v.Name || 'Version') + (when ? ' · ' + when : ''),
@@ -2839,7 +2840,7 @@ export default class DocGenCanvas extends LightningElement {
             });
             return res || none;
         } catch (e) {
-            console.warn('Portwood: chart preparation failed; falling back to the server path', e);
+            console.warn('DocGen: chart preparation failed; falling back to the server path', e);
             return none;
         }
     }
@@ -2940,7 +2941,7 @@ export default class DocGenCanvas extends LightningElement {
     }
 
     /**
-     * The library is the org's Portwood ASSETS, not org files or static resources.
+     * The library is the org's DocGen ASSETS, not org files or static resources.
      *
      * An asset is referenced by key, and `{%asset:<key>}` resolves to that asset's
      * latest version every time a document is generated — so replacing the logo in the

@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 ﻿/** Issue #454: test real source with data: URLs blocked. Run: node scripts/qa/lws-download-route-check.mjs */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -153,7 +154,7 @@ await check('Canvas HTML export preserves Unicode and markup without sanitizatio
     const html = '<html><body>Résumé — 東京 {Name}<script>example()</script></body></html>';
     env.context.serialize = () => html;
     const component = vm.runInContext('({' + handler(canvas, 'handleExportHtml() {') + '})', env.context);
-    component.exportFileName = 'portwood-account-canvas.html';
+    component.exportFileName = 'docgen-account-canvas.html';
     component.handleExportHtml();
     assert.equal(env.downloads.length, 1);
     assert.equal(env.downloads[0].fileName, component.exportFileName);

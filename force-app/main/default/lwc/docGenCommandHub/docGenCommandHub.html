@@ -1,11 +1,12 @@
 <template>
+    <!-- Modified by Dura Composites Ltd. -->
     <div class="app-container">
         <!-- Refined Professional Sidebar -->
         <nav class="sidebar">
             <div class="sidebar-header">
-                <img src={logoUrl} alt="Portwood" class="logo-icon" />
+                <img src={logoUrl} alt="DocGen" class="logo-icon" />
                 <div class="logo-text">
-                    <h2>Portwood</h2>
+                    <h2>DocGen</h2>
                     <p>Document Automation</p>
                 </div>
             </div>
@@ -56,36 +57,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <a
-                    href="mailto:support@portwood.dev?subject=Portwood%20feature%20request"
-                    class="community-link"
-                    title="Something you wish Portwood did? Tell us — feature requests go straight to the roadmap."
-                >
-                    <lightning-icon icon-name="utility:new" size="xx-small" class="nav-icon"></lightning-icon>
-                    Request a Feature
-                </a>
-                <a
-                    href="mailto:support@portwood.dev?subject=Portwood%20bug%20report"
-                    class="community-link"
-                    title="Something broken or confusing? Tell us — it goes straight to the team."
-                >
-                    <lightning-icon icon-name="utility:bug" size="xx-small" class="nav-icon"></lightning-icon>
-                    Report a Bug
-                </a>
-                <a
-                    href="https://portwood.dev/services"
-                    target="_blank"
-                    class="community-link"
-                    title="Need a template built, a rollout planned, or hands-on help? Our team does that."
-                >
-                    <lightning-icon icon-name="utility:touch_action" size="xx-small" class="nav-icon"></lightning-icon>
-                    Get Expert Help
-                </a>
-                <a href="https://portwood.dev/community" target="_blank" class="community-link">
-                    <lightning-icon icon-name="utility:comments" size="xx-small" class="nav-icon"></lightning-icon>
-                    Join the Community
-                </a>
-                <div class="footer-note">Made with <span class="heart">&#10084;&#65039;</span> for you</div>
+                <div class="footer-note">Problems or ideas? Tell your Salesforce administrator.</div>
             </div>
         </nav>
 
@@ -189,7 +161,7 @@
                             <h2>Brands</h2>
                             <p>
                                 Set up a reusable sender identity — address, logo, and color — for each business unit,
-                                then choose it on any Portwood Template.
+                                then choose it on any DocGen Template.
                             </p>
                         </div>
                         <div class="panel-body">
@@ -197,25 +169,21 @@
                         </div>
                     </template>
 
-                    <!-- HELP / LEARNING CENTER — moved to portwood.dev/guide -->
+                    <!-- HELP / LEARNING CENTER — links to the User Guide on GitHub -->
                     <template if:true={isHelp}>
                         <div class="panel-header">
                             <h2>User Guide</h2>
-                            <p>
-                                The full Portwood User Guide lives on the web — always up to date with the latest
-                                release.
-                            </p>
+                            <p>The full DocGen User Guide is on GitHub, with the source.</p>
                         </div>
                         <div class="panel-body">
                             <div class="guide-redirect-card">
-                                <h3>Open the Portwood User Guide</h3>
+                                <h3>Open the DocGen User Guide</h3>
                                 <p>
                                     Setup walkthroughs, merge-tag syntax, e-signature configuration, PDF features, Flow
-                                    integration, troubleshooting — everything is on the portwood.dev guide site,
-                                    formatted for fast skimming and search.
+                                    integration, troubleshooting — everything is in the guide.
                                 </p>
                                 <a
-                                    href="https://portwood.dev/guide"
+                                    href="https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     class="guide-redirect-button"
@@ -223,12 +191,7 @@
                                     Open the User Guide ↗
                                 </a>
                                 <p class="guide-redirect-fineprint">
-                                    Need implementation help or training? Visit&nbsp;<a
-                                        href="https://portwood.dev/support"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        >portwood.dev/support</a
-                                    >.
+                                    Need help or training? Ask your Salesforce administrator.
                                 </p>
                             </div>
                         </div>

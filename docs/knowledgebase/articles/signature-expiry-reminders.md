@@ -1,10 +1,12 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Give each template its own link expiry and reminder schedule, let the sender adjust both when sending, and extend a link or change the reminders after it has gone out.
 
-**Before you start:** Signature reminders are switched on in **Portwood → Signatures** and the reminder job is scheduled; see [Track, resend, or stop a request](#manage-signatures). You are a Portwood administrator for the template settings, and a sender with **Portwood User** or **Portwood Admin** for the rest.
+**Before you start:** Signature reminders are switched on in **DocGen → Signatures** and the reminder job is scheduled; see [Track, resend, or stop a request](#manage-signatures). You are a DocGen administrator for the template settings, and a sender with **DocGen User** or **DocGen Admin** for the rest.
 
 #### Set the defaults on a template
 
-1. Open the template in **Portwood → Templates** and go to **E-Signature Defaults**.
+1. Open the template in **DocGen → Templates** and go to **E-Signature Defaults**.
 2. Fill in any of these, in days:
 
 | Setting                       | What it does                                                             | Blank means                          |
@@ -40,7 +42,7 @@ Each change goes on the request's timeline with your name, such as "Link extende
 
 **Resend** in the Signature Sender also gives the link a fresh window: the template's length (or the org default), never shorter than a date someone already extended it to.
 
-Changing a sent request needs the **Change Sent Signature Requests** permission, which **Portwood User** and **Portwood Admin** include.
+Changing a sent request needs the **Change Sent Signature Requests** permission, which **DocGen User** and **DocGen Admin** include.
 
 #### How the reminders go out
 

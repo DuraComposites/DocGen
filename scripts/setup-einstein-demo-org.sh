@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Modified by Dura Composites Ltd.
 #
 # DocGen — spin up an Einstein-enabled DEMO org in one command.
 #
@@ -26,7 +27,7 @@ set -euo pipefail
 
 ALIAS="docgen-einstein-demo"
 DURATION="30"
-DEVHUB="Portwood Global - Production"
+DEVHUB="prod"
 DEF_FILE="config/einstein-demo-scratch-def.json"
 RECREATE="false"
 # Defaults track the current release; override per run when testing a new build.
@@ -61,7 +62,7 @@ if sf org display --target-org "$ALIAS" >/dev/null 2>&1; then
     echo "==> Reusing existing org (pass --recreate to rebuild)"
 else
     echo "==> Creating scratch org (Einstein1AIPlatform + Prompt Builder)"
-    # --no-namespace: a subscriber does not own portwoodglobal, it receives it.
+    # --no-namespace: a subscriber does not own duracomp, it receives it.
     sf org create scratch \
         --definition-file "$DEF_FILE" \
         --alias "$ALIAS" \

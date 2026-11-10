@@ -1,5 +1,6 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
-// Portwood DocGen DEMO — Seed 03: Students + Enrollments
+// DocGen DEMO — Seed 03: Students + Enrollments
 //   Powers: report card, official transcript (GPA aggregates, term loops).
 // Idempotent: clears all Demo_Student__c / Demo_Enrollment__c then re-inserts.
 // ============================================================================

@@ -1,6 +1,8 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Use job history to see whether a large generation is still working, finished, or needs attention.
 
-Open **Portwood → Bulk Generation** and its job-history area. Open the job to inspect its counts, generated files, and errors. Portwood Jobs in the app navigation is another way to find job records.
+Open **DocGen → Bulk Generation** and its job-history area. Open the job to inspect its counts, generated files, and errors. DocGen Jobs in the app navigation is another way to find job records.
 
 | Status                    | What to do                                                          |
 | ------------------------- | ------------------------------------------------------------------- |
@@ -32,6 +34,6 @@ Recovery is capped, and combined-PDF failures are not automatically folded into 
 
 #### When nothing is moving
 
-Ask your administrator to check Salesforce **Apex Jobs** and **Portwood Error Logs**. Include the job ID, template name, time, and displayed error when reporting a problem. Avoid starting repeated duplicate jobs while the first is queued.
+Ask your administrator to check Salesforce **Apex Jobs** and **DocGen Error Logs**. Include the job ID, template name, time, and displayed error when reporting a problem. Avoid starting repeated duplicate jobs while the first is queued.
 
 For persisted field/API names and a Flow refresh loop, see [Follow asynchronous jobs](#async-jobs). Friendly progress labels can differ from the stored job state.

@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getTemplates from '@salesforce/apex/DocGenEmailTemplateController.getTemplates';
@@ -213,7 +214,7 @@ export default class DocGenEmailTemplates extends LightningElement {
 
     get layoutModeOptions() {
         return [
-            { label: 'Portwood layout — edit body, branded chrome', value: 'Managed' },
+            { label: 'DocGen layout — edit body, branded chrome', value: 'Managed' },
             { label: 'Full custom HTML — your entire document', value: 'Full_Html' }
         ];
     }

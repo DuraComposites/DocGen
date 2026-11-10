@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 <!--
   WHAT IS SHAREABLE HERE, AND WHAT IS NOT
   ---------------------------------------
@@ -12,9 +14,9 @@
   published.
 -->
 
-# Portwood DocGen — Example Template Library
+# DocGen — Example Template Library
 
-A set of **ready-to-adapt HTML document templates** for **Portwood DocGen**,
+A set of **ready-to-adapt HTML document templates** for **DocGen**,
 spanning 9 industries. Use them as starting points for your own templates: copy a
 body, point it at your own object/fields, and load it into the DocGen Template
 Builder.

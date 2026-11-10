@@ -1,9 +1,11 @@
 ---
 name: triage-report
-description: Decide whether a Portwood bug report is a real code defect or a template-authoring problem, before any code is written. Use when a user reports "the PDF looks wrong", a merge tag didn't resolve, an image is missing, a chart is distorted, or output doesn't match the template. Most reports are template issues.
+description: Decide whether a DocGen bug report is a real code defect or a template-authoring problem, before any code is written. Use when a user reports "the PDF looks wrong", a merge tag didn't resolve, an image is missing, a chart is distorted, or output doesn't match the template. Most reports are template issues.
 ---
 
-# Triaging a Portwood report
+<!-- Modified by Dura Composites Ltd. -->
+
+# Triaging a DocGen report
 
 **Most reports are template issues, not code defects.** Work through this before
 calling anything a bug. A report that turns out to be an authoring problem gets
@@ -104,7 +106,7 @@ Do **not** fix it. File the issue. The issue is the deliverable — it is the wo
 that community contributors pick from, so the write-up carries the weight a direct fix
 used to.
 
-A good Portwood issue has:
+A good DocGen issue has:
 
 - **Exact repro** — template shape, record shape, output format, what you expected.
 - **`file:line` citations** into the actual code.

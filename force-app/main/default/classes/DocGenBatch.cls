@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 public with sharing class DocGenBatch implements Database.Batchable<SObject>, Database.Stateful, Database.AllowsCallouts {
     public Id jobId;
     public Id templateId;
@@ -748,7 +749,7 @@ public with sharing class DocGenBatch implements Database.Batchable<SObject>, Da
             Messaging.CustomNotification notification = new Messaging.CustomNotification();
             notification.setNotificationTypeId(types[0].Id);
             notification.setTargetId(jobId);
-            notification.setTitle('Portwood: ' + jobName + ' — ' + status);
+            notification.setTitle('DocGen: ' + jobName + ' — ' + status);
             notification.setBody(
                 successCount +
                     ' documents generated' +

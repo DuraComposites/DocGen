@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // CxSAST: Test class — SOQL/DML findings are test data operations, not production code paths
 @IsTest
 private class DocGenControllerTests {
@@ -6142,7 +6143,7 @@ private class DocGenControllerTests {
             Base_Object_API__c = 'Account',
             Type__c = 'Word',
             Output_Format__c = 'PDF',
-            Required_Permission_Sets__c = 'portwoodglobal__docgen_admin'
+            Required_Permission_Sets__c = 'duracomp__docgen_admin'
         );
         insert gated;
 
@@ -6320,7 +6321,7 @@ private class DocGenControllerTests {
 
         String message = DocGenController.resolveTemplatePickerLoadError(tmpVarFailure);
         System.assert(
-            message.contains('Portwood Template is shared'),
+            message.contains('DocGen Template is shared'),
             'tmpVar bind errors should become actionable template sharing guidance'
         );
         System.assert(!message.contains('tmpVar1'), 'Raw platform implementation detail must not reach the runner');
@@ -6538,12 +6539,12 @@ private class DocGenControllerTests {
     // verify the caller can actually see that record before reading or
     // mutating it. These tests pair an "authorized" path (caller owns/has
     // access — operation succeeds) with an "unauthorized" path (caller is a
-    // standard user with no sharing access AND no Portwood permission set —
+    // standard user with no sharing access AND no DocGen permission set —
     // operation throws AuraHandledException).
     // =========================================================================
 
     /**
-     * Builds a Standard-User-profile user with NO Portwood permission sets so
+     * Builds a Standard-User-profile user with NO DocGen permission sets so
      * runAs() blocks them from seeing managed records. Reused across the
      * deny-path tests below.
      */
@@ -6762,7 +6763,7 @@ private class DocGenControllerTests {
                 threw = true;
             }
             Test.stopTest();
-            System.assert(threw, 'Standard user without Portwood access must be denied');
+            System.assert(threw, 'Standard user without DocGen access must be denied');
         }
     }
 

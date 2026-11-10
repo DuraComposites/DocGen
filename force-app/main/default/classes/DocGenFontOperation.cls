@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /** Native Files operations keep multi-megabyte font payloads out of synchronous LWC requests. */
 public with sharing class DocGenFontOperation implements Queueable {
     private String operation;
@@ -26,7 +27,7 @@ public with sharing class DocGenFontOperation implements Queueable {
     }
     public void execute(QueueableContext context) {
         if (!FeatureManagement.checkPermission('Manage_DocGen_Fonts'))
-            throw new DocGenException('Manage Portwood Fonts permission is required.');
+            throw new DocGenException('Manage DocGen Fonts permission is required.');
         if (Limits.getLimitHeapSize() < 25000000)
             throw new DocGenException(
                 'Large font imports require the Winter 27 Apex heap limits. Check Apex Settings.'

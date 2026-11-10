@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Schedule a document run instead of starting it by hand.
 
 **Before you start:** Test the template and filter in [Bulk Generation](#bulk-generation). A Salesforce administrator should design the schedule and Flow error handling.
@@ -5,7 +7,7 @@ Schedule a document run instead of starting it by hand.
 #### Configure the action
 
 1. Create the automation that should launch the run, such as one scheduled Flow.
-2. Add **Generate Bulk Documents** from Portwood.
+2. Add **Generate Bulk Documents** from DocGen.
 3. Set **Template API Name** or **Template ID**.
 4. Supply a **WHERE Condition** or a **Record IDs** collection.
 5. Set the job label, output options, batch size, and sort order.
@@ -32,6 +34,6 @@ If a scheduled Flow starts once per matching record, adding a bulk action that a
 
 Store **Success**, **Error Message**, and **Job ID**. Add a Decision for an unsuccessful response and a fault connector for an unexpected action failure.
 
-The action submits background work and returns. Follow the job in Portwood job history; do not email a completion notice just because submission returned successfully.
+The action submits background work and returns. Follow the job in DocGen job history; do not email a completion notice just because submission returned successfully.
 
 When producing a combined PDF for double-sided printing, the action's **Duplex Padding** input applies the same behavior as the bulk UI.

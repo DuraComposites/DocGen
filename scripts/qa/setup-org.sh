@@ -7,7 +7,7 @@
 #   ./scripts/qa/setup-org.sh                    # reuse/refresh docgen-verify
 #   ./scripts/qa/setup-org.sh my-org --create    # create it first
 #   ./scripts/qa/setup-org.sh my-org --create --days 30
-#   ./scripts/qa/setup-org.sh my-org --create --hub portwood-prod
+#   ./scripts/qa/setup-org.sh my-org --create --hub docgen-prod
 #
 # WHY THIS EXISTS
 # ---------------
@@ -32,7 +32,7 @@ DAYS=30
 # one with NoDefaultDevHubError — which reads like a broken script and is really
 # missing config. Default to the project's hub (CLAUDE.md § Package info),
 # override with --hub or $DOCGEN_DEVHUB.
-HUB="${DOCGEN_DEVHUB:-Portwood Global - Production}"
+HUB="${DOCGEN_DEVHUB:-prod}"
 for ((i = 1; i <= $#; i++)); do
     case "${!i}" in
         --create) CREATE=true ;;

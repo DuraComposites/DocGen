@@ -1,5 +1,6 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
-// Portwood DocGen DEMO — Seed 05: Giant catalog (giant-query scale demo)
+// DocGen DEMO — Seed 05: Giant catalog (giant-query scale demo)
 //   Creates a 2,200-line price book so the PricebookEntries child loop crosses
 //   DocGen's >2000-row "giant query" threshold. Powers the giant price-list
 //   HTML template (repeating headers, constant-cost rendering at scale).
@@ -9,11 +10,11 @@ Integer GIANT_COUNT = 2200;
 
 delete [SELECT Id FROM PricebookEntry WHERE Product2.ProductCode LIKE 'GIANT-%'];
 delete [SELECT Id FROM Product2 WHERE ProductCode LIKE 'GIANT-%'];
-delete [SELECT Id FROM Pricebook2 WHERE Name = 'Portwood Mega Catalog (Giant Demo)'];
+delete [SELECT Id FROM Pricebook2 WHERE Name = 'DocGen Mega Catalog (Giant Demo)'];
 
 Id stdPbId = [SELECT Id FROM Pricebook2 WHERE IsStandard = TRUE LIMIT 1].Id;
 Pricebook2 mega = new Pricebook2(
-    Name = 'Portwood Mega Catalog (Giant Demo)',
+    Name = 'DocGen Mega Catalog (Giant Demo)',
     IsActive = true,
     Description = '2,200-line catalog for the DocGen giant-query scale demo.'
 );

@@ -1,8 +1,10 @@
-Portwood turns information in Salesforce into a document you can download, save, email, or send for signature.
+<!-- Modified by Dura Composites Ltd. -->
 
-Think of a template as a reusable form. You design it once. Portwood fills in a new copy for each customer, deal, or other record.
+DocGen turns information in Salesforce into a document you can download, save, email, or send for signature.
 
-| You bring                                  | Portwood makes                                 |
+Think of a template as a reusable form. You design it once. DocGen fills in a new copy for each customer, deal, or other record.
+
+| You bring                                  | DocGen makes                                   |
 | ------------------------------------------ | ---------------------------------------------- |
 | An Account and a customer-summary template | A customer summary with that Account's details |
 | An Opportunity and a quote template        | A quote with the deal's information            |
@@ -12,7 +14,7 @@ Think of a template as a reusable form. You design it once. Portwood fills in a 
 #### Start with the path that fits you
 
 - **I just need a document.** Go to [Generate a document](#generate-document).
-- **I am setting up Portwood.** Start with [Install and give people access](#install-portwood).
+- **I am setting up DocGen.** Start with [Install and give people access](#install-docgen).
 - **I want to build something.** Follow [Make your first document](#first-document).
 - **I already have a PDF to sign.** Follow [Send an uploaded PDF for signature](#sign-uploaded-pdf).
 - **Something is wrong.** Open [Find and fix a problem](#troubleshooting).
@@ -25,7 +27,7 @@ Think of a template as a reusable form. You design it once. Portwood fills in a 
 
 **Field:** one piece of information on a record, such as its name or phone number.
 
-**Merge tag:** a marker such as `{Name}`. In the finished document, Portwood replaces it with the record's name.
+**Merge tag:** a marker such as `{Name}`. In the finished document, DocGen replaces it with the record's name.
 
 **Version:** a saved copy of a template. You can return to an earlier copy if a change goes wrong.
 

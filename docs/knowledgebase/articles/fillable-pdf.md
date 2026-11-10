@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Fill the fields of an existing PDF form using Salesforce information. This feature is **in testing**.
 
 An existing PDF form is different from a PDF you merely want someone to sign. For signing, use [Send an uploaded PDF for signature](#sign-uploaded-pdf).
@@ -20,7 +22,7 @@ Edit labels or mappings under **Fillable Fields** and use **Save Mapping**. If y
 
 #### Know what to test
 
-Portwood reads actual PDF form fields; it does not recognize a printed blank line as a field. Standard AcroForm PDFs are the intended format. XFA-only, encrypted, or unusual forms may need a different source file.
+DocGen reads actual PDF form fields; it does not recognize a printed blank line as a field. Standard AcroForm PDFs are the intended format. XFA-only, encrypted, or unusual forms may need a different source file.
 
 Generated fields normally remain editable. Do not assume the result has been flattened into a permanent printed page.
 

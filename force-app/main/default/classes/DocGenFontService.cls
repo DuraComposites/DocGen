@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /** Pinned font bindings travel inside versioned HTML, alongside the body they style. */
 public with sharing class DocGenFontService {
     private static final String MARKER = '-pw-font-face';
@@ -176,7 +177,7 @@ public with sharing class DocGenFontService {
      * Office XML keeps the family name (w:rFonts / a:latin), but the native PDF
      * renderer cannot use that name unless the matching TTF is declared with
      * @font-face. Matching is deliberately family-based so Office source
-     * documents do not need Portwood-specific markup.
+     * documents do not need DocGen-specific markup.
      */
     public static String cssForSource(String source) {
         if (String.isBlank(source) || source.containsIgnoreCase('@font-face'))
@@ -255,9 +256,9 @@ public with sharing class DocGenFontService {
     public static String specimenText(Map<String, Object> m) {
         for (
             String candidate : new List<String>{
-                'Portwood 漢 Şahin Şirket 漢 😀 0123456789',
-                'Portwood 漢 😀 😀 漢 0123456789',
-                'Portwood - Document font - 0123456789'
+                'DocGen 漢 Şahin Şirket 漢 😀 0123456789',
+                'DocGen 漢 😀 😀 漢 0123456789',
+                'DocGen - Document font - 0123456789'
             }
         ) {
             Boolean complete = true;
@@ -269,7 +270,7 @@ public with sharing class DocGenFontService {
             if (complete)
                 return candidate;
         }
-        String seed = 'Portwood 0123456789';
+        String seed = 'DocGen 0123456789';
         List<Integer> chars = new List<Integer>();
         for (Integer i = 0; i < seed.length(); i++)
             if (hasGlyph(m, seed.charAt(i)))

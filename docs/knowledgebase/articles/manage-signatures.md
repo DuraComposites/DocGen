@@ -1,8 +1,10 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Track a request, replace an expired link, or stop an unsigned request.
 
 #### Find the request
 
-Open the related record and look under **Recent requests** or the sender's previous-request list. Use **Refresh requests** if someone has just completed a step. The Portwood Signature Requests app tab also lists request records.
+Open the related record and look under **Recent requests** or the sender's previous-request list. Use **Refresh requests** if someone has just completed a step. The DocGen Signature Requests app tab also lists request records.
 
 Open a request to check signer status, delivery information, and its audit records.
 
@@ -22,7 +24,7 @@ Completed or cancelled requests do not offer the same resend/revoke actions. If 
 
 #### Set expiration and reminders
 
-An administrator sets the default in **Portwood → Signatures**. A send can override expiration within the supported **1–365 day** range. A later change to the org default does not rewrite the signing window on a request already sent.
+An administrator sets the default in **DocGen → Signatures**. A send can override expiration within the supported **1–365 day** range. A later change to the org default does not rewrite the signing window on a request already sent.
 
 Reminders use hour offsets such as `24, 72, 168`. They go to pending signers while the request remains valid, subject to the configured scheduled job and email setup.
 
@@ -30,10 +32,10 @@ A template can set its own expiry and reminder schedule in days, which the sende
 
 #### Signing in person
 
-Portwood Admin users can use **Sign In Person** when it is offered for a pending signer. Confirm the identity-check attestation only after doing that check. The bypass is recorded in the audit history.
+DocGen Admin users can use **Sign In Person** when it is offered for a pending signer. Confirm the identity-check attestation only after doing that check. The bypass is recorded in the audit history.
 
 #### Find the completed file
 
 Open **Files** on the related record and inspect the signed PDF. Guided signing adds the marks and a **Certificate of Completion** with signer and verification information. The verification link supports checking the received file against the recorded document hash.
 
-An image merged into an ordinary document is not a completed Portwood signing request and does not create the same signing audit trail.
+An image merged into an ordinary document is not a completed DocGen signing request and does not create the same signing audit trail.

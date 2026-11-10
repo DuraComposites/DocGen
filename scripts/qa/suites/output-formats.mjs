@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * output-formats — does generation actually produce a valid document, for every
  * template type and every output format?
@@ -1577,7 +1578,7 @@ System.debug('PHASE_DONE=P10');
 
         /* --- poll the async chain: batch -> finish -> assembler queueable ---
          * Polled through anonymous Apex rather than `sf data query`, because a
-         * NAMESPACED org (this package builds under `portwoodglobal`) rejects the
+         * NAMESPACED org (this package builds under `duracomp`) rejects the
          * bare `DocGen_Job__c` name over the API while Apex inside the namespace
          * resolves it. Polling in Apex keeps the suite working against both a
          * namespaced scratch org and a plain one.

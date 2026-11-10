@@ -1,5 +1,6 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
-// Portwood DocGen DEMO — Seed 02: Events + Attendees
+// DocGen DEMO — Seed 02: Events + Attendees
 //   Powers: event ticket (QR), attendee badge, event program, attendee roster.
 // Idempotent: clears all Demo_Event__c / Demo_Attendee__c then re-inserts.
 // ============================================================================
@@ -9,7 +10,7 @@ delete [SELECT Id FROM Demo_Event__c];
 Date today = Date.today();
 
 Demo_Event__c summit = new Demo_Event__c(
-    Name = 'Portwood Summit 2026',
+    Name = 'DocGen Summit 2026',
     Event_Date__c = today.addDays(30),
     End_Date__c = today.addDays(32),
     Venue__c = 'Moscone West',
@@ -17,10 +18,10 @@ Demo_Event__c summit = new Demo_Event__c(
     City__c = 'San Francisco',
     State__c = 'CA',
     Postal_Code__c = '94103',
-    Organizer__c = 'Portwood Global Solutions',
-    Contact_Email__c = 'events@portwood.dev',
+    Organizer__c = 'Example Consulting Group',
+    Contact_Email__c = 'events@example.com',
     Capacity__c = 1200,
-    Registration_URL__c = 'https://summit.portwood.dev/register',
+    Registration_URL__c = 'https://summit.example.com/register',
     Description__c = 'The annual conference for document automation on Salesforce. Three days of sessions, hands-on labs, and the partner expo.'
 );
 
@@ -129,7 +130,7 @@ List<List<String>> summitAtt = new List<List<String>>{
         'D-17',
         '799'
     },
-    new List<String>{ 'Greg Olsen', 'greg.olsen@portwood.dev', 'Portwood Global', 'Event Staff', 'Staff', '-', '0' }
+    new List<String>{ 'Greg Olsen', 'greg.olsen@example.com', 'Example Consulting', 'Event Staff', 'Staff', '-', '0' }
 };
 for (List<String> a : summitAtt) {
     atts.add(
@@ -225,5 +226,5 @@ for (List<String> a : galaAtt) {
 insert atts;
 
 System.debug('SEED-02 EVENTS DONE');
-System.debug('Portwood Summit 2026: ' + summit.Id + '  attendees=' + summitAtt.size());
+System.debug('DocGen Summit 2026: ' + summit.Id + '  attendees=' + summitAtt.size());
 System.debug('Riverside Gala 2026: ' + gala.Id + '  attendees=' + galaAtt.size());

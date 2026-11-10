@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Modified by Dura Composites Ltd.
 // Creates examples in a disposable subscriber org; never deploys package source.
 import fs from 'node:fs';
 import os from 'node:os';
@@ -82,17 +83,17 @@ for (const e of examples) {
     const html = fs.readFileSync(path.join(root, 'docs/knowledgebase/examples', e.file), 'utf8');
     const query = typeof e.query === 'string' ? e.query : JSON.stringify(e.query);
     lines.push(`{
-        List<portwoodglobal__DocGen_Template__c> existing = [SELECT Id FROM portwoodglobal__DocGen_Template__c WHERE portwoodglobal__API_Name__c = ${q(e.api)} LIMIT 1];
+        List<duracomp__DocGen_Template__c> existing = [SELECT Id FROM duracomp__DocGen_Template__c WHERE duracomp__API_Name__c = ${q(e.api)} LIMIT 1];
         if (existing.isEmpty()) {
             ContentVersion body = new ContentVersion(Title=${q(e.name + ' body')}, PathOnClient=${q(e.file)}, VersionData=EncodingUtil.base64Decode(${q(Buffer.from(html).toString('base64'))}));
             insert body;
-            portwoodglobal__DocGen_Template__c template = new portwoodglobal__DocGen_Template__c(Name=${q(e.name)}, portwoodglobal__API_Name__c=${q(e.api)}, portwoodglobal__Type__c='HTML', portwoodglobal__Output_Format__c='PDF', portwoodglobal__Base_Object_API__c=${q(e.object)}, portwoodglobal__Query_Config__c=${q(query)}, portwoodglobal__Is_Active__c=true, portwoodglobal__Category__c='Knowledgebase examples', portwoodglobal__Test_Record_Id__c=${e.object === 'Account' ? 'sampleAccount' : 'sampleOpportunity'});
+            duracomp__DocGen_Template__c template = new duracomp__DocGen_Template__c(Name=${q(e.name)}, duracomp__API_Name__c=${q(e.api)}, duracomp__Type__c='HTML', duracomp__Output_Format__c='PDF', duracomp__Base_Object_API__c=${q(e.object)}, duracomp__Query_Config__c=${q(query)}, duracomp__Is_Active__c=true, duracomp__Category__c='Knowledgebase examples', duracomp__Test_Record_Id__c=${e.object === 'Account' ? 'sampleAccount' : 'sampleOpportunity'});
             insert template;
-            insert new portwoodglobal__DocGen_Template_Version__c(portwoodglobal__Template__c=template.Id,portwoodglobal__Is_Active__c=true,portwoodglobal__Content_Version_Id__c=body.Id);
+            insert new duracomp__DocGen_Template_Version__c(duracomp__Template__c=template.Id,duracomp__Is_Active__c=true,duracomp__Content_Version_Id__c=body.Id);
         }
     }`);
 }
-const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'portwood-kb-'));
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'docgen-kb-'));
 try {
     const file = path.join(temp, 'seed.apex');
     fs.writeFileSync(file, lines.join('\n'));

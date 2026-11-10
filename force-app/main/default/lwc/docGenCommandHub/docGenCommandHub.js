@@ -1,13 +1,12 @@
+// Modified by Dura Composites Ltd.
 import { LightningElement, track, wire } from 'lwc';
 import getAllTemplates from '@salesforce/apex/DocGenController.getAllTemplates';
-import getOrgId from '@salesforce/apex/DocGenController.getOrgId';
 import canManageButtons from '@salesforce/apex/DocGenButtonAdminController.canManageButtons';
 import DOCGEN_LOGO from '@salesforce/resourceUrl/DocGenLogo';
 
 export default class DocGenCommandHub extends LightningElement {
     logoUrl = DOCGEN_LOGO;
     @track templateCount = 0;
-    communityOrgId = '';
     @track showBanner = false;
     @track bannerDismissed = false;
     @track activeSection = 'templates';
@@ -30,17 +29,6 @@ export default class DocGenCommandHub extends LightningElement {
             });
     }
 
-    @wire(getOrgId)
-    wiredOrgId({ data }) {
-        if (data) {
-            this.communityOrgId = data;
-        }
-    }
-
-    get communityUrl() {
-        return 'https://portwood.dev/community?view=signup&orgId=' + this.communityOrgId;
-    }
-
     @wire(getAllTemplates)
     wiredTemplates(result) {
         this._wiredTemplates = result;
@@ -56,7 +44,7 @@ export default class DocGenCommandHub extends LightningElement {
     }
 
     get bannerHeading() {
-        return this.templateCount === 0 ? 'Welcome to Portwood' : 'Portwood';
+        return this.templateCount === 0 ? 'Welcome to DocGen' : 'DocGen';
     }
 
     get bannerSubtext() {

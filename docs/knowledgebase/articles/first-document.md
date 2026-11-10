@@ -1,10 +1,12 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Make a small Account summary. Start with a title and two fields; you can add tables and pictures after the first PDF works.
 
-**Before you start:** You have **Portwood Admin**, Portwood is installed, and you have an Account with a name and phone number. The examples use **Northstar Bikes**; any test Account is fine.
+**Before you start:** You have **DocGen Admin**, DocGen is installed, and you have an Account with a name and phone number. The examples use **Northstar Bikes**; any test Account is fine.
 
 #### 1. Make the template
 
-1. Open **App Launcher → Portwood**.
+1. Open **App Launcher → DocGen**.
 2. Under **My Templates → Create New**, choose **Start from a Blank Canvas**.
 3. Enter **My First Account Brief** in **Template Name**.
 4. Set **Base Object** to **Account**. If suggestions appear, choose the standard Account.
@@ -35,7 +37,7 @@ This record is your practice example. Choosing it does not limit the template to
 3. Drag the box to where you want it. Make it wide and tall enough to show all three lines.
 4. Click **Save**.
 
-Keep the braces around `{Name}` and `{Phone}`. Those are the places Portwood fills in for you.
+Keep the braces around `{Name}` and `{Phone}`. Those are the places DocGen fills in for you.
 
 ![A saved Canvas text box shows the Account name and phone from the selected sample record](docs/images/userguide/v3.60/canvas-first-document.png)
 

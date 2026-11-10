@@ -1,9 +1,11 @@
 ---
 name: run-tests
-description: Run Portwood's test suites — the one-command QA harness, the anonymous-Apex e2e scripts, Apex unit tests, prettier, and Code Analyzer. Use before opening a PR, when verifying a fix, or when a test fails and you need to know whether it's your change or the harness.
+description: Run DocGen's test suites — the one-command QA harness, the anonymous-Apex e2e scripts, Apex unit tests, prettier, and Code Analyzer. Use before opening a PR, when verifying a fix, or when a test fails and you need to know whether it's your change or the harness.
 ---
 
-# Running Portwood's tests
+<!-- Modified by Dura Composites Ltd. -->
+
+# Running DocGen's tests
 
 ## The one command
 

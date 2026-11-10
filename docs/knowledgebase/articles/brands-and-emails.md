@@ -1,8 +1,10 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Use the right company name, logo, color, and sender throughout a signing request.
 
 #### Create a brand
 
-1. Open **Portwood → Brands → Add Brand**.
+1. Open **DocGen → Brands → Add Brand**.
 2. Enter an internal **Brand name**.
 3. Set its **Company name**, **Brand color**, and **Footer text**.
 4. Choose **Send emails from** if this brand uses its own verified Organization-Wide Email Address.
@@ -33,7 +35,7 @@ There are seven email types: request, reminder, verification code, signer comple
 
 #### Keep the signing controls
 
-The default **Portwood layout** adds the branded frame around your body. **Full custom HTML** gives you the complete layout.
+The default **DocGen layout** adds the branded frame around your body. **Full custom HTML** gives you the complete layout.
 
 Keep the required link or code tokens when customizing. `{ActionButton}` creates a signing button; `{VerificationCode}` creates the PIN block. If you replace a widget with custom wording, preserve the underlying `{SignatureUrl}` or `{Pin}` token as appropriate for that email type.
 

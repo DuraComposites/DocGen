@@ -1,8 +1,10 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Shared content lets you author a frequently reused section once and insert it into HTML or Canvas templates with a stable merge tag.
 
 #### Create shared content
 
-1. Open **Portwood > Assets > Terms & snippets**.
+1. Open **DocGen > Assets > Terms & snippets**.
 2. Select **New shared content**.
 3. Enter a name, optional category, and permanent asset key.
 4. Use **Write** for common formatting, **HTML source** for exact inline styles and tables, or **Preview** to review the rendered section.

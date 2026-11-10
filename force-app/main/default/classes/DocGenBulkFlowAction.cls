@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Invocable action for starting bulk document generation from a Flow.
  * Exposes the full bulk generation pipeline: filtering, batch size,
@@ -7,7 +8,7 @@ global with sharing class DocGenBulkFlowAction { // NOPMD AvoidGlobalModifier â€
     global class Request {
         @InvocableVariable(
             label='Template ID'
-            description='The Portwood Template record ID. Provide this OR Template API Name.'
+            description='The DocGen Template record ID. Provide this OR Template API Name.'
         )
         global Id templateId;
 

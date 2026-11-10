@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 The public page and the email sender are separate parts of signing setup. A working page does not prove that invitations or verification codes can be delivered.
 
 **Before you start:** Use an administrator account and a real sender/inbox controlled by your organization. Domain authentication can require your email or DNS administrator.
@@ -8,19 +10,19 @@ The public page and the email sender are separate parts of signing setup. A work
 2. Add the intended display name and email address.
 3. Make it available to the profiles required by the signing workflow, including the guest completion path where applicable.
 4. Open Salesforce's verification message in that inbox and complete verification.
-5. Confirm the address is verified and eligible before selecting it in Portwood.
+5. Confirm the address is verified and eligible before selecting it in DocGen.
 
 A brand can have its own sender, but that address also needs to be verified and usable. An address that an admin can select is not proof that every runtime path can use it.
 
 #### 2. Complete Salesforce email prerequisites
 
-Check **Setup → Deliverability** and the org's sending-domain verification/authentication requirements. Use your organization's approved sender domain, DKIM and other domain records as required by Salesforce and your email setup. Sandbox/scratch delivery restrictions and unverified domains can prevent mail even when the Portwood settings look complete.
+Check **Setup → Deliverability** and the org's sending-domain verification/authentication requirements. Use your organization's approved sender domain, DKIM and other domain records as required by Salesforce and your email setup. Sandbox/scratch delivery restrictions and unverified domains can prevent mail even when the DocGen settings look complete.
 
 Use Salesforce's current [Organization-Wide Addresses documentation](https://help.salesforce.com/s/articleView?id=sf.emailadmin_manage_orgwide_email_addresses.htm&language=en_US&type=5) and [requirements for sending email](https://help.salesforce.com/s/articleView?id=xcloud.security_email_verification_requirements.htm&language=en_US&type=5) for the platform controls.
 
-#### 3. Select it in Portwood
+#### 3. Select it in DocGen
 
-1. Open **Portwood → Signatures**.
+1. Open **DocGen → Signatures**.
 2. Choose the verified address in **Send Emails From**.
 3. Save and click **Re-check Setup**.
 4. Set the default email verification, pre-fill, expiration, and reminder choices.

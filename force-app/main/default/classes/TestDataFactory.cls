@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 @IsTest
 public class TestDataFactory {
     // =========================================================================
@@ -382,11 +383,11 @@ public class TestDataFactory {
     public static void assignAdminPermissionSet() {
         // Try the local DeveloperName first; fall back to the namespaced form
         // in case the package-build context surfaces the permset with the
-        // portwoodglobal__ prefix.
+        // duracomp__ prefix.
         List<PermissionSet> ps = [
             SELECT Id, Name
             FROM PermissionSet
-            WHERE Name IN ('DocGen_Admin', 'portwoodglobal__DocGen_Admin')
+            WHERE Name IN ('DocGen_Admin', 'duracomp__DocGen_Admin')
             LIMIT 1
         ];
         if (ps.isEmpty()) {

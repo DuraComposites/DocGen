@@ -1,6 +1,7 @@
 <!doctype html>
+<!-- Modified by Dura Composites Ltd. -->
 <!--
-  Portwood - Charting Quick Course Example
+  DocGen - Charting Quick Course Example
 
   Upload this as an HTML template against a parent record with a
   Survey_Responses__r child relationship. Swap the relationship and field
@@ -180,7 +181,7 @@
         </table>
 
         <h2>1. Fast Shorthand Chart</h2>
-        <p class="note">Use one `{Chart:...}` tag when you want Portwood to choose the markup for you.</p>
+        <p class="note">Use one `{Chart:...}` tag when you want DocGen to choose the markup for you.</p>
         <div class="chart-slot">
             {Chart:Survey_Responses__r:Selected_Answer__c:bar:title=Overall Answer Distribution}
         </div>
@@ -274,6 +275,6 @@
             {/ChartBucket}
         </table>
 
-        <p class="footer">Portwood charting example - no external services or callouts.</p>
+        <p class="footer">DocGen charting example - no external services or callouts.</p>
     </body>
 </html>

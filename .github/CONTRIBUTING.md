@@ -100,11 +100,19 @@ Portwood releases arrive as a pull request, like any other change. Merge a relea
 ```bash
 git fetch upstream --tags
 git switch -c sync/upstream-v3.63.0 origin/main
-git merge v3.63.0                    # resolve any conflicts, then run the checks
+git merge v3.63.0                    # resolve any conflicts (see below)
+node scripts/dura/rebrand.mjs        # rename what the release brought in, then run the checks
 git push -u origin sync/upstream-v3.63.0
 git push origin v3.63.0              # keep a copy of the release tag
 gh pr create --base main --title "Sync Portwood v3.63.0"
 ```
+
+This fork ships as **DocGen**, so the release's Portwood names, links and `portwoodglobal` namespace have to be renamed each time. `scripts/dura/rebrand.mjs` does it:
+
+- Where a conflict is only our renaming against Portwood's change to the same line, take Portwood's side. The script renames it again afterwards.
+- The script adds the "Modified by Dura" notice to each file it changes.
+- It lists any link it can't decide, such as a new portwood.dev page or support address. Point those somewhere sensible, or remove them, by hand.
+- `node scripts/dura/rebrand.mjs --check` changes nothing and lists what's left.
 
 Merge it with a merge commit. The next sync then only brings in what's new.
 
@@ -119,7 +127,7 @@ If a fix isn't specific to Dura, offer it to Portwood as well:
 3. Open the pull request with `gh pr create --repo Portwood-Global-Solutions/Portwood`.
 4. Leave the "Modified by Dura" notice off that branch. It's for our own changes, not for code we hand to Portwood.
 
-To ship the fix here before Portwood releases it, also open a pull request from the same branch into our `main`. Merge it with a merge commit. When Portwood releases it, the sync then sees the commits are already in.
+To ship the fix here before Portwood releases it, also open a pull request from the same branch into our `main`: merge `main` into a copy of the branch and run `node scripts/dura/rebrand.mjs` first, as for a release. Merge it with a merge commit. When Portwood releases it, the sync then sees the commits are already in.
 
 ## Issues and security
 

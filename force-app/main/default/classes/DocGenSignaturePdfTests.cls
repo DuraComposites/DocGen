@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // CxSAST: Test class — SOQL/DML findings are test data operations, not production code paths
 @isTest
 private class DocGenSignaturePdfTests {
@@ -416,7 +417,7 @@ private class DocGenSignaturePdfTests {
 
     @isTest
     static void testPdfFlowAction_success() {
-        // v3.18: the action is template-only. Provide a Template Id; Portwood snapshots +
+        // v3.18: the action is template-only. Provide a Template Id; DocGen snapshots +
         // re-renders on completion.
         Account acc = [SELECT Id FROM Account LIMIT 1];
         Id tmplId = createHtmlSignatureTemplate(

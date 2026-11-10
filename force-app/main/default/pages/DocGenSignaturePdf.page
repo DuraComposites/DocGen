@@ -2159,7 +2159,7 @@
                     // on first render and cached.
                     var MODULE_URL = "{!URLFOR($Resource.pdfjs4, 'pdf.min.js')}";
                     var WORKER_SRC = "{!URLFOR($Resource.pdfjs4, 'pdf.worker.min.js')}";
-                    var MAX_SCALE = 1.8; // Portwood v3.60+ (was 1.6)
+                    var MAX_SCALE = 1.8; // DocGen v3.60+ (was 1.6)
                     // #413 — page canvases are backed at device resolution, bounded so a phone
                     // doesn't run out of canvas memory: at most 3x, at most MAX_CANVAS_PIXELS
                     // per page (iOS Safari refuses a larger canvas outright), and at most
@@ -3208,7 +3208,7 @@
                                 notify(st);
                             })
                             .catch(function (err) {
-                                console.error('Portwood: the shape could not be added', err);
+                                console.error('DocGen: the shape could not be added', err);
                             });
                     }
 
@@ -4269,7 +4269,7 @@
                         document.title = (data && data.brandName) || 'Document Signature';
                         var header = document.getElementById('brand-header');
                         if (!header || !data) return;
-                        var name = data.brandName || 'Portwood';
+                        var name = data.brandName || 'DocGen';
                         var title = data.brandName || 'Document Signature';
                         var favicon = document.getElementById('brand-favicon');
                         if (favicon && data.brandLogoUrl) favicon.href = data.brandLogoUrl;
@@ -4643,7 +4643,7 @@
                         if (docOrder.indexOf(entry) < 0 || entry === currentDoc) return;
                         captureMarks()
                             .catch(function (err) {
-                                console.error('Portwood: could not keep the markups on this document', err);
+                                console.error('DocGen: could not keep the markups on this document', err);
                             })
                             .then(function () {
                                 switchDocument(entry);
@@ -4776,7 +4776,7 @@
                             })
                             .catch(function (err) {
                                 if (gen !== attachmentLoadGen) return;
-                                console.error('Portwood attached document ' + a.index + ' failed', err);
+                                console.error('DocGen attached document ' + a.index + ' failed', err);
                                 showAttachmentMessage(
                                     err && err.userMessage
                                         ? err.userMessage
@@ -4835,7 +4835,7 @@
                         }
                         return fetch(attachmentEndpoint + '?index=' + encodeURIComponent(a.index), {
                             method: 'GET',
-                            headers: { 'X-Portwood-Token': token },
+                            headers: { 'X-DocGen-Token': token },
                             cache: 'no-store',
                             credentials: 'same-origin'
                         })
@@ -4853,7 +4853,7 @@
                                             );
                                         });
                                 }
-                                var serverSha = res.headers.get('X-Portwood-Sha256');
+                                var serverSha = res.headers.get('X-DocGen-Sha256');
                                 return readAll(res, a.size, onProgress).then(function (bytes) {
                                     return verifyAttachment(bytes, serverSha, a);
                                 });
@@ -4940,10 +4940,7 @@
                                     return;
                                 }
                                 a.marking = false;
-                                console.error(
-                                    'Portwood: could not record opening attached document ' + a.index,
-                                    result
-                                );
+                                console.error('DocGen: could not record opening attached document ' + a.index, result);
                             },
                             { escape: false }
                         );
@@ -5264,7 +5261,7 @@
                                 })
                                 .catch(function (err) {
                                     backgroundBusy = false;
-                                    console.error('Portwood: background markup save failed', err);
+                                    console.error('DocGen: background markup save failed', err);
                                     setMarkupStatus(
                                         'Your markup on \u201C' +
                                             (a.title || 'this document') +
@@ -5377,8 +5374,8 @@
                         var init = {
                             method: method,
                             headers: {
-                                'X-Portwood-Token': token,
-                                'X-Portwood-Markup-Base': markupBase[a.index] || a.sha256 || ''
+                                'X-DocGen-Token': token,
+                                'X-DocGen-Markup-Base': markupBase[a.index] || a.sha256 || ''
                             },
                             cache: 'no-store',
                             credentials: 'same-origin'
@@ -5416,12 +5413,12 @@
                     function fetchSavedMarkup(a, onProgress) {
                         return fetch(attachmentEndpoint + '?index=' + encodeURIComponent(a.index) + '&markup=1', {
                             method: 'GET',
-                            headers: { 'X-Portwood-Token': token },
+                            headers: { 'X-DocGen-Token': token },
                             cache: 'no-store',
                             credentials: 'same-origin'
                         }).then(function (res) {
                             if (!res.ok) return fetchAttachmentBytes(a, onProgress); // fall back to the original
-                            var serverSha = (res.headers.get('X-Portwood-Sha256') || '').toLowerCase();
+                            var serverSha = (res.headers.get('X-DocGen-Sha256') || '').toLowerCase();
                             return readAll(res, null, onProgress).then(function (bytes) {
                                 return sha256Hex(bytes).then(function (hex) {
                                     if (serverSha && hex && serverSha !== hex) {
@@ -5549,7 +5546,7 @@
                                     return;
                                 }
                                 if (!placements.length) {
-                                    console.info('Portwood signing path: legacy; placements=0; located=0');
+                                    console.info('DocGen signing path: legacy; placements=0; located=0');
                                     return; // legitimate placement-less request
                                 }
                                 buildGuidedSpots(placements);
@@ -5626,10 +5623,7 @@
                             }
                         }
                         console.info(
-                            'Portwood signing path: guided; placements=' +
-                                placements.length +
-                                '; located=' +
-                                spots.length
+                            'DocGen signing path: guided; placements=' + placements.length + '; located=' + spots.length
                         );
                         if (spots.length !== placements.length || hits.length !== placements.length) {
                             showError(
@@ -6474,7 +6468,7 @@
                                         var pages = doc.getPages();
                                         // Renders a DocuSign-style stamp card: an opaque backdrop +
                                         // brand border so it reads as a deliberate stamp, the drawn ink
-                                        // (signature or initials), and a "<labelLine> · Portwood"
+                                        // (signature or initials), and a "<labelLine> · DocGen"
                                         // footer. Whitespace-aware: it grows into whichever side of the
                                         // field line has more clearance (rect.clearAbove/clearBelow, from
                                         // the text layer) so it never covers the line above (body text)
@@ -6527,7 +6521,7 @@
                                             }
                                             var labelSize = 6.5,
                                                 brandSize = 6;
-                                            var brand = 'Portwood';
+                                            var brand = 'DocGen';
                                             var labelW = helv.widthOfTextAtSize(labelLine, labelSize);
                                             var brandW = helvBold.widthOfTextAtSize(brand, brandSize);
                                             var accent = 3;

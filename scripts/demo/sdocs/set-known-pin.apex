@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
 // SDocs-replacement demo — set a KNOWN email-verification PIN (123456).
 //
@@ -9,7 +10,7 @@
 //
 // This is the namespaced, demo-scoped sibling of scripts/set-known-pin.apex —
 // that one targets the "Verification UAT Template" using BARE API names, which
-// do not compile in a subscriber org where everything is portwoodglobal__.
+// do not compile in a subscriber org where everything is duracomp__.
 //
 // ORDER OF OPERATIONS (the page regenerates a random PIN when you click Send):
 //   1. Open the signing URL and reach the code-entry screen
@@ -18,7 +19,7 @@
 //   3. Enter 123456 on screen.
 //   Do NOT click "Resend" afterwards — that replaces the known code.
 //
-//   sf apex run --target-org portwood-sdocs -f scripts/demo/sdocs/set-known-pin.apex
+//   sf apex run --target-org docgen-sdocs -f scripts/demo/sdocs/set-known-pin.apex
 // ============================================================================
 
 String KNOWN_PIN = '123456';
@@ -29,20 +30,20 @@ for (Demo_Project__c p : [SELECT Id FROM Demo_Project__c WHERE Project_Code__c L
     projIds.add(p.Id);
 }
 
-List<portwoodglobal__DocGen_Signer__c> signers = [
-    SELECT Id, portwoodglobal__Signer_Name__c, portwoodglobal__Signer_Email__c
-    FROM portwoodglobal__DocGen_Signer__c
+List<duracomp__DocGen_Signer__c> signers = [
+    SELECT Id, duracomp__Signer_Name__c, duracomp__Signer_Email__c
+    FROM duracomp__DocGen_Signer__c
     WHERE
-        portwoodglobal__Signature_Request__r.portwoodglobal__Related_Record_Id__c IN :projIds
-        AND portwoodglobal__Status__c IN ('Pending', 'Viewed')
+        duracomp__Signature_Request__r.duracomp__Related_Record_Id__c IN :projIds
+        AND duracomp__Status__c IN ('Pending', 'Viewed')
 ];
-for (portwoodglobal__DocGen_Signer__c s : signers) {
-    s.portwoodglobal__PIN_Hash__c = hash;
-    s.portwoodglobal__PIN_Expires_At__c = System.now().addHours(24);
-    s.portwoodglobal__PIN_Attempts__c = 0;
+for (duracomp__DocGen_Signer__c s : signers) {
+    s.duracomp__PIN_Hash__c = hash;
+    s.duracomp__PIN_Expires_At__c = System.now().addHours(24);
+    s.duracomp__PIN_Attempts__c = 0;
     // Null it out so the code step is forced even if a prior run verified.
-    s.portwoodglobal__PIN_Verified_At__c = null;
-    System.debug('PIN set for ' + s.portwoodglobal__Signer_Name__c + ' <' + s.portwoodglobal__Signer_Email__c + '>');
+    s.duracomp__PIN_Verified_At__c = null;
+    System.debug('PIN set for ' + s.duracomp__Signer_Name__c + ' <' + s.duracomp__Signer_Email__c + '>');
 }
 update signers;
 System.debug('KNOWN-PIN ' + KNOWN_PIN + ' set on ' + signers.size() + ' pending signer(s).');

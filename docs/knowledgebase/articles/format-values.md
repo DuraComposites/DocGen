@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Keep dates, amounts, labels, and numbers easy to read.
 
 #### Start with a field tag
@@ -41,6 +43,6 @@ When you need conversion, use the supported `:convert` suffix and verify your or
 {Amount:currency:EUR:convert}
 ```
 
-Totals across mixed currencies need particular care. Portwood rejects conflicting currencies unless conversion is requested. Conversion uses current static Salesforce currency rates, not dated Advanced Currency Management rates.
+Totals across mixed currencies need particular care. DocGen rejects conflicting currencies unless conversion is requested. Conversion uses current static Salesforce currency rates, not dated Advanced Currency Management rates.
 
-See the [merge tag reference](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/reference/merge-tags.md) for all supported patterns, currencies, locales, and conversion rules.
+See the [merge tag reference](https://github.com/DuraComposites/DocGen/blob/main/docs/reference/merge-tags.md) for all supported patterns, currencies, locales, and conversion rules.

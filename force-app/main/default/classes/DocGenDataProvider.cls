@@ -1,11 +1,12 @@
+// Modified by Dura Composites Ltd.
 /**
- * Interface for custom Apex data providers in Portwood.
+ * Interface for custom Apex data providers in DocGen.
  *
- * Implement this interface to supply custom data to Portwood templates
+ * Implement this interface to supply custom data to DocGen templates
  * from any source — external APIs, computed fields, cross-object aggregations,
  * Apex wrappers, or anything SOQL can't reach.
  *
- * The returned Map must follow the same structure that Portwood's merge engine expects:
+ * The returned Map must follow the same structure that DocGen's merge engine expects:
  *
  *   Simple fields:
  *     'Name' => 'Acme Corp'
@@ -42,7 +43,7 @@
  * To use: set the template's Query_Config__c to:
  *   {"v":4,"provider":"InvoiceDataProvider"}
  *
- * Portwood will instantiate the class, call getData(), and merge the result
+ * DocGen will instantiate the class, call getData(), and merge the result
  * into your template using the same {FieldName} tags as SOQL-based templates.
  */
 global interface DocGenDataProvider {

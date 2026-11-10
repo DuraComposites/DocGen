@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Use the symptom that matches your output, then regenerate the same test record.
 
 #### A value is blank or a tag still appears
@@ -33,7 +35,7 @@ First check for long strings with no spaces, such as URLs, identifiers, or codes
 
 Give the value more width, put it on a separate full-width row, or use a display-specific field with sensible break points. Do not insert visible spaces or hyphens into a value someone must copy exactly. For authored static HTML, `<wbr />` can mark intentional break points.
 
-For Word tables that should align, use consistent fixed widths and avoid mixing incompatible AutoFit settings. See the [layout reference](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/reference/template-layout.md).
+For Word tables that should align, use consistent fixed widths and avoid mixing incompatible AutoFit settings. See the [layout reference](https://github.com/DuraComposites/DocGen/blob/main/docs/reference/template-layout.md).
 
 #### The document is too large
 

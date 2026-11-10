@@ -1,13 +1,13 @@
 {
-    "name": "portwood-docgen",
+    "name": "dura-docgen",
     "version": "1.0.0",
     "private": true,
-    "description": "Build tooling for the Portwood DocGen managed package (Salesforce 2GP). Pins formatter versions and pre-commit hooks so every contributor produces identical output regardless of local install.",
+    "description": "Build tooling for DocGen, Dura Composites' Salesforce 2GP package. Pins formatter versions and pre-commit hooks so every contributor produces identical output regardless of local install.",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Portwood-Global-Solutions/Portwood.git"
+        "url": "git+https://github.com/DuraComposites/DocGen.git"
     },
-    "homepage": "https://portwood.dev",
+    "homepage": "https://github.com/DuraComposites/DocGen",
     "license": "Apache-2.0",
     "scripts": {
         "format": "prettier --write \"force-app/**/*.{cls,trigger,page,component,cmp,html,js,xml}\" \"scripts/**/*.apex\" \"*.{json,md,yml,yaml}\"",

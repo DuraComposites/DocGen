@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * #412 — existing record PDFs attached to a guided signature request:
  *   - send-side validation and pinning (sender controller + Flow action)
@@ -417,7 +418,7 @@ private class DocGenSignatureAttachmentsTest {
         RestRequest req = new RestRequest();
         req.requestURI = '/services/apexrest/signature-attachment';
         req.httpMethod = 'GET';
-        req.addHeader('x-portwood-token', s.Secure_Token__c); // lower-case, as HTTP/2 sends it
+        req.addHeader('x-docgen-token', s.Secure_Token__c); // lower-case, as HTTP/2 sends it
         req.addParameter('index', '0');
         RestContext.request = req;
         RestContext.response = new RestResponse();
@@ -452,7 +453,7 @@ private class DocGenSignatureAttachmentsTest {
         Assert.areEqual(200, ok.statusCode, 'Served');
         Assert.areEqual('%PDF-1.4 drawing one', ok.responseBody.toString(), 'Raw bytes, not base64');
         Assert.areEqual('application/pdf', ok.headers.get('Content-Type'), 'PDF content type');
-        Assert.areEqual(expected, ok.headers.get('X-Portwood-Sha256'), 'Hash sent for the client check');
+        Assert.areEqual(expected, ok.headers.get('X-DocGen-Sha256'), 'Hash sent for the client check');
         Assert.areEqual('no-store', ok.headers.get('Cache-Control'), 'Never cached');
         Assert.areEqual(expected, storedSha, 'Hash stored on first serve');
         Assert.areEqual(200, second.status, 'Second attachment served');
@@ -510,7 +511,7 @@ private class DocGenSignatureAttachmentsTest {
             RestContext.response.responseBody.toString()
         );
         Assert.isNotNull(body.get('error'), 'Error message returned');
-        Assert.isNull(DocGenSignatureAttachmentRest.header(null, 'X-Portwood-Token'), 'Null request');
+        Assert.isNull(DocGenSignatureAttachmentRest.header(null, 'X-DocGen-Token'), 'Null request');
     }
 
     @IsTest
@@ -1335,7 +1336,7 @@ private class DocGenSignatureAttachmentsTest {
                 Alias = 'dgplain2',
                 Email = 'dgplain2@example.com',
                 EmailEncodingKey = 'UTF-8',
-                LastName = 'NoPortwoodPermissions',
+                LastName = 'NoDocGenPermissions',
                 LanguageLocaleKey = 'en_US',
                 LocaleSidKey = 'en_US',
                 ProfileId = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1]
@@ -1377,8 +1378,8 @@ private class DocGenSignatureAttachmentsTest {
         req.requestURI = '/services/apexrest/signature-attachment';
         req.httpMethod = 'POST';
         req.addParameter('index', '0');
-        req.addHeader('x-portwood-token', s.Secure_Token__c);
-        req.addHeader('x-portwood-markup-base', originalSha(s.Signature_Request__c, 0));
+        req.addHeader('x-docgen-token', s.Secure_Token__c);
+        req.addHeader('x-docgen-markup-base', originalSha(s.Signature_Request__c, 0));
         req.requestBody = markedUp('via REST');
         RestContext.request = req;
         RestContext.response = new RestResponse();
@@ -1476,7 +1477,7 @@ private class DocGenSignatureAttachmentsTest {
         get.httpMethod = 'GET';
         get.addParameter('index', '0');
         get.addParameter('markup', '1');
-        get.addHeader('X-Portwood-Token', s.Secure_Token__c);
+        get.addHeader('X-DocGen-Token', s.Secure_Token__c);
         RestContext.request = get;
         RestContext.response = new RestResponse();
         DocGenSignatureAttachmentRest.fetchAttachment();
@@ -1487,8 +1488,8 @@ private class DocGenSignatureAttachmentsTest {
         del.requestURI = '/services/apexrest/signature-attachment';
         del.httpMethod = 'DELETE';
         del.addParameter('index', '0');
-        del.addHeader('X-Portwood-Token', s.Secure_Token__c);
-        del.addHeader('X-Portwood-Markup-Base', RestContext.response.headers.get('X-Portwood-Sha256'));
+        del.addHeader('X-DocGen-Token', s.Secure_Token__c);
+        del.addHeader('X-DocGen-Markup-Base', RestContext.response.headers.get('X-DocGen-Sha256'));
         RestContext.request = del;
         RestContext.response = new RestResponse();
         DocGenSignatureAttachmentRest.withdrawMarkup();
@@ -1634,7 +1635,7 @@ private class DocGenSignatureAttachmentsTest {
     }
 
     @IsTest
-    static void declineSummary_survivesAUserWithoutPortwoodPermissions() {
+    static void declineSummary_survivesAUserWithoutDocGenPermissions() {
         Id tplId = markupTemplate('Decline only');
         send(tplId, oneSigner(), drawingIds(), 'Before', false);
         DocGen_Signer__c s = signer(tplId);
@@ -1643,14 +1644,14 @@ private class DocGenSignatureAttachmentsTest {
         DocGenSignatureAttachments.saveMarkup(s.Secure_Token__c, 0, markedUp('bay 3'));
         DocGenSignatureController.declineSignature(s.Secure_Token__c, 'Bay 3', '1.2.3.4', 'JUnit/1.0');
         // The decline email is built in a platform-event trigger, as the Automated Process user:
-        // no Portwood permission set, and not a guest.
+        // no DocGen permission set, and not a guest.
         User plain;
         System.runAs(new User(Id = UserInfo.getUserId())) {
             plain = new User(
                 Alias = 'dgplain',
                 Email = 'dgplain@example.com',
                 EmailEncodingKey = 'UTF-8',
-                LastName = 'NoPortwoodPermissions',
+                LastName = 'NoDocGenPermissions',
                 LanguageLocaleKey = 'en_US',
                 LocaleSidKey = 'en_US',
                 ProfileId = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1]

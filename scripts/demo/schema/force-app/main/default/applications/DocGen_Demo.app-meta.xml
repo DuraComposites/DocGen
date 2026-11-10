@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <label>DocGen Demo</label>
-    <description>Portwood DocGen demonstration environment — sample data across industries.</description>
+    <description>DocGen demonstration environment — sample data across industries.</description>
     <navType>Standard</navType>
     <uiType>Lightning</uiType>
     <formFactors>Large</formFactors>

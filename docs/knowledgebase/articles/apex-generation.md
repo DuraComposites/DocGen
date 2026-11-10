@@ -1,4 +1,6 @@
-Use `portwoodglobal.DocGenService` from subscriber Apex. Start with the method that matches the result your process needs.
+<!-- Modified by Dura Composites Ltd. -->
+
+Use `duracomp.DocGenService` from subscriber Apex. Start with the method that matches the result your process needs.
 
 #### Choose the method
 
@@ -20,7 +22,7 @@ Use `portwoodglobal.DocGenService` from subscriber Apex. Start with the method t
 
 A trigger or Flow can change records and then queue the document work. The worker gets a fresh transaction. Rendering is subject to platform transaction rules; do not paste a synchronous PDF call directly into a trigger and assume it is supported there.
 
-The downloadable [KBGenerateAccountBrief class](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/knowledgebase/examples/apex/KBGenerateAccountBrief.cls) was deployed and executed in the fresh subscriber org. It looks up the template by its stable API Name and calls the global generation service from a Queueable implementing `Database.AllowsCallouts`.
+The downloadable [KBGenerateAccountBrief class](https://github.com/DuraComposites/DocGen/blob/main/docs/knowledgebase/examples/apex/KBGenerateAccountBrief.cls) was deployed and executed in the fresh subscriber org. It looks up the template by its stable API Name and calls the global generation service from a Queueable implementing `Database.AllowsCallouts`.
 
 ```apex
 // Run in your process after deciding this Account needs a document.
@@ -32,11 +34,11 @@ The example uses `KB_Account_Brief`, the [worked example](#example-library). Rep
 #### Return bytes to another process
 
 ```apex
-Map<String, Object> result = portwoodglobal.DocGenService.generatePdfBlob(templateId, accountId);
+Map<String, Object> result = duracomp.DocGenService.generatePdfBlob(templateId, accountId);
 Blob pdf = (Blob) result.get('blob');
 String title = (String) result.get('title');
 // Your code can attach the bytes to an email or pass them to another system.
-// This Portwood method does not itself send an email or create a File.
+// This DocGen method does not itself send an email or create a File.
 ```
 
 Read all inputs before rendering; keep preceding DML out of the render transaction. Test the exact document, image, and chart path you will use. Large outputs still consume Apex heap even when you do not save a File.
@@ -45,6 +47,6 @@ Read all inputs before rendering; keep preceding DML out of the render transacti
 
 The standard retrieval path uses user-mode queries. A prepared map skips the source-record retrieval; template, file, font, and other supporting queries can still consume SOQL budget. Prepared maps and custom providers bypass that retrieval, so caller code must enforce access on the data it supplies. `with sharing` alone does not enforce field access.
 
-Catch `portwoodglobal.DocGenException` for Portwood validation failures, and handle other platform/transaction failures in your job framework. Log safe identifiers and the failure reason; do not write entire documents, signing URLs, or sensitive merged values into logs.
+Catch `duracomp.DocGenException` for DocGen validation failures, and handle other platform/transaction failures in your job framework. Log safe identifiers and the failure reason; do not write entire documents, signing URLs, or sensitive merged values into logs.
 
 The package's `DocGenController` and `DocGenBulkController` are internal UI controllers, not exported subscriber APIs. `@AuraEnabled` does not make a public controller global. Call the exported service/actions or your own authorized wrapper.

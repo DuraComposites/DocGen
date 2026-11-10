@@ -1,6 +1,7 @@
 #!/usr/bin/env node
+// Modified by Dura Composites Ltd.
 /*
- * docgen-template-lint — preflight check for Portwood DocGen Word templates.
+ * docgen-template-lint — preflight check for DocGen Word templates.
  *
  * Usage:
  *   node docgen-template-lint.js path/to/template.docx
@@ -628,7 +629,7 @@ function main() {
   if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
     console.log('Usage: node docgen-template-lint.js <template.docx> [--json]');
     console.log('');
-    console.log('Pre-flight check for Portwood DocGen Word templates.');
+    console.log('Pre-flight check for DocGen Word templates.');
     console.log('Detects fragmented merge tags, loop tag pairing issues,');
     console.log('and structural placement problems before you upload.');
     process.exit(args.length === 0 ? 2 : 0);

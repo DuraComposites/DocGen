@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /** Record-scoped PDF preparation. Draft files/configuration remain uploader-private.
  * Global remoting is required by Salesforce for a Visualforce editor in a Lightning iframe.
  * Every entry point still enforces authenticated record access and draft ownership. */
@@ -197,7 +198,7 @@ global with sharing class DocGenSignaturePreparationController {
 
     private static void persistConfig(DocGen_Signature_Request__c draft, Map<String, Object> config) {
         ContentVersion cv = new ContentVersion(
-            Title = 'Portwood private signing draft',
+            Title = 'DocGen private signing draft',
             PathOnClient = 'preparation.json',
             VersionData = Blob.valueOf(JSON.serialize(config))
         );
@@ -461,7 +462,7 @@ global with sharing class DocGenSignaturePreparationController {
         if (records.isEmpty())
             fail('You do not have access to this record.');
         if (!Schema.sObjectType.DocGen_Signature_Request__c.isCreateable() && !Test.isRunningTest())
-            fail('Ask your administrator for Portwood signature sender access.');
+            fail('Ask your administrator for DocGen signature sender access.');
     }
 
     public static void assertSenderRecordAccess(Id recordId) {

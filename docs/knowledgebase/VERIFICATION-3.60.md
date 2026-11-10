@@ -1,4 +1,6 @@
-# Knowledgebase verification — Portwood 3.60.0
+<!-- Modified by Dura Composites Ltd. -->
+
+# Knowledgebase verification — DocGen 3.60.0
 
 Reviewed on October 24, 2026 against source commit `8fd56843` and released managed package `04tVx000001BOsrIAG` (3.60.0.1). The Dev Hub's released-version query confirmed it was the newest promoted version at review time.
 
@@ -6,7 +8,7 @@ Reviewed on October 24, 2026 against source commit `8fd56843` and released manag
 
 - Newly created Developer scratch org, no namespace, no ancestor/source deployment.
 - Managed package installed successfully with Admins Only installation.
-- Portwood Admin and Button Manager assigned to the scratch administrator.
+- DocGen Admin and Button Manager assigned to the scratch administrator.
 - Fictional records seeded by `scripts/knowledgebase/seed.apex`.
 - Three HTML examples seeded by `scripts/knowledgebase/seed-templates.mjs`.
 - Scratch-only Account page fixture with the packaged Runner and Signature Sender.
@@ -15,7 +17,7 @@ Reviewed on October 24, 2026 against source commit `8fd56843` and released manag
 
 | Workflow                  | Observed result                                                                                                               |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Open Portwood             | Current existing-file and blank-Canvas choices; no retired starter gallery                                                    |
+| Open DocGen               | Current existing-file and blank-Canvas choices; no retired starter gallery                                                    |
 | First Canvas lesson       | Created Account template, chose Northstar Bikes, entered Name/Phone tags, saved and previewed                                 |
 | First PDF                 | Extracted text contained Account brief, Northstar Bikes, and 317-555-0142; rendered page visually inspected                   |
 | Complete Account Brief    | Contact rows and Opportunity rows rendered; total was $40,000.00                                                              |
@@ -31,7 +33,7 @@ Reviewed on October 24, 2026 against source commit `8fd56843` and released manag
 
 ## Advanced recipe and subscriber API checks
 
-- Created an active Salesforce Site, enabled all four public signing Visualforce pages, assigned Portwood Guest Signature to that Site Guest User, and saved the Site base URL through Portwood settings.
+- Created an active Salesforce Site, enabled all four public signing Visualforce pages, assigned DocGen Guest Signature to that Site Guest User, and saved the Site base URL through DocGen settings.
 - Called `DocGenSignatureFlowAction.generate()` from subscriber Apex with standalone `DocGenSigner`, invitations suppressed and no email verification. A clean, unauthenticated browser loaded the signing shell, both required placements, and the real PDF canvas. The public test stopped before submission; the earlier internal preview test completed the full signing/save path.
 - Called `DocGenFlowAction.generateDocument()` from subscriber Apex and confirmed success and a File Id.
 - Deployed and executed `KBAccountProvider` with both required interface methods; seven field paths and the two seeded Contacts were returned.

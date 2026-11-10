@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Queueable that assembles HTML snippets into a single merged PDF.
  * Chained from DocGenBatch.finish() when merge mode is enabled.
@@ -257,7 +258,7 @@ public with sharing class DocGenMergeJob implements Queueable {
             Messaging.CustomNotification notification = new Messaging.CustomNotification();
             notification.setNotificationTypeId(types[0].Id);
             notification.setTargetId(jobId);
-            notification.setTitle('Portwood: ' + fileName + ' is ready');
+            notification.setTitle('DocGen: ' + fileName + ' is ready');
             notification.setBody(
                 pageCount + ' pages merged from ' + Integer.valueOf(job.Success_Count__c) + ' records. Tap to view.'
             );

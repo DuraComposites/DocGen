@@ -1,10 +1,12 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Give people a short action such as **Generate Quote**, **Preview Brief**, or **Email Document** on a record.
 
-**Before you start:** A Salesforce administrator needs **Portwood Button Manager** plus the relevant platform metadata permission, such as **Customize Application**. Portwood Admin alone does not expose the Buttons and Send Email management tabs.
+**Before you start:** A Salesforce administrator needs **DocGen Button Manager** plus the relevant platform metadata permission, such as **Customize Application**. DocGen Admin alone does not expose the Buttons and Send Email management tabs.
 
 #### Create a document button
 
-1. Open **Portwood → Buttons → New Button**.
+1. Open **DocGen → Buttons → New Button**.
 2. Choose the object and template.
 3. Choose the label, active setting, optional record types, title, and save-to-record behavior.
 4. Choose **Delivery mode**:
@@ -31,11 +33,11 @@ For a headless preview action, use **docGenPreviewButton** and an active configu
 
 #### Create an email button
 
-1. Open **Portwood → Send Email → New Send Email Button**.
+1. Open **DocGen → Send Email → New Send Email Button**.
 2. Configure its object, optional default template, label, and audience.
 3. Place a record action using **docGenSendEmailButton**.
 4. Test its three steps: **Template → Preview → Recipients & message**.
 
 Sending generates the document, saves it to the record, and sends an attachment to the selected addresses. Review the preview and recipients before sending. An email-delivery failure is shown to the user; finding a generated file alone does not prove the email was sent.
 
-For very large related lists, use Portwood Runner or an appropriate background Flow action. The one-click document action uses a synchronous generation path.
+For very large related lists, use DocGen Runner or an appropriate background Flow action. The one-click document action uses a synchronous generation path.

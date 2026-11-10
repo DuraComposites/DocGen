@@ -1,10 +1,11 @@
+// Modified by Dura Composites Ltd.
 /**
  * Designer — the missing-Type-picklist warning names EVERY field that needs a value.
  *
  *   node scripts/qa/missing-picklist-guidance-check.mjs
  *
  * Issue #303. imax-vaughn upgraded to v3.56, found the `Canvas` type absent,
- * followed the warning exactly — "add the missing values to the Portwood
+ * followed the warning exactly — "add the missing values to the DocGen
  * Template > Type field in Setup" — and STILL could not save:
  *
  *   "Type: bad value for restricted picklist field: Canvas"
@@ -51,8 +52,8 @@ function guidance(orgTemplateValues, orgVersionValues) {
     const has = onTemplate.length > 0 || onVersion.length > 0;
     const all = Array.from(new Set([...onTemplate, ...onVersion]));
     const fields = [];
-    if (onTemplate.length) fields.push('Portwood Template > Type');
-    if (onVersion.length) fields.push('Portwood Template Version > Type');
+    if (onTemplate.length) fields.push('DocGen Template > Type');
+    if (onVersion.length) fields.push('DocGen Template Version > Type');
     const message =
         `Missing Type picklist value: ${all.join(', ')}. ` +
         `${all.includes('Canvas') ? 'Canvas must be active on ' : 'Add or activate the missing value on '}` +
@@ -65,10 +66,10 @@ function guidance(orgTemplateValues, orgVersionValues) {
 function preflightCreate(templateType, orgTemplateValues, orgVersionValues) {
     const fields = [];
     if (orgTemplateValues && orgTemplateValues.length && !orgTemplateValues.includes(templateType)) {
-        fields.push('Portwood Template > Type');
+        fields.push('DocGen Template > Type');
     }
     if (orgVersionValues && orgVersionValues.length && !orgVersionValues.includes(templateType)) {
-        fields.push('Portwood Template Version > Type');
+        fields.push('DocGen Template Version > Type');
     }
     if (!fields.length) return null;
 
@@ -89,8 +90,8 @@ console.log('\nthe reported case: Canvas missing from BOTH picklists');
     const g = guidance(NO_CANVAS, NO_CANVAS);
     ok(g.has, 'the warning fires');
     ok(g.fields.length === 2, 'and names both fields');
-    ok(g.message.includes('Portwood Template > Type'), 'names the template field');
-    ok(g.message.includes('Portwood Template Version > Type'), 'names the version field');
+    ok(g.message.includes('DocGen Template > Type'), 'names the template field');
+    ok(g.message.includes('DocGen Template Version > Type'), 'names the version field');
     ok(g.message.includes('Canvas must be active on'), 'says Canvas must be active');
     ok(g.message.includes('Open the field link below'), 'gives the short admin action');
 }
@@ -101,32 +102,32 @@ console.log('\nthe reported case, halfway fixed — this is where imax-vaughn go
     const g = guidance(FULL, NO_CANVAS);
     ok(g.has, 'the warning STILL fires after fixing only the template field');
     ok(g.fields.length === 1, 'and now names exactly one remaining field');
-    ok(g.message.includes('Portwood Template Version > Type'), 'the version field — the one the old message never mentioned');
-    ok(!g.message.includes('Portwood Template > Type in Setup'), 'and no longer points at the field already fixed');
+    ok(g.message.includes('DocGen Template Version > Type'), 'the version field — the one the old message never mentioned');
+    ok(!g.message.includes('DocGen Template > Type in Setup'), 'and no longer points at the field already fixed');
 }
 
 console.log('\nthe reverse asymmetry is handled too');
 {
     const g = guidance(NO_CANVAS, FULL);
     ok(g.has, 'warns when only the template field is short');
-    ok(g.fields.length === 1 && g.fields[0] === 'Portwood Template > Type', 'and names just that one');
+    ok(g.fields.length === 1 && g.fields[0] === 'DocGen Template > Type', 'and names just that one');
 }
 
 console.log('\ncreate preflight blocks Canvas with the exact object that is missing it');
 {
     const versionOnly = preflightCreate('Canvas', FULL, NO_CANVAS);
     ok(!!versionOnly, 'blocks before the version insert can fail generically');
-    ok(versionOnly.includes('Portwood Template Version > Type'), 'names the version field when only it is missing Canvas');
-    ok(!versionOnly.includes('Portwood Template > Type AND'), 'does not blame the template field after it is fixed');
+    ok(versionOnly.includes('DocGen Template Version > Type'), 'names the version field when only it is missing Canvas');
+    ok(!versionOnly.includes('DocGen Template > Type AND'), 'does not blame the template field after it is fixed');
 
     const templateOnly = preflightCreate('Canvas', NO_CANVAS, FULL);
     ok(!!templateOnly, 'also blocks when only the template field is missing Canvas');
-    ok(templateOnly.includes('Portwood Template > Type'), 'names the template field');
-    ok(!templateOnly.includes('Portwood Template Version > Type'), 'does not blame the version field when it is complete');
+    ok(templateOnly.includes('DocGen Template > Type'), 'names the template field');
+    ok(!templateOnly.includes('DocGen Template Version > Type'), 'does not blame the version field when it is complete');
 
     const both = preflightCreate('Canvas', NO_CANVAS, NO_CANVAS);
     ok(!!both, 'blocks when both fields are missing Canvas');
-    ok(both.includes('Portwood Template > Type AND Portwood Template Version > Type'), 'names both fields together');
+    ok(both.includes('DocGen Template > Type AND DocGen Template Version > Type'), 'names both fields together');
     ok(both.includes('"Canvas" (added in v3.54.0)'), 'names Canvas with the release that introduced it');
 }
 

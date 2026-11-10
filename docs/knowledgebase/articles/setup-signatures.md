@@ -1,10 +1,12 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Set up the public signing page and email sender before inviting external recipients.
 
 **Before you start:** You are a Salesforce administrator with authority to configure a Salesforce Site or Experience Cloud site and the organization's email settings.
 
 #### 1. Open the checklist
 
-Go to **Portwood → Signatures**. The **Setup Status** checklist shows what is configured and what still needs attention.
+Go to **DocGen → Signatures**. The **Setup Status** checklist shows what is configured and what still needs attention.
 
 ![Signature Settings in a fresh org shows the missing site, email sender, and guest permission assignment](docs/images/userguide/v3.60/signature-settings.png)
 
@@ -14,7 +16,7 @@ Follow the complete [Salesforce Site walkthrough](#site-salesforce), or use [an 
 
 1. Create or choose the active Salesforce Site or supported Experience Cloud site.
 2. Add the packaged signing Visualforce pages to the site's enabled pages, including **DocGenSignature**, **DocGenSignaturePdf**, **DocGenVerify**, and **DocGenSign**.
-3. In Portwood's **Signature Site URL**, enter the site's base URL.
+3. In DocGen's **Signature Site URL**, enter the site's base URL.
 4. For an Experience Cloud site, remove a trailing **`/s`** from the URL.
 
 Use the base site address, not an individual signing page or someone's signing token.
@@ -26,7 +28,7 @@ For a classic Salesforce Site:
 1. Open **Setup → Sites → your site**.
 2. Click **Public Access Settings**.
 3. Open **View Users**, then the site's guest user.
-4. Under **Permission Set Assignments**, assign **Portwood Guest Signature**.
+4. Under **Permission Set Assignments**, assign **DocGen Guest Signature**.
 
 For Experience Cloud, find that site's guest user through its administration/profile controls and assign the same packaged set.
 
@@ -39,7 +41,7 @@ Use [Configure signing email and verification](#site-email) for the sender, deli
 1. In Salesforce Setup, create and verify the intended **Organization-Wide Email Address**.
 2. Make it available to the profiles required by the signing workflow; the guest completion path needs an eligible sender.
 3. Complete your sending-domain authentication and Salesforce email-deliverability setup.
-4. Return to **Portwood → Signatures** and select the address under **Send Emails From**.
+4. Return to **DocGen → Signatures** and select the address under **Send Emails From**.
 5. Save and **Re-check Setup**.
 
 PIN emails need a working sender even if you distribute signing links yourself. Check the request's **Email Status** when an email fails to arrive.

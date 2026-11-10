@@ -1,4 +1,6 @@
-# Maintaining the Portwood knowledgebase
+<!-- Modified by Dura Composites Ltd. -->
+
+# Maintaining the DocGen knowledgebase
 
 The knowledgebase has one set of article sources and generated outputs. Edit the sources; regenerate the outputs. The website reads the catalog, and GitHub readers can read the complete guide.
 
@@ -109,8 +111,8 @@ sf package install --package <released-04t-id> --target-org <kb-org> \
   --security-type AdminsOnly --no-prompt --wait 20
 
 sf org assign permset --target-org <kb-org> \
-  --name portwoodglobal__DocGen_Admin \
-  --name portwoodglobal__DocGen_Button_Manager
+  --name duracomp__DocGen_Admin \
+  --name duracomp__DocGen_Button_Manager
 
 sf apex run --target-org <kb-org> --file scripts/knowledgebase/seed.apex
 node scripts/knowledgebase/seed-templates.mjs <kb-org>

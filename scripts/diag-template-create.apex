@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Diagnostic for issue #236 — "cannot create new templates after upgrading".
  *
@@ -15,7 +16,7 @@
  *
  * Read-only except for the final insert, which is rolled back unconditionally.
  */
-String ns = 'portwoodglobal__';
+String ns = 'duracomp__';
 
 System.debug('DIAG ===== 1. PICKLIST VALUES =====');
 for (String fieldName : new List<String>{ 'Type__c', 'Output_Format__c', 'Page_Margins__c' }) {

@@ -1,4 +1,6 @@
-# Portwood DocGen DEMO — Data Dictionary & Authoring Rules
+<!-- Modified by Dura Composites Ltd. -->
+
+# DocGen DEMO — Data Dictionary & Authoring Rules
 
 Every template merges against records seeded by `seed/seed-01..05.apex`. Use these
 **exact** API names. Relationship (child-loop) names end in `__r`.
@@ -59,7 +61,7 @@ Children: `Contacts` (Contact), `Opportunities` (Opportunity).
 - **Donations** (base=Account Rivers, Type='Donation'): 6 opps, `Designation__c` ∈ {River Restoration Fund, Clean Water Program, Education Outreach, General Fund}, Amount 250–5000.
 - Child **OpportunityLineItems**: `Quantity, UnitPrice, TotalPrice, ListPrice, Description, Product2.Name, Product2.ProductCode, Product2.Family`.
 
-### Pricebook2 (records: "Portwood 2026 Wholesale Catalog" = 39 entries; "Portwood Mega Catalog (Giant Demo)" = 2,200 entries)
+### Pricebook2 (records: "DocGen 2026 Wholesale Catalog" = 39 entries; "DocGen Mega Catalog (Giant Demo)" = 2,200 entries)
 
 `Name, Description`. Child **PricebookEntries**: `UnitPrice, Product2.Name, Product2.ProductCode, Product2.Family, Product2.Description, Product2.QuantityUnitOfMeasure`.
 ProductCodes look like `PWG-1001` (catalog) / `GIANT-100000` (mega).
@@ -71,7 +73,7 @@ ProductCodes look like `PWG-1001` (catalog) / `GIANT-100000` (mega).
 `Name, Account_Holder__c, Account_Number__c, Account_Type__c, Statement_Period__c, Statement_Date__c, Opening_Balance__c, Closing_Balance__c, Total_Deposits__c, Total_Withdrawals__c, Email__c, Address__c, City_State_Zip__c`
 Child **Lines\_\_r** (Demo_Statement_Line**c): `Transaction_Date**c, Description**c, Category**c (Deposit/Withdrawal/Fee/Interest/Transfer/Purchase), Amount**c, Running_Balance**c, Line_Order\_\_c`. 15 lines.
 
-### Demo_Event\_\_c (records: "Portwood Summit 2026" SF conf, "Riverside Conservation Gala 2026" PDX gala)
+### Demo_Event\_\_c (records: "DocGen Summit 2026" SF conf, "Riverside Conservation Gala 2026" PDX gala)
 
 `Name, Event_Date__c, End_Date__c, Venue__c, Address__c, City__c, State__c, Postal_Code__c, Organizer__c, Contact_Email__c, Capacity__c, Registration_URL__c, Description__c`
 Child **Attendees\_\_r** (Demo_Attendee**c): `Name, Email**c, Company**c, Title**c, Ticket_Type**c (General Admission/VIP/Speaker/Sponsor/Staff), Ticket_Code**c (e.g. PSUMMIT26-00001), Seat**c, Amount_Paid**c, Checked_In\_\_c`. Summit=12, Gala=8.

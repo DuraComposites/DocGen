@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Modified by Dura Composites Ltd.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -35,7 +36,7 @@ try {
     await check('homepage loads the local catalog and correct release', async () => {
         await page.goto(url);
         await page.getByRole('heading', { name: 'What would you like to do?', exact: true }).waitFor();
-        assert.equal(await page.locator('#pg-release').innerText(), `Portwood ${catalog.product.version}`);
+        assert.equal(await page.locator('#pg-release').innerText(), `DocGen ${catalog.product.version}`);
         assert.equal(await page.locator('.pg-task').count(), 6);
     });
     await check('all task articles render, keep merge tags, and have no missing screenshot files', async () => {
@@ -97,7 +98,7 @@ try {
         }
     });
     await check('search matches article content and opens a result', async () => {
-        const search = page.getByRole('searchbox', { name: 'Search the Portwood guide', exact: true });
+        const search = page.getByRole('searchbox', { name: 'Search the DocGen guide', exact: true });
         await search.fill('email verification');
         await page.locator('.pg-result').first().waitFor();
         assert.ok((await page.locator('.pg-result').count()) > 0);
@@ -126,14 +127,14 @@ try {
     await check('learning paths advance and remember a stable article slug', async () => {
         await page.goto(`${url}?path=first-pdf#first-document`);
         await page.getByRole('button', { name: 'Done, next lesson', exact: true }).click();
-        await page.getByRole('heading', { name: 'Add Portwood to a record page', exact: true }).waitFor();
-        const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('portwood-guide-progress-v1')));
+        await page.getByRole('heading', { name: 'Add DocGen to a record page', exact: true }).waitFor();
+        const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('docgen-guide-progress-v1')));
         assert.ok(saved.done.includes('first-document'));
         assert.equal(saved.last.slug, 'add-to-record-page');
     });
     await check('raw Markdown compatibility and return navigation work', async () => {
         await page.goto(`${url}?raw=1`);
-        await page.locator('#pg-raw-text').filter({ hasText: '# Portwood Knowledgebase' }).waitFor();
+        await page.locator('#pg-raw-text').filter({ hasText: '# DocGen Knowledgebase' }).waitFor();
         assert.ok((await page.locator('#pg-raw-text').innerText()).includes(catalog.product.packageId));
         await page.locator('[data-article="first-document"]').click();
         await page.getByRole('heading', { name: 'Make your first document', exact: true }).waitFor();
@@ -157,7 +158,7 @@ try {
         await page.locator('#pg-nav details').first().locator('summary').click();
         await page.locator('#pg-nav details').first().locator('summary').click();
         await page.locator('[data-article="welcome"]').click();
-        await page.getByRole('heading', { name: 'Welcome to Portwood', exact: true }).waitFor();
+        await page.getByRole('heading', { name: 'Welcome to DocGen', exact: true }).waitFor();
         assert.equal(await menu.getAttribute('aria-expanded'), 'false');
     });
     await check('print keeps the lesson visible', async () => {

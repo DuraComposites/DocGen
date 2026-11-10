@@ -1,5 +1,6 @@
-/** Subscriber-side example. Deploy to your org after installing Portwood. */
-global with sharing class KBAccountProvider implements portwoodglobal.DocGenDataProvider {
+// Modified by Dura Composites Ltd.
+/** Subscriber-side example. Deploy to your org after installing DocGen. */
+global with sharing class KBAccountProvider implements duracomp.DocGenDataProvider {
     global Map<String, Object> getData(Id recordId) {
         Account account = [
             SELECT Name, Industry, Phone

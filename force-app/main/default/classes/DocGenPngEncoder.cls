@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * DocGenPngEncoder
  *
@@ -8,7 +9,7 @@
  *
  *   1. Stuff the filtered pixel data into a single-entry ZIP (which
  *      ZipWriter compresses with DEFLATE by default — verified against
- *      portwood-staging).
+ *      docgen-staging).
  *   2. Parse the resulting ZIP's central directory to locate the local
  *      file header → skip header bytes → grab the raw DEFLATE payload.
  *   3. Wrap the DEFLATE bytes in a zlib header (78 9C) + adler-32 trailer.
@@ -173,7 +174,7 @@ public class DocGenPngEncoder {
 
     /**
      * Compress `raw` bytes through Compression.ZipWriter (which defaults to
-     * DEFLATE method 8 — confirmed empirically against portwood-staging),
+     * DEFLATE method 8 — confirmed empirically against docgen-staging),
      * then surgically extract the DEFLATE payload by parsing the ZIP's
      * central directory.
      *

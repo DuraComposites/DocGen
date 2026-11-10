@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Choose a format and run size that fit the document. Test representative data before a large run.
 
 | Item                                       | Practical limit or behavior                                                                       |
@@ -16,7 +18,7 @@ Choose a format and run size that fit the document. Test representative data bef
 
 A few rows containing large pictures or rich text can cost more memory than thousands of short rows. Keep data selection focused and use sensible image dimensions.
 
-Portwood has background paths and browser assembly for supported scenarios, but they do not make every format unlimited. Flow and Apex do not have the browser assembly available to an interactive runner.
+DocGen has background paths and browser assembly for supported scenarios, but they do not make every format unlimited. Flow and Apex do not have the browser assembly available to an interactive runner.
 
 #### Features to test particularly carefully
 

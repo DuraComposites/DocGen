@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Generate a document from Salesforce information and send it for signature.
 
 **Before you start:** The template is active, includes signature positions, and generates the expected PDF. External delivery needs the [signing-site and email setup](#setup-signatures).
@@ -20,8 +22,8 @@ Use `Initials` for initials and `DatePick` for a date the signer chooses. Use `:
 
 #### Send a request
 
-1. Open the Salesforce record and find **Portwood Signature Sender**.
-2. Click **New signature request → Portwood template**.
+1. Open the Salesforce record and find **DocGen Signature Sender**.
+2. Click **New signature request → DocGen template**.
 3. Choose the template, or several compatible templates for a packet.
 4. Add each signer from Contacts or enter their name and email.
 5. Match each person's **Role** to the template's signature role.

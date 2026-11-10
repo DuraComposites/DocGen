@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // ============================================================================
 // SDocs-replacement demo — reset between runs.
 //
@@ -37,10 +38,10 @@ if (!docIds.isEmpty()) {
 }
 
 // Signature requests (signers cascade with the master-detail).
-List<portwoodglobal__DocGen_Signature_Request__c> reqs = [
+List<duracomp__DocGen_Signature_Request__c> reqs = [
     SELECT Id
-    FROM portwoodglobal__DocGen_Signature_Request__c
-    WHERE portwoodglobal__Related_Record_Id__c IN :projIds
+    FROM duracomp__DocGen_Signature_Request__c
+    WHERE duracomp__Related_Record_Id__c IN :projIds
 ];
 Integer reqCount = reqs.size();
 delete reqs;

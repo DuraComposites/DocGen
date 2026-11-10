@@ -1,5 +1,6 @@
+<!-- Modified by Dura Composites Ltd. -->
 <!--
-  Portwood DocGen DEMO — Invoice with QR Pay-Link (HTML -> PDF)   [requires v3.15+]
+  DocGen DEMO — Invoice with QR Pay-Link (HTML -> PDF)   [requires v3.15+]
   Base object: Opportunity   Child loop: OpportunityLineItems
   Showcases barcodes/QR in HTML templates (new in v3.15): {*Account.Website:qr}
   renders as a scannable QR in the PDF. Also: line-item loop, SUM total, currency.
@@ -28,7 +29,7 @@
   <body>
     <table>
       <tr>
-        <td><h1>INVOICE</h1><div class="muted">Portwood Global Solutions &middot; 100 Market Street, Boston, MA 02109 &middot; billing@portwood.dev</div></td>
+        <td><h1>INVOICE</h1><div class="muted">Example Consulting Group &middot; 100 Market Street, Boston, MA 02109 &middot; billing@example.com</div></td>
         <td class="r" style="vertical-align:top;">
           <table class="meta" style="width:auto;float:right;">
             <tr><td class="k">Invoice No.</td><td><strong>{Name}</strong></td></tr>

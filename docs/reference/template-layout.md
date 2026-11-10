@@ -1,6 +1,8 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 # HTML and Word layout reference
 
-This advanced reference accompanies the [task-based knowledgebase](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/UserGuide.md). Retained from the existing guide and reviewed against the 3.60.0 source. Use the task articles for current installation and user workflows.
+This advanced reference accompanies the [task-based knowledgebase](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md). Retained from the existing guide and reviewed against the 3.60.0 source. Use the task articles for current installation and user workflows.
 
 #### 5.7.3 CSS rules — what works, what doesn't, and an LLM prompt
 
@@ -126,7 +128,7 @@ font.
 Copy this verbatim into ChatGPT / Claude / Gemini. Replace the bracketed sections with what you want:
 
 ```
-Generate a single self-contained HTML file for Portwood.
+Generate a single self-contained HTML file for DocGen.
 
 Audience: rendered to PDF by Flying Saucer (CSS 2.1 + small CSS 3 subset). Modern CSS layout features are silently ignored.
 
@@ -465,7 +467,7 @@ When an LLM (or a designer) hands you a template using modern CSS, here are the 
 
 Two ways to control the page size, margins, and orientation:
 
-1. **Template fields** — `Page_Size__c`, `Page_Orientation__c`, `Page_Margins__c`, `Custom_Margins__c` on the Portwood Template record. Portwood wraps the template's HTML with an engine `<style>` block declaring `@page` from these fields.
+1. **Template fields** — `Page_Size__c`, `Page_Orientation__c`, `Page_Margins__c`, `Custom_Margins__c` on the DocGen Template record. DocGen wraps the template's HTML with an engine `<style>` block declaring `@page` from these fields.
 2. **Source CSS** — your HTML's own `<style>` declares `@page { size: ... }`.
 
 Pick one. If both are set, you get **two `<style>` blocks each declaring `@page`**, the cascade is non-deterministic, and dimensions can come out wrong. Recommended: leave the template fields blank when your source HTML already specifies `@page`. If you author in Google Docs (which sometimes injects an `@page` block on export) and then set `Page_Size__c` to "Legal", the conflict will silently produce a Letter document because the source CSS wins.
@@ -489,7 +491,7 @@ Example footer HTML:
 <div style="text-align:center; font-size:9pt; color:#888;">Page {PageNumber} of {TotalPages}</div>
 ```
 
-**Flying Saucer limitation:** page counters only resolve inside `@page` rules, not on DOM elements. When a header/footer contains counter tokens, Portwood renders that margin as plain text (no inline images or rich formatting). A header _without_ counters stays rich HTML via CSS running elements. Practical workaround: logo in the header (no counters), page count in the footer (counters only). Both fields can be populated simultaneously.
+**Flying Saucer limitation:** page counters only resolve inside `@page` rules, not on DOM elements. When a header/footer contains counter tokens, DocGen renders that margin as plain text (no inline images or rich formatting). A header _without_ counters stays rich HTML via CSS running elements. Practical workaround: logo in the header (no counters), page count in the footer (counters only). Both fields can be populated simultaneously.
 
 #### 5.7.6 Images
 
@@ -520,7 +522,7 @@ Loop auto-expansion works the same as Word. Either pattern produces one repeated
         </tr>
         {/OpportunityLineItems}
 
-        <!-- Pattern B: loop inside the row (Portwood expands to the <tr>) -->
+        <!-- Pattern B: loop inside the row (DocGen expands to the <tr>) -->
         <tr>
             {#OpportunityLineItems}
             <td>{Product2.Name}</td>
@@ -547,14 +549,14 @@ HTML templates work with every generation path: single-record, bulk (individual 
 
 #### 5.7.10 Troubleshooting
 
-- **"Your company doesn't support the following file types: .zip"** — Portwood's LWC extracts the zip client-side and never uploads the zip itself, so this org-level File Upload Security error shouldn't appear in normal use. If you see it, hard-refresh the page (Cmd+Shift+R / Ctrl+Shift+R) to clear any cached LWC bundle.
+- **"Your company doesn't support the following file types: .zip"** — DocGen's LWC extracts the zip client-side and never uploads the zip itself, so this org-level File Upload Security error shouldn't appear in normal use. If you see it, hard-refresh the page (Cmd+Shift+R / Ctrl+Shift+R) to clear any cached LWC bundle.
 - **Images show as broken squares in the PDF** — `Blob.toPdf` can only fetch images via relative `/sfc/` URLs; it can't reach arbitrary HTTPS URLs (no session ID). Make sure the image source is in the zip, a data URI in the HTML, a `{%Image:N}` tag, or a `{%FieldName}` pointing at a real ContentVersion.
 - **Page numbers appearing without a configured header/footer** — your template's source HTML already has `@page { @bottom-center { content: counter(page) ... } }`. Google Docs' Web Page export sometimes includes this automatically. Either remove the `@page` block from the HTML body before upload, or accept it (many users actually want page numbers).
-- **Merge tag shows up literally in the PDF (e.g. the text "{Name}")** — the tag didn't resolve. Check the field name is correct and in your Query Config, and that the WYSIWYG editor didn't HTML-encode the braces (Portwood decodes `&#123;` and `&#125;` automatically, but non-standard editors could still trip this).
+- **Merge tag shows up literally in the PDF (e.g. the text "{Name}")** — the tag didn't resolve. Check the field name is correct and in your Query Config, and that the WYSIWYG editor didn't HTML-encode the braces (DocGen decodes `&#123;` and `&#125;` automatically, but non-standard editors could still trip this).
 
 ### 5.8 Word template authoring tips
 
-Word templates are the most common Portwood authoring path, and 95% of issues come from one of three quirks below. Worth a five-minute read before debugging a "but it looks fine in Word" rendering bug.
+Word templates are the most common DocGen authoring path, and 95% of issues come from one of three quirks below. Worth a five-minute read before debugging a "but it looks fine in Word" rendering bug.
 
 #### 5.8.1 Aligning columns across multiple tables — the "phantom width" trap
 

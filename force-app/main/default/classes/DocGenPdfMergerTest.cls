@@ -1,5 +1,6 @@
+// Modified by Dura Composites Ltd.
 /**
- * DocGenPdfMerger — merges Portwood-generated PDFs and pads odd-length documents
+ * DocGenPdfMerger — merges DocGen-generated PDFs and pads odd-length documents
  * with a blank page for duplex printing (#382).
  *
  * Fixtures are real Blob.toPdf() output (Flying Saucer / iText) captured from a

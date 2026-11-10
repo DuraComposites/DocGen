@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Turn a Word document you already maintain into a reusable template.
 
 **Before you start:** Save a copy as `.docx`. Keep your original. Choose the Salesforce object you will generate from.
@@ -16,7 +18,7 @@ These first two tags assume an **Account** template. For an Opportunity, the cus
 
 Use ordinary text, headings, and tables. Keep a tag together and type it exactly, including braces. Save the `.docx`.
 
-#### 2. Bring the file into Portwood
+#### 2. Bring the file into DocGen
 
 1. Open **My Templates → Create New → Bring an Existing Template**.
 2. Enter a name and choose the **Base Object**.

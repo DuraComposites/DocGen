@@ -64,7 +64,7 @@
         {
             "id": "first-pdf",
             "title": "Your first PDF",
-            "description": "A small, satisfying first project. Start here if Portwood is new to you.",
+            "description": "A small, satisfying first project. Start here if DocGen is new to you.",
             "articles": ["first-document", "add-to-record-page", "generate-document"]
         },
         {
@@ -89,7 +89,7 @@
     "articles": [
         {
             "slug": "welcome",
-            "title": "Welcome to Portwood",
+            "title": "Welcome to DocGen",
             "group": "start",
             "audience": "Everyone",
             "minutes": 3,
@@ -104,8 +104,8 @@
             }
         },
         {
-            "slug": "install-portwood",
-            "title": "Install Portwood",
+            "slug": "install-docgen",
+            "title": "Install DocGen",
             "group": "start",
             "audience": "Salesforce administrators",
             "minutes": 6,
@@ -183,7 +183,7 @@
             "sources": ["force-app/main/default/lwc/docGenAdmin", "force-app/main/default/classes/DocGenService.cls"],
             "related": ["canvas-design", "upload-word", "import-html"],
             "aliases": [
-                "2-what-portwood-does",
+                "2-what-docgen-does",
                 "51-creating-a-template",
                 "fillable-pdf-templates-pdf-to-pdf-testing",
                 "54-output-format-locking"
@@ -551,7 +551,7 @@
         },
         {
             "slug": "add-to-record-page",
-            "title": "Add Portwood to a record page",
+            "title": "Add DocGen to a record page",
             "group": "generate",
             "audience": "Salesforce administrators",
             "minutes": 6,
@@ -1075,7 +1075,7 @@
                 "force-app/main/default/lwc/docGenAdmin",
                 "force-app/main/default/classes/DocGenController.cls"
             ],
-            "related": ["template-versions", "upgrade-portwood"],
+            "related": ["template-versions", "upgrade-docgen"],
             "aliases": [
                 "511-api-name-a-stable-key-for-automation-v328",
                 "511-api-name--a-stable-key-for-automation-v328",
@@ -1101,8 +1101,8 @@
                 "4-permission-sets",
                 "assigning-a-permission-set",
                 "assigning-docgen_guest_signature-to-a-site-guest-user",
-                "adding-custom-fields-to-portwood-objects",
-                "134-custom-fields-on-portwood-objects"
+                "adding-custom-fields-to-docgen-objects",
+                "134-custom-fields-on-docgen-objects"
             ],
             "review": {
                 "version": "3.60.0",
@@ -1111,7 +1111,7 @@
             }
         },
         {
-            "slug": "upgrade-portwood",
+            "slug": "upgrade-docgen",
             "title": "Upgrade without losing your way",
             "group": "manage",
             "audience": "Salesforce administrators",
@@ -1262,7 +1262,7 @@
             "group": "help",
             "audience": "Everyone",
             "minutes": 4,
-            "summary": "Translate Portwood and Salesforce terms into everyday words.",
+            "summary": "Translate DocGen and Salesforce terms into everyday words.",
             "sources": ["force-app/main/default/lwc/docGenAdmin", "force-app/main/default/lwc/docGenRunner"],
             "related": ["welcome"],
             "aliases": [],

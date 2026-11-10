@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Demo data and a worked Canvas template, so the canvas editor opens onto something
  * real rather than a blank artboard.
@@ -24,7 +25,7 @@
 // ---------------------------------------------------------------------------
 // 1. Accounts + children
 // ---------------------------------------------------------------------------
-String TAG = 'Portwood Demo';
+String TAG = 'DocGen Demo';
 // Matched by NAME, not by the Description tag: Description is a long text area and
 // long text cannot appear in a WHERE clause at all.
 List<String> SEED_NAMES = new List<String>{
@@ -352,4 +353,4 @@ System.debug('SEED template=' + tpl.Id + ' version=' + saved.get('versionId'));
 Map<String, Object> pdf = DocGenController.generatePdf(tpl.Id, sampleId, false, null, null);
 String b64 = (String) pdf.get('base64');
 System.debug('SEED render bytes=' + (b64 == null ? -1 : EncodingUtil.base64Decode(b64).size()));
-System.debug('SEED OK — open "' + NAME + '" in the Portwood Designer');
+System.debug('SEED OK — open "' + NAME + '" in the DocGen Designer');

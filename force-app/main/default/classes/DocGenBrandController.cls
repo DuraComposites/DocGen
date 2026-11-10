@@ -1,5 +1,6 @@
+// Modified by Dura Composites Ltd.
 /**
- * Admin CRUD for Portwood Brands (#369) — reusable sender identities a
+ * Admin CRUD for DocGen Brands (#369) — reusable sender identities a
  * Template can point at via Brand__c. Mirrors DocGenSetupController's
  * admin-gate + FLS-guard pattern.
  */
@@ -64,7 +65,7 @@ public with sharing class DocGenBrandController {
             FROM DocGen_Brand__c
             WITH SYSTEM_MODE
             ORDER BY Name
-        ]; // NOPMD - package-internal object; CRUD via Portwood permission sets
+        ]; // NOPMD - package-internal object; CRUD via DocGen permission sets
         List<BrandDto> dtos = new List<BrandDto>();
         for (DocGen_Brand__c r : rows) {
             dtos.add(toDto(r));
@@ -88,7 +89,7 @@ public with sharing class DocGenBrandController {
     @AuraEnabled
     public static Id saveBrand(Map<String, Object> dto) {
         if (!FeatureManagement.checkPermission('DocGen_Admin_Access') && !isCurrentUserAdmin()) {
-            throw DocGenService.ahe('Insufficient privileges to manage Portwood Brands.');
+            throw DocGenService.ahe('Insufficient privileges to manage DocGen Brands.');
         }
         String name = dto == null ? null : (String) dto.get('name');
         if (String.isBlank(name)) {

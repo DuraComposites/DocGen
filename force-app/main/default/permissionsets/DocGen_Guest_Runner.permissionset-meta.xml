@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <description
-    >Deprecated. The Experience Cloud guest render path has been removed from Portwood; this permission set is retained only for upgrade compatibility and grants no access. Safe to unassign from site guest users.</description>
+    >Deprecated. The Experience Cloud guest render path has been removed from DocGen; this permission set is retained only for upgrade compatibility and grants no access. Safe to unassign from site guest users.</description>
     <hasActivationRequired>false</hasActivationRequired>
-    <label>Portwood Guest Runner (deprecated)</label>
+    <label>DocGen Guest Runner (deprecated)</label>
 </PermissionSet>

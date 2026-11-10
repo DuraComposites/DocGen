@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 # Known issues
 
 What the QA suite reports that is **real and unfixed**, as distinct from suite staleness
@@ -23,9 +25,9 @@ Kept here briefly so an older report reading "known issue" is not confusing.
     Measured on two upgraded orgs: a fresh 3.55 install describes the field with no
     default, while orgs upgraded from 3.53 and 3.48 still report `Word`. So an existing
     customer keeps the old behaviour until an admin clears it by hand — Setup → Object
-    Manager → Portwood Template Version → Type → edit the Word value → untick Default.
+    Manager → DocGen Template Version → Type → edit the Word value → untick Default.
 
-    All of Portwood's own creation paths set the type explicitly, so this only bites code
+    All of DocGen's own creation paths set the type explicitly, so this only bites code
     that creates versions without one: scripts, data loads, integrations.
 
 - **`Validate Signature Token` faulted a bulk Flow.** It queries per token, so past
@@ -78,7 +80,7 @@ Documented in UserGuide §15.12, with the check surfaced in the release note so 
 before someone goes looking for the designer rather than after.
 
 **An admin can add the value by hand, and it works.** Confirmed on an upgraded org:
-Setup → Object Manager → Portwood Template → Type → **New** → `Canvas` made Canvas
+Setup → Object Manager → DocGen Template → Type → **New** → `Canvas` made Canvas
 templates creatable, and they generate normally. Restricted managed picklists normally
 refuse subscriber additions, so this was worth checking rather than assuming — the
 assumption would have been wrong and would have sent people to support for something

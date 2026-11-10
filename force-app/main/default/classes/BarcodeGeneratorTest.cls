@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 @IsTest
 private class BarcodeGeneratorTest {
     @IsTest

@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 // global (not public) so the @InvocableMethod is visible in subscriber-org Flow
 // Builder — this is a managed package, where public Apex is invisible to subscribers.
 // Inputs are primitives (no Apex-Defined Flow variable), so no @AuraEnabled needed.
@@ -29,7 +30,7 @@ global without sharing class DocGenSignatureValidator { // NOPMD AvoidGlobalModi
      */
     private static final Integer QUERY_BUDGET_PER_TOKEN = 4;
 
-    @InvocableMethod(label='Validate Signature Token' category='Portwood')
+    @InvocableMethod(label='Validate Signature Token' category='DocGen')
     global static List<FlowOutput> validateToken(List<FlowInput> inputs) {
         List<FlowOutput> results = new List<FlowOutput>();
         if (inputs == null) {
@@ -61,7 +62,7 @@ global without sharing class DocGenSignatureValidator { // NOPMD AvoidGlobalModi
                 out.isValid = false;
                 out.errorMessage =
                     'Not validated — this Flow transaction ran out of its SOQL query allowance. ' +
-                    'Portwood validated the earlier tokens in this batch and stopped rather than failing them all. ' +
+                    'DocGen validated the earlier tokens in this batch and stopped rather than failing them all. ' +
                     'Validate signature tokens in smaller batches, or one per interview.';
                 results.add(out);
                 continue;
@@ -77,7 +78,7 @@ global without sharing class DocGenSignatureValidator { // NOPMD AvoidGlobalModi
         if (skipped > 0) {
             System.debug(
                 LoggingLevel.WARN,
-                'Portwood: Validate Signature Token skipped ' +
+                'DocGen: Validate Signature Token skipped ' +
                     skipped +
                     ' of ' +
                     inputs.size() +

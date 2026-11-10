@@ -1360,7 +1360,7 @@
     <fieldPermissions><editable>false</editable><field>ContentDistribution.ContentDownloadUrl</field><readable
         >true</readable></fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
-    <label>Portwood Admin</label>
+    <label>DocGen Admin</label>
     <objectPermissions>
         <allowCreate>false</allowCreate>
         <allowDelete>false</allowDelete>

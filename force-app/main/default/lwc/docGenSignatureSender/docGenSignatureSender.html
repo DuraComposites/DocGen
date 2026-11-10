@@ -1,4 +1,5 @@
 <template>
+    <!-- Modified by Dura Composites Ltd. -->
     <section class="sender">
         <header class="sender-heading">
             <lightning-icon icon-name="utility:signature" size="small"></lightning-icon>
@@ -98,7 +99,7 @@
                     <template if:true={showSourceChooser}>
                         <section class="source-picker" aria-label="Choose a document source">
                             <h3>What would you like to send?</h3>
-                            <p>Choose a PDF or generate a document from a Portwood template.</p>
+                            <p>Choose a PDF or generate a document from a DocGen template.</p>
                             <div class="source-choices">
                                 <button type="button" data-source="upload" onclick={chooseSource}>
                                     <lightning-icon icon-name="utility:upload" size="small"></lightning-icon>
@@ -110,7 +111,7 @@
                                 </button>
                                 <button type="button" data-source="templates" onclick={chooseSource}>
                                     <lightning-icon icon-name="utility:insert_template" size="small"></lightning-icon>
-                                    <span>Portwood template</span><small>Generate from record data</small>
+                                    <span>DocGen template</span><small>Generate from record data</small>
                                 </button>
                             </div>
                             <template if:true={hasPreparation}

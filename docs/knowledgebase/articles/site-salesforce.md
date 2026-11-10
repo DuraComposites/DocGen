@@ -1,6 +1,8 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 A Salesforce Site gives external recipients a public doorway to the signing experience. They use their unique signing link; they do not need a Salesforce login.
 
-**Before you start:** Install Portwood and use a Salesforce administrator account. This walkthrough uses **Salesforce Sites**. If your organization already uses Experience Cloud, follow [the Experience Cloud route](#site-experience-cloud) instead.
+**Before you start:** Install DocGen and use a Salesforce administrator account. This walkthrough uses **Salesforce Sites**. If your organization already uses Experience Cloud, follow [the Experience Cloud route](#site-experience-cloud) instead.
 
 #### 1. Open Sites
 
@@ -14,16 +16,16 @@ In the fresh scratch org, Salesforce had already provisioned a Sites domain. A n
 
 #### 2. Name and activate the site
 
-| Field                      | Example or choice                                                                                      |
-| -------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Site Label                 | Portwood Signing                                                                                       |
-| Site Name                  | Portwood_Signing; check the generated value                                                            |
-| Site Contact               | The internal user responsible for this site                                                            |
-| Default Record Owner       | An appropriate active internal user                                                                    |
-| Default Web Address        | A short unused path such as `sign`                                                                     |
-| Active                     | Selected                                                                                               |
-| Active Site Home Page      | Use the lookup to choose `portwoodglobal.DocGenSignature`, or your organization's neutral landing page |
-| Clickjack Protection Level | Leave the recommended same-origin protection for this standalone signing site                          |
+| Field                      | Example or choice                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| Site Label                 | DocGen Signing                                                                                   |
+| Site Name                  | DocGen_Signing; check the generated value                                                        |
+| Site Contact               | The internal user responsible for this site                                                      |
+| Default Record Owner       | An appropriate active internal user                                                              |
+| Default Web Address        | A short unused path such as `sign`                                                               |
+| Active                     | Selected                                                                                         |
+| Active Site Home Page      | Use the lookup to choose `duracomp.DocGenSignature`, or your organization's neutral landing page |
+| Clickjack Protection Level | Leave the recommended same-origin protection for this standalone signing site                    |
 
 Use the home-page lookup rather than guessing its API spelling. Managed pages appear with the namespace, and typed lookup values can fail to resolve. The home page does not replace the complete signing URL generated for each request.
 
@@ -41,10 +43,10 @@ Your domain will differ. The example is a base address, not a signing link.
 
 1. On Site Details, find **Site Visualforce Pages** and click **Edit**.
 2. Move these pages into **Enabled Visualforce Pages**:
-    - `portwoodglobal.DocGenSignature`
-    - `portwoodglobal.DocGenSignaturePdf`
-    - `portwoodglobal.DocGenVerify`
-    - `portwoodglobal.DocGenSign`
+    - `duracomp.DocGenSignature`
+    - `duracomp.DocGenSignaturePdf`
+    - `duracomp.DocGenVerify`
+    - `duracomp.DocGenSign`
 3. Save.
 
 The home page may already be enabled. `DocGenSignaturePrepare` is the authenticated preparation UI used by your internal senders; it is not one of the public pages to add for this setup.
@@ -59,17 +61,17 @@ Each site has its own guest user. Assigning a permission set to yourself or a di
 
 1. Return to Site Details and click **Public Access Settings**.
 2. On the guest profile, click **View Users**.
-3. Open the user named for this site, such as **Portwood Signing Site Guest User**.
+3. Open the user named for this site, such as **DocGen Signing Site Guest User**.
 4. In **Permission Set Assignments**, click **Edit Assignments**.
-5. Move **Portwood Guest Signature** to **Enabled Permission Sets** and save.
+5. Move **DocGen Guest Signature** to **Enabled Permission Sets** and save.
 
-![Portwood Guest Signature is selected for this site's guest user](docs/images/userguide/v3.60/site-guest-permission.png)
+![DocGen Guest Signature is selected for this site's guest user](docs/images/userguide/v3.60/site-guest-permission.png)
 
 Use the packaged permission set as the starting point. Do not grant a guest the Admin permission set or broad Account/Contact access to make signing work. The signing pipeline uses the specific request/link and packaged access controls.
 
-#### 5. Tell Portwood where the site lives
+#### 5. Tell DocGen where the site lives
 
-1. Open the **Portwood** app and its **Signatures** workspace.
+1. Open the **DocGen** app and its **Signatures** workspace.
 2. Paste the base address into **Signature Site URL**, including your site's path such as `/sign`.
 3. Save the setting and click **Re-check Setup**.
 4. Follow [Configure signing email](#site-email) for the sender and verification delivery.

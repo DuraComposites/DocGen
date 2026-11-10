@@ -97,9 +97,9 @@ export default class DocGenTemplateSignatureSender extends NavigationMixin(Light
                 label: t.Name,
                 value: t.Id,
                 // #208 — namespace-aware read: prefixed in subscriber orgs, bare in dev.
-                defaultMessage: t.Default_Email_Message__c || t.portwoodglobal__Default_Email_Message__c || '',
+                defaultMessage: t.Default_Email_Message__c || t.duracomp__Default_Email_Message__c || '',
                 // #412 — Off (default) / Optional / Required; same namespace-aware read.
-                attachedDocuments: t.Attached_Documents__c || t.portwoodglobal__Attached_Documents__c || 'Off',
+                attachedDocuments: t.Attached_Documents__c || t.duracomp__Attached_Documents__c || 'Off',
                 // Dura: expiry and reminder defaults (0 is a real value, so not ||).
                 expiryDays: this._templateNumber(t, 'Signature_Expiry_Days__c'),
                 remindEvery: this._templateNumber(t, 'Signature_Reminder_Every_Days__c'),
@@ -119,7 +119,7 @@ export default class DocGenTemplateSignatureSender extends NavigationMixin(Light
     }
 
     _templateNumber(t, field) {
-        const v = t[field] !== undefined ? t[field] : t['portwoodglobal__' + field];
+        const v = t[field] !== undefined ? t[field] : t['duracomp__' + field];
         return v === undefined || v === null ? null : Number(v);
     }
 

@@ -1,3 +1,5 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 Add a chart to explain your data, or a QR code or barcode that readers can scan.
 
 #### Make a chart in Canvas
@@ -22,13 +24,13 @@ This groups the Account's Opportunities by stage. Use a valid relationship and f
 
 Chart support depends on the output path. HTML-to-PDF is safest with the supported CSS chart styles: **bar**, **pivot**, **clustered**, and **stacked**. An inline SVG chart visible in an HTML preview can disappear in Salesforce's PDF renderer. Excel output does not embed chart-tag images.
 
-For the complete style and output matrix, use the [chart reference](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/reference/merge-tags.md#76-charts).
+For the complete style and output matrix, use the [chart reference](https://github.com/DuraComposites/DocGen/blob/main/docs/reference/merge-tags.md#76-charts).
 
 #### Add a QR code or barcode
 
 In Canvas, choose **Code**, place it, then set the code type and value in its properties. A value can come from a field so each generated record gets its own code.
 
-For Word or HTML, use the template's copy-paste tag tools or the [barcode reference](https://github.com/Portwood-Global-Solutions/Portwood/blob/main/docs/reference/merge-tags.md#78-barcodes--qr-codes). Match the barcode type to the scanner or business process that will read it.
+For Word or HTML, use the template's copy-paste tag tools or the [barcode reference](https://github.com/DuraComposites/DocGen/blob/main/docs/reference/merge-tags.md#78-barcodes--qr-codes). Match the barcode type to the scanner or business process that will read it.
 
 #### Check the result
 

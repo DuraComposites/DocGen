@@ -1,10 +1,11 @@
+// Modified by Dura Composites Ltd.
 /**
  * Watermark opacity — changing it after upload must actually apply, in every
  * session, and the strength control must reflect what is stored.
  *
  *   node scripts/qa/watermark-opacity-route-check.mjs
  *
- * Issue #313, reported by untangleportwood:
+ * Issue #313, reported by untangledocgen:
  *
  *   "When I try to update the Watermark percentage after I uploaded the image it
  *    doesn't update this value. It works when I change it before I upload the file."

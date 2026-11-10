@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — global required so subscriber Apex can call generateDocument*/generatePdfBlob* in installed orgs
     // Collector for images to inject after XML processing
     private static List<Map<String, Object>> pendingImages = new List<Map<String, Object>>();
@@ -1901,7 +1902,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
         // to the package-internal pre-decomposed XML ContentVersions. USER_MODE silently
         // returned empty in that context, which is why the signed PDF path lost table-style
         // borders for guest-triggered signatures (#28). Template access is already gated by
-        // Portwood permission sets; reading the pre-decomposed artifacts in system mode is safe.
+        // DocGen permission sets; reading the pre-decomposed artifacts in system mode is safe.
         List<ContentVersion> xmlCvs = new PreDecompXmlLoader()
             .loadForLinkedEntityByTitlePrefix(activeVersions[0].Id, xmlPrefix);
 
@@ -2129,7 +2130,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
         } catch (Exception cleanupErr) {
             System.debug(
                 LoggingLevel.WARN,
-                'Portwood: snapshot cleanup before re-decompose failed (continuing): ' + cleanupErr.getMessage()
+                'DocGen: snapshot cleanup before re-decompose failed (continuing): ' + cleanupErr.getMessage()
             );
         }
     }
@@ -2548,7 +2549,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
 
     /**
      * Blob.toPdf() fetches relative shepherd image URLs as the running user. Template
-     * asset images can be linked only to Portwood's internal version records, so a
+     * asset images can be linked only to DocGen's internal version records, so a
      * non-owner/non-admin user who can read the shared template may still see broken
      * images in the rendered PDF. Before calling Blob.toPdf(), link only referenced
      * template-owned image files to the source record so the running user can fetch
@@ -3143,7 +3144,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
      * cross-object aggregations) and render them straight into a template without persisting
      * to records first or implementing the DocGenDataProvider interface.
      *
-     * The dataMap follows the same shape Portwood merge expects:
+     * The dataMap follows the same shape DocGen merge expects:
      *   - Simple fields: 'Name' => 'Acme'
      *   - Parent lookups: 'Account' => Map<String,Object>{ 'Name' => 'Acme' }
      *   - Child loops: 'Items' => Map<String,Object>{ 'records' => List<Object>{ ... } }
@@ -3538,7 +3539,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
                         Decimal imgInches = (Decimal.valueOf(cx) / 914400).setScale(2);
                         System.debug(
                             LoggingLevel.WARN,
-                            'Portwood image-overflow: template version ' +
+                            'DocGen image-overflow: template version ' +
                                 versionId +
                                 ' part ' +
                                 partName +
@@ -3556,7 +3557,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
         if (overflowCount > 0) {
             System.debug(
                 LoggingLevel.WARN,
-                'Portwood image-overflow summary: ' +
+                'DocGen image-overflow summary: ' +
                     overflowCount +
                     ' oversized image(s) detected in template version ' +
                     versionId +
@@ -5722,7 +5723,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
     /**
      * Resolves an org or namespaced Salesforce Custom Label at runtime.
      * Missing/invalid labels intentionally resolve to null, which preserves
-     * Portwood's existing behavior for unknown merge fields (render empty).
+     * DocGen's existing behavior for unknown merge fields (render empty).
      */
     private static String resolveCustomLabel(String path) {
         if (!isCustomLabelPath(path)) {
@@ -5758,7 +5759,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
             if (String.isEmpty(namespace)) {
                 try {
                     // In a managed-package execution context, fall back to
-                    // the package namespace for Portwood's own labels. This
+                    // the package namespace for DocGen's own labels. This
                     // does not shadow a subscriber label because the org lookup
                     // above is always attempted first.
                     value = System.Label.get(null, labelName, UserInfo.getLanguage());
@@ -9392,7 +9393,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
             // Missing or inactive asset, or an asset with no uploaded version yet.
             System.debug(
                 LoggingLevel.ERROR,
-                'Portwood: {%asset:' + assetKey + '} did not resolve (missing, inactive, or no version).'
+                'DocGen: {%asset:' + assetKey + '} did not resolve (missing, inactive, or no version).'
             );
             return assetPlaceholder(assetKey);
         }
@@ -10350,7 +10351,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
     // Old orgs may still have DocGenSignatureSenderController and
     // DocGenSignatureService which reference these methods. The stubs
     // exist solely so those old classes compile during package upgrade.
-    // They do nothing — signatures have been removed from Portwood.
+    // They do nothing — signatures have been removed from DocGen.
     // =========================================================================
 
     /**
@@ -10379,7 +10380,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
         ];
         if (tpls.isEmpty()) {
             throw new DocGenException(
-                'No Portwood Template found with API Name \'' +
+                'No DocGen Template found with API Name \'' +
                     apiName +
                     '\'. Set the API Name field on the template, or pass Template ID instead.'
             );
@@ -11060,7 +11061,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
             Id = versionId,
             Content_Version_Id__c = htmlCvId
         );
-        update upd; // NOPMD ApexCRUDViolation — package-internal custom object; CRUD via Portwood permsets
+        update upd; // NOPMD ApexCRUDViolation — package-internal custom object; CRUD via DocGen permsets
     }
 
     // =====================================================================
@@ -11118,7 +11119,7 @@ global with sharing class DocGenService { // NOPMD AvoidGlobalModifier — globa
         //
         // Google Docs and Notion exports put <style> in the body routinely, and so
         // does re-uploading a previously generated document, which is why the leaked
-        // selectors in that report were Portwood's own docgen-* classes.
+        // selectors in that report were DocGen's own docgen-* classes.
         //
         // Header and footer get the same treatment, and their styles are hoisted into
         // sourceStyles rather than dropped — stripping without hoisting would fix the

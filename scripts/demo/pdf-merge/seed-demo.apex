@@ -1,6 +1,7 @@
+// Modified by Dura Composites Ltd.
 // Creates the two sample Files used by DocGen_Merge_PDFs_Demo. Safe to rerun:
 // only missing sample Files are created, and existing documents are retained.
-Set<String> titles = new Set<String>{ 'Portwood Merge Demo - Welcome', 'Portwood Merge Demo - Project Brief' };
+Set<String> titles = new Set<String>{ 'DocGen Merge Demo - Welcome', 'DocGen Merge Demo - Project Brief' };
 Set<String> existing = new Set<String>();
 for (ContentVersion cv : [SELECT Title FROM ContentVersion WHERE Title IN :titles AND IsLatest = TRUE WITH USER_MODE]) {
     existing.add(cv.Title);
@@ -15,8 +16,8 @@ String css =
     '.page{page-break-before:always}</style>';
 Map<String, String> bodies = new Map<String, String>();
 bodies.put(
-    'Portwood Merge Demo - Welcome',
-    '<div class="brand">PORTWOOD</div><div class="bar"></div>' +
+    'DocGen Merge Demo - Welcome',
+    '<div class="brand">DOCGEN</div><div class="bar"></div>' +
         '<div class="eyebrow">WELCOME LETTER</div><h1>One clear packet.<br/>Everything in order.</h1>' +
         '<p>Prepared for <strong>Northstar Studio</strong></p><p>Welcome aboard. Your project brief and delivery checklist follow this letter in one convenient PDF.</p>' +
         '<div class="callout"><strong>Your packet, assembled</strong><p>1. Welcome letter &mdash; 1 page<br/>2. Project brief &amp; delivery checklist &mdash; 2 pages</p></div>' +
@@ -24,15 +25,15 @@ bodies.put(
         '<p class="source">SOURCE A &nbsp; | &nbsp; Welcome letter &nbsp; | &nbsp; Page 1 of 1</p>'
 );
 bodies.put(
-    'Portwood Merge Demo - Project Brief',
-    '<div class="brand">PORTWOOD</div><div class="bar"></div>' +
+    'DocGen Merge Demo - Project Brief',
+    '<div class="brand">DOCGEN</div><div class="bar"></div>' +
         '<div class="eyebrow">PROJECT BRIEF</div><h1>A smooth start<br/>for Northstar Studio.</h1>' +
         '<p>A shared plan for the people, documents, and decisions that move this project forward.</p>' +
         '<table><tr><th>Milestone</th><th>Outcome</th></tr><tr><td>Discover</td><td>Confirm goals and requirements</td></tr>' +
         '<tr><td>Build</td><td>Prepare the working solution</td></tr><tr><td>Deliver</td><td>Review and hand over the final packet</td></tr></table>' +
         '<h2>Success looks like</h2><p>Everyone has the same information, the next steps are clear, and the completed documents are easy to find.</p>' +
         '<p class="source">SOURCE B &nbsp; | &nbsp; Project brief &nbsp; | &nbsp; Page 1 of 2</p>' +
-        '<div class="page"></div><div class="brand">PORTWOOD</div><div class="bar"></div>' +
+        '<div class="page"></div><div class="brand">DOCGEN</div><div class="bar"></div>' +
         '<div class="eyebrow">DELIVERY CHECKLIST</div><h1>Ready for<br/>the next chapter.</h1>' +
         '<table><tr><th>Item</th><th>Ready when</th></tr><tr><td>Project scope</td><td>The team has agreed on the deliverables</td></tr>' +
         '<tr><td>Review</td><td>Feedback is resolved and approved</td></tr><tr><td>Document packet</td><td>The welcome letter, brief, and checklist are together</td></tr>' +

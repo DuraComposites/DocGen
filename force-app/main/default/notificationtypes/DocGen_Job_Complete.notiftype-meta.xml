@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomNotificationType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <customNotifTypeName>DocGen_Job_Complete</customNotifTypeName>
     <description
-    >Notification sent when a Portwood bulk merge job completes and the merged PDF is ready for download.</description>
+    >Notification sent when a DocGen bulk merge job completes and the merged PDF is ready for download.</description>
     <desktop>true</desktop>
-    <masterLabel>Portwood Job Complete</masterLabel>
+    <masterLabel>DocGen Job Complete</masterLabel>
     <mobile>true</mobile>
     <slack>false</slack>
 </CustomNotificationType>

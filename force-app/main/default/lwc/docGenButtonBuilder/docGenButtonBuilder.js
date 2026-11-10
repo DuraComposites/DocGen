@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import { api, LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getButtonConfigs from '@salesforce/apex/DocGenButtonAdminController.getButtonConfigs';
@@ -9,7 +10,7 @@ import getObjectOptions from '@salesforce/apex/DocGenController.getObjectOptions
 /**
  * docGenButtonBuilder
  * -------------------
- * Command Hub tab for creating/editing the one-click Portwood record-page buttons
+ * Command Hub tab for creating/editing the one-click DocGen record-page buttons
  * (DocGen_Button__mdt) from the UI — no Setup > Custom Metadata spelunking.
  * Saves are async (Metadata API), so after a save we re-query on a short delay.
  */

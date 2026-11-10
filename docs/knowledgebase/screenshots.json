@@ -179,7 +179,7 @@
         "release": "3.60.0",
         "capturedOn": "2026-10-24",
         "environment": "Fresh subscriber scratch org with fictional example data",
-        "description": "Correct Site Guest User permission assignment editor with Portwood Guest Signature selected."
+        "description": "Correct Site Guest User permission assignment editor with DocGen Guest Signature selected."
     },
     {
         "file": "docs/images/userguide/v3.60/site-public-preview.png",

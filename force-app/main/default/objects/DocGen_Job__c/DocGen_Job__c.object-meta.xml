@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
@@ -14,13 +15,13 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>Portwood Job</label>
+    <label>DocGen Job</label>
     <nameField>
         <displayFormat>JOB-{0000}</displayFormat>
         <label>Job Number</label>
         <type>AutoNumber</type>
     </nameField>
-    <pluralLabel>Portwood Jobs</pluralLabel>
+    <pluralLabel>DocGen Jobs</pluralLabel>
     <searchLayouts />
     <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>

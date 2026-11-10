@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * END-USER UI SUITE — the surfaces a customer actually touches.
  *
@@ -337,7 +338,7 @@ const TEXT_OF = `
   };`;
 
 /** Selector matching the component host in both a namespaced and a plain org. */
-const host = (kebab) => `portwoodglobal-${kebab}, c-${kebab}`;
+const host = (kebab) => `duracomp-${kebab}, c-${kebab}`;
 
 /**
  * Centre-point of the first element matching `sel`, plus its HIT_TEST verdict.

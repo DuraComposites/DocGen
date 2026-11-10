@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * The Canvas scene graph, and the only place that knows how it becomes HTML.
  *
@@ -441,7 +442,7 @@ export function newImageBox(xIn, yIn, wIn, hIn) {
         variantGroup: '',
         style: { ...DEFAULT_STYLE, padding: 0 },
         image: {
-            // A Portwood ASSET KEY, not a file URL. `{%asset:<key>}` resolves at
+            // A DocGen ASSET KEY, not a file URL. `{%asset:<key>}` resolves at
             // generation time to that asset's latest version, so replacing the logo in
             // the Assets tab updates every document that uses it. Baking a
             // ContentVersion Id into the body instead would pin each template to the

@@ -1,4 +1,5 @@
 <template>
+    <!-- Modified by Dura Composites Ltd. -->
     <div class="library">
         <div class="toolbar">
             <div>
@@ -80,7 +81,7 @@
                     </p>
                     <lightning-file-upload
                         label="TrueType fonts or ZIP archive"
-                        name="portwoodBulkFontUpload"
+                        name="docgenBulkFontUpload"
                         accept={bulkAcceptedFormats}
                         multiple
                         onuploadfinished={handleBulkUploadFinished}
@@ -139,7 +140,7 @@
                     </p>
                     <lightning-file-upload
                         label="TrueType font (up to 9 MB)"
-                        name="portwoodFontUpload"
+                        name="docgenFontUpload"
                         accept={acceptedFormats}
                         onuploadfinished={handleUploadFinished}
                         disabled={busy}
