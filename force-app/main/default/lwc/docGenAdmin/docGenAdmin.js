@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import { LightningElement, track, wire } from 'lwc';
 import { createRecord, updateRecord } from 'lightning/uiRecordApi';
 // #236 — Type__c is a RESTRICTED picklist and the wizard defaults to 'HTML', a value
@@ -144,6 +145,10 @@ import HIDE_SIGNER_DECLINE_FIELD from '@salesforce/schema/DocGen_Template__c.Hid
 import ATTACHED_DOCUMENTS_FIELD from '@salesforce/schema/DocGen_Template__c.Attached_Documents__c';
 import ATTACHED_DOCUMENT_MARKUP_FIELD from '@salesforce/schema/DocGen_Template__c.Attached_Document_Markup__c';
 import SIGNATURE_TYPE_ONLY_FIELD from '@salesforce/schema/DocGen_Template__c.Signature_Type_Only__c';
+// Dura: signing link expiry and reminder defaults
+import SIGNATURE_EXPIRY_DAYS_FIELD from '@salesforce/schema/DocGen_Template__c.Signature_Expiry_Days__c';
+import SIGNATURE_REMIND_EVERY_FIELD from '@salesforce/schema/DocGen_Template__c.Signature_Reminder_Every_Days__c';
+import SIGNATURE_REMIND_FOR_FIELD from '@salesforce/schema/DocGen_Template__c.Signature_Reminder_For_Days__c';
 import getSettingsFresh from '@salesforce/apex/DocGenSetupController.getSettingsFresh';
 import testRecordFilter from '@salesforce/apex/DocGenController.testRecordFilter';
 // 1.61 — HTML zip sidesteps File Upload Security via client-side unzip + per-part upload
@@ -283,6 +288,9 @@ const F = {
     AttachedDocuments: ATTACHED_DOCUMENTS_FIELD.fieldApiName,
     AttachedDocumentMarkup: ATTACHED_DOCUMENT_MARKUP_FIELD.fieldApiName,
     SignatureTypeOnly: SIGNATURE_TYPE_ONLY_FIELD.fieldApiName,
+    SignatureExpiryDays: SIGNATURE_EXPIRY_DAYS_FIELD.fieldApiName,
+    SignatureRemindEvery: SIGNATURE_REMIND_EVERY_FIELD.fieldApiName,
+    SignatureRemindFor: SIGNATURE_REMIND_FOR_FIELD.fieldApiName,
     // PHD-9 — stable developer key for Flow lookups; namespace resolved from an
     // already-imported field (same pattern as FormFieldsConfig).
     ApiName:
@@ -523,6 +531,10 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
     @track editTemplateAttachedDocuments = 'Off'; // #412
     @track editTemplateAttachedDocumentMarkup = 'Off'; // #412 M2
     @track editTemplateTypeOnly = false;
+    // Dura: signing link expiry and reminder defaults, in days (blank = org default)
+    @track editTemplateExpiryDays = null;
+    @track editTemplateRemindEvery = null;
+    @track editTemplateRemindFor = null;
     // #367 — org-wide "Hide Decline Button", fetched once on mount so this template
     // toggle can hide itself when the org has already hidden Decline everywhere.
     @track orgHideDecline = false;
@@ -4585,6 +4597,44 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
         this.editTemplateHideDecline = event.target.checked;
     }
 
+    // Dura: signing link expiry and reminder defaults
+    _daysOrNull(value) {
+        if (value === null || value === undefined || value === '') return null;
+        const n = parseInt(value, 10);
+        return Number.isNaN(n) ? null : n;
+    }
+    handleExpiryDaysChange(event) {
+        this.editTemplateExpiryDays = this._daysOrNull(event.detail.value);
+    }
+    handleRemindEveryChange(event) {
+        this.editTemplateRemindEvery = this._daysOrNull(event.detail.value);
+    }
+    handleRemindForChange(event) {
+        this.editTemplateRemindFor = this._daysOrNull(event.detail.value);
+    }
+    get showRemindFor() {
+        return this.editTemplateRemindEvery > 0;
+    }
+    get templateScheduleSummary() {
+        const expiry = this.editTemplateExpiryDays;
+        const every = this.editTemplateRemindEvery;
+        const forDays = this.editTemplateRemindFor;
+        const plural = (n, word) => (n === 1 ? '1 ' + word : n + ' ' + word + 's');
+        const link = expiry ? 'Links expire after ' + plural(expiry, 'day') : 'Links use the org expiry';
+        let reminders;
+        if (every === null || every === undefined) {
+            reminders = 'reminders follow the org schedule';
+        } else if (every <= 0) {
+            reminders = 'no reminders';
+        } else {
+            reminders =
+                'a reminder every ' +
+                (every === 1 ? 'day' : every + ' days') +
+                (forDays ? ' for ' + plural(forDays, 'day') : ' until the link expires');
+        }
+        return link + '; ' + reminders + '. The sender can change both.';
+    }
+
     // #412 — existing PDFs from the record attached to signature requests
     get attachedDocumentsOptions() {
         return [
@@ -5450,6 +5500,9 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             this.editTemplateAttachedDocuments = row[F.AttachedDocuments] || 'Off';
             this.editTemplateAttachedDocumentMarkup = row[F.AttachedDocumentMarkup] || 'Off';
             this.editTemplateTypeOnly = row[F.SignatureTypeOnly] === true;
+            this.editTemplateExpiryDays = this._daysOrNull(row[F.SignatureExpiryDays]);
+            this.editTemplateRemindEvery = this._daysOrNull(row[F.SignatureRemindEvery]);
+            this.editTemplateRemindFor = this._daysOrNull(row[F.SignatureRemindFor]);
             this.editTemplateApiName = row[F.ApiName] || '';
             this.editTemplateDefaultEmailMessage = row[F.DefaultEmailMessage] || '';
             this.editTemplateSpecificRecordIds = row[F.SpecificRecordIds];
@@ -5581,6 +5634,9 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             this.editTemplateAttachedDocuments,
             this.editTemplateAttachedDocumentMarkup,
             this.editTemplateTypeOnly,
+            this.editTemplateExpiryDays,
+            this.editTemplateRemindEvery,
+            this.editTemplateRemindFor,
             this.editTemplateApiName,
             this.editTemplateDefaultEmailMessage
         ]);
@@ -6178,6 +6234,9 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             Attached_Documents__c: this.editTemplateAttachedDocuments,
             Attached_Document_Markup__c: this.editTemplateAttachedDocumentMarkup,
             Signature_Type_Only__c: this.editTemplateTypeOnly,
+            Signature_Expiry_Days__c: this.editTemplateExpiryDays,
+            Signature_Reminder_Every_Days__c: this.editTemplateRemindEvery,
+            Signature_Reminder_For_Days__c: this.editTemplateRemindFor,
             API_Name__c: this.editTemplateApiName,
             Default_Email_Message__c: this.editTemplateDefaultEmailMessage
         };
@@ -6278,6 +6337,9 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             Attached_Documents__c: this.editTemplateAttachedDocuments,
             Attached_Document_Markup__c: this.editTemplateAttachedDocumentMarkup,
             Signature_Type_Only__c: this.editTemplateTypeOnly,
+            Signature_Expiry_Days__c: this.editTemplateExpiryDays,
+            Signature_Reminder_Every_Days__c: this.editTemplateRemindEvery,
+            Signature_Reminder_For_Days__c: this.editTemplateRemindFor,
             API_Name__c: this.editTemplateApiName,
             Default_Email_Message__c: this.editTemplateDefaultEmailMessage
         };

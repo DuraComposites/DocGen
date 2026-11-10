@@ -36,7 +36,11 @@ Each request has a status, the people it went to and a one-line summary, such as
 | **... signed** / **... declined: "..."** | The signature audit, with the reason given for a decline |
 | **Link expired**                         | The link's expiry, if nobody finished first              |
 | **... tried to open the expired link**   | The signer came back after the link lapsed               |
+| **Link extended to ... by ...**          | Someone extended or reopened the link (see below)        |
+| **Reminders every ... by ...**           | Someone changed or stopped the reminders                 |
 | **Waiting on ...**                       | Who still has to sign, and how long since it was sent    |
+
+Until a request is finished, a line under the summary gives its plan, such as **Link expires 22 Nov · Reminders every 2 days until 20 Nov**, with **Extend link** and **Reminders** to change it. See [Set link expiry and reminders](#signature-expiry-reminders).
 
 For drawing approvals, a line under the timeline says how many attached documents each signer opened and marked up.
 
@@ -56,6 +60,6 @@ Visits record the time, the kind of device and the browser's user agent. No IP a
 
 #### If the card is empty or shows an error
 
-The card runs as the viewing user. **Portwood User** and **Portwood Admin** include what it needs. With your own permission sets, give read access to the Portwood Signature Request, Signer, Signature Audit, Signature Attachment, Signer Attachment, Signer Visit and Signature Event objects, the fields the card shows, and the `DocGenSignatureStatusController` Apex class.
+The card runs as the viewing user. **Portwood User** and **Portwood Admin** include what it needs. With your own permission sets, give read access to the Portwood Signature Request, Signer, Signature Audit, Signature Attachment, Signer Attachment, Signer Visit and Signature Event objects, the fields the card shows, and the `DocGenSignatureStatusController` Apex class. To extend links and change reminders, also give the **Change Sent Signature Requests** custom permission.
 
 Requests are matched on the record they were sent from. A request sent from another record appears on that record, or under it on a parent page set up as above.

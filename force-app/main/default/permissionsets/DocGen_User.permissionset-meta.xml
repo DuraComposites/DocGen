@@ -186,6 +186,10 @@
         <enabled>true</enabled>
         <name>DocGen_Button__mdt</name>
     </customMetadataTypeAccesses>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>DocGen_Change_Signature_Requests</name>
+    </customPermissions>
     <description>Standard User access to Document Generation features.</description>
     <fieldPermissions>
         <editable>false</editable>
@@ -705,6 +709,16 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>DocGen_Signature_Request__c.Reminder_Every_Days__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>DocGen_Signature_Request__c.Reminders_Until__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>DocGen_Signature_Request__c.Render_Data_Snapshot__c</field>
         <readable>true</readable>
@@ -922,6 +936,21 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>DocGen_Template__c.Attached_Documents__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>DocGen_Template__c.Signature_Expiry_Days__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>DocGen_Template__c.Signature_Reminder_Every_Days__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>DocGen_Template__c.Signature_Reminder_For_Days__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

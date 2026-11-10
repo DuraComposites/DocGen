@@ -236,6 +236,67 @@ private class DocGenSignatureStatusControllerTest {
     }
 
     @IsTest
+    static void extendingAndChangingRemindersShowOnTheCard() {
+        Account acct = [SELECT Id FROM Account WHERE Name = 'Status Card Test'];
+        DocGen_Signature_Request__c open = [
+            SELECT Id
+            FROM DocGen_Signature_Request__c
+            WHERE Status__c = 'Sent' AND Template__c != NULL
+            LIMIT 1
+        ];
+        DocGen_Signature_Request__c signed = [SELECT Id FROM DocGen_Signature_Request__c WHERE Status__c = 'Signed'];
+        User u = docGenUser();
+        List<DocGenSignatureStatusController.RecordGroup> groups;
+        System.runAs(u) {
+            Test.startTest();
+            DocGenSignatureStatusController.changeExpiry(open.Id, Date.today().addDays(60));
+            DocGenSignatureStatusController.changeReminders(open.Id, 'EVERY', 2, null);
+            try {
+                DocGenSignatureStatusController.changeExpiry(signed.Id, Date.today().addDays(3));
+                Assert.fail('A signed request cannot be changed');
+            } catch (AuraHandledException e) {
+                Assert.isTrue(e.getMessage().contains('finished'), e.getMessage());
+            }
+            try {
+                DocGenSignatureStatusController.changeReminders(signed.Id, 'NONE', null, null);
+                Assert.fail('A signed request cannot be changed');
+            } catch (AuraHandledException e) {
+                Assert.isTrue(e.getMessage().contains('finished'), e.getMessage());
+            }
+            groups = DocGenSignatureStatusController.getTimeline(acct.Id, null);
+            Test.stopTest();
+        }
+
+        DocGenSignatureStatusController.RequestStatus r;
+        for (DocGenSignatureStatusController.RequestStatus each : groups[0].requests) {
+            if (each.id == open.Id) {
+                r = each;
+            }
+        }
+        Assert.isTrue(r.canChange);
+        Assert.areEqual(Date.today().addDays(60), r.expiresOn);
+        Assert.areEqual(2, r.reminderEvery);
+        Assert.isTrue(r.plan.startsWith('Link expires '), r.plan);
+        Assert.isTrue(r.plan.contains('Reminders every 2 days until the link expires'), r.plan);
+        Assert.isTrue(r.plan.contains('reminders are off in Signature Settings'), 'The job is off in tests: ' + r.plan);
+        List<String> t = texts(r);
+        Assert.isTrue(
+            String.join(t, ' | ').contains('expiry-changed: Link extended to '),
+            'Extending is a signal for sales: ' + String.join(t, ' | ')
+        );
+        Assert.isTrue(
+            t.contains('reminders-changed: Reminders every 2 days until the link expires by Card'),
+            String.join(t, ' | ')
+        );
+        for (DocGenSignatureStatusController.RequestStatus each : groups[0].requests) {
+            if (each.id == signed.Id) {
+                Assert.isFalse(each.canChange);
+                Assert.isNull(each.plan, 'No plan line once finished');
+            }
+        }
+    }
+
+    @IsTest
     static void smallHelpers() {
         Assert.areEqual(0, DocGenSignatureStatusController.getTimeline(null, null).size());
         Assert.areEqual('', DocGenSignatureStatusController.fmt(null));

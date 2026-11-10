@@ -1,4 +1,5 @@
 <template>
+    <!-- Modified by Dura Composites Ltd. -->
     <div class="slds-var-p-around_medium">
         <template if:true={isLoading}>
             <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
@@ -187,18 +188,56 @@
 
             <!-- Custom subject + message (#193) + signer verification (#verification) — single-template path only -->
             <template if:true={isSingleTemplate}>
+                <!-- Dura: link expiry and reminders, pre-filled from the template's defaults -->
                 <div class="slds-var-m-bottom_medium">
                     <lightning-input
-                        type="number"
-                        name="expirationDays"
-                        label="Link Expiration in Days (optional)"
-                        field-level-help="How many days the signing links stay valid for this request. Leave blank to use the org default from Portwood Signature Settings."
-                        placeholder="Org default"
-                        value={expirationDays}
-                        min="1"
-                        max="365"
-                        onchange={handleExpirationDaysChange}
+                        type="date"
+                        name="expiresOn"
+                        label="Link expires on"
+                        field-level-help="Signing links stop working at the end of this day. The template sets the default; you can extend it later from the Signature Status card."
+                        value={expiresOnValue}
+                        min={todayIso}
+                        max={maxDateIso}
+                        required
+                        onchange={handleExpiresOnChange}
                     ></lightning-input>
+                </div>
+                <div class="slds-var-m-bottom_medium">
+                    <lightning-combobox
+                        name="reminderMode"
+                        label="Reminders"
+                        options={reminderModeOptions}
+                        value={reminderModeValue}
+                        onchange={handleReminderModeChange}
+                    ></lightning-combobox>
+                    <template if:true={isReminderEvery}>
+                        <div class="slds-grid slds-gutters_x-small slds-var-m-top_x-small">
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input
+                                    type="number"
+                                    name="reminderEveryDays"
+                                    label="Every (days)"
+                                    value={reminderEveryValue}
+                                    min="1"
+                                    max="365"
+                                    required
+                                    onchange={handleReminderEveryChange}
+                                ></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input
+                                    type="date"
+                                    name="remindersUntil"
+                                    label="Until (optional)"
+                                    field-level-help="Leave blank to keep reminding until the link expires."
+                                    value={remindersUntilValue}
+                                    min={todayIso}
+                                    onchange={handleRemindersUntilChange}
+                                ></lightning-input>
+                            </div>
+                        </div>
+                    </template>
+                    <p class="slds-text-body_small slds-text-color_weak slds-var-m-top_xx-small">{reminderSummary}</p>
                 </div>
                 <div class="slds-var-m-bottom_medium">
                     <lightning-input

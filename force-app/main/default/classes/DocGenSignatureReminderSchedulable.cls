@@ -25,6 +25,10 @@ public with sharing class DocGenSignatureReminderSchedulable implements Schedula
         if (settings.Signature_Reminder_Enabled__c != true)
             return;
 
+        // Dura: requests with their own schedule (every N days, set on the template or at send)
+        // are reminded here, and left out of the org schedule below (DocGenSignatureReminderRules).
+        DocGenSignatureReminderRules.sendDueReminders();
+
         List<Integer> offsets = parseSchedule(settings);
         if (offsets.isEmpty())
             return;
@@ -87,6 +91,7 @@ public with sharing class DocGenSignatureReminderSchedulable implements Schedula
                 AND (Reminders_Sent__c = NULL
                 OR Reminders_Sent__c < :scheduleSize)
                 AND Signature_Request__r.Status__c NOT IN ('Signed', 'Cancelled', 'Declined')
+                AND Signature_Request__r.Reminder_Every_Days__c = NULL // Dura: no own schedule
             WITH SYSTEM_MODE
             LIMIT 200
         ]; // NOPMD ApexCRUDViolation - package-internal custom object; CRUD controlled by Portwood permission sets

@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 public with sharing class DocGenController { // NOPMD ExcessivePublicCount — controller requires public methods for AuraEnabled endpoints
     private static Id cachedTemplateId;
     private static Map<String, Object> cachedTemplateEnvelope;
@@ -2724,6 +2725,9 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                 'Hide_Signer_Decline__c',
                 'Attached_Documents__c',
                 'Attached_Document_Markup__c',
+                'Signature_Expiry_Days__c',
+                'Signature_Reminder_Every_Days__c',
+                'Signature_Reminder_For_Days__c',
                 'Signature_Type_Only__c',
                 'API_Name__c',
                 'Default_Email_Message__c'
@@ -2761,6 +2765,9 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                 Hide_Signer_Decline__c,
                 Attached_Documents__c,
                 Attached_Document_Markup__c,
+                Signature_Expiry_Days__c,
+                Signature_Reminder_Every_Days__c,
+                Signature_Reminder_For_Days__c,
                 Signature_Type_Only__c,
                 API_Name__c,
                 Default_Email_Message__c,
@@ -2815,6 +2822,9 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                 'Hide_Signer_Decline__c',
                 'Attached_Documents__c',
                 'Attached_Document_Markup__c',
+                'Signature_Expiry_Days__c',
+                'Signature_Reminder_Every_Days__c',
+                'Signature_Reminder_For_Days__c',
                 'Signature_Type_Only__c',
                 'API_Name__c',
                 'Default_Email_Message__c',
@@ -2853,6 +2863,9 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                 Hide_Signer_Decline__c,
                 Attached_Documents__c,
                 Attached_Document_Markup__c,
+                Signature_Expiry_Days__c,
+                Signature_Reminder_Every_Days__c,
+                Signature_Reminder_For_Days__c,
                 Signature_Type_Only__c,
                 API_Name__c,
                 Default_Email_Message__c,
@@ -3078,6 +3091,19 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                 String markupMode = (String) fields.get('Attached_Document_Markup__c');
                 template.Attached_Document_Markup__c = String.isBlank(markupMode) ? 'Off' : markupMode;
             }
+            // Dura: signing link expiry and reminder defaults (days; blank = org default)
+            if (fields.containsKey('Signature_Expiry_Days__c')) {
+                template.Signature_Expiry_Days__c = templateDays(fields.get('Signature_Expiry_Days__c'), 1);
+            }
+            if (fields.containsKey('Signature_Reminder_Every_Days__c')) {
+                template.Signature_Reminder_Every_Days__c = templateDays(
+                    fields.get('Signature_Reminder_Every_Days__c'),
+                    0
+                );
+            }
+            if (fields.containsKey('Signature_Reminder_For_Days__c')) {
+                template.Signature_Reminder_For_Days__c = templateDays(fields.get('Signature_Reminder_For_Days__c'), 1);
+            }
             // PHD-9 — stable developer key for Flow lookups. Blank means "leave
             // unchanged": Flows/buttons reference this key, and the create-wizard's
             // follow-up saves (which don't re-collect the API name) must never wipe
@@ -3163,6 +3189,9 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                     'Hide_Signer_Decline__c',
                     'Attached_Documents__c',
                     'Attached_Document_Markup__c',
+                    'Signature_Expiry_Days__c',
+                    'Signature_Reminder_Every_Days__c',
+                    'Signature_Reminder_For_Days__c',
                     'Signature_Type_Only__c',
                     'API_Name__c',
                     'Default_Email_Message__c',
@@ -8209,6 +8238,9 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                     'Hide_Signer_Decline__c',
                     'Attached_Documents__c',
                     'Attached_Document_Markup__c',
+                    'Signature_Expiry_Days__c',
+                    'Signature_Reminder_Every_Days__c',
+                    'Signature_Reminder_For_Days__c',
                     'Signature_Type_Only__c',
                     'Default_Email_Message__c',
                     'Form_Fields_Config__c'
@@ -8245,6 +8277,9 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                     Hide_Signer_Decline__c,
                     Attached_Documents__c,
                     Attached_Document_Markup__c,
+                    Signature_Expiry_Days__c,
+                    Signature_Reminder_Every_Days__c,
+                    Signature_Reminder_For_Days__c,
                     Signature_Type_Only__c,
                     Default_Email_Message__c,
                     Form_Fields_Config__c,
@@ -8312,6 +8347,9 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
             tmplData.put('Hide_Signer_Decline__c', tmpl.Hide_Signer_Decline__c);
             tmplData.put('Attached_Documents__c', tmpl.Attached_Documents__c);
             tmplData.put('Attached_Document_Markup__c', tmpl.Attached_Document_Markup__c);
+            tmplData.put('Signature_Expiry_Days__c', tmpl.Signature_Expiry_Days__c);
+            tmplData.put('Signature_Reminder_Every_Days__c', tmpl.Signature_Reminder_Every_Days__c);
+            tmplData.put('Signature_Reminder_For_Days__c', tmpl.Signature_Reminder_For_Days__c);
             tmplData.put('Signature_Type_Only__c', tmpl.Signature_Type_Only__c);
             tmplData.put('Default_Email_Message__c', tmpl.Default_Email_Message__c);
             tmplData.put('Form_Fields_Config__c', tmpl.Form_Fields_Config__c);
@@ -8545,6 +8583,10 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
             tmpl.Attached_Documents__c = String.isBlank(importedAttachedMode) ? 'Off' : importedAttachedMode;
             String importedMarkupMode = (String) tmplData.get('Attached_Document_Markup__c');
             tmpl.Attached_Document_Markup__c = String.isBlank(importedMarkupMode) ? 'Off' : importedMarkupMode;
+            // Dura: an older bundle without these keys leaves them blank (org defaults)
+            tmpl.Signature_Expiry_Days__c = templateDays(tmplData.get('Signature_Expiry_Days__c'), 1);
+            tmpl.Signature_Reminder_Every_Days__c = templateDays(tmplData.get('Signature_Reminder_Every_Days__c'), 0);
+            tmpl.Signature_Reminder_For_Days__c = templateDays(tmplData.get('Signature_Reminder_For_Days__c'), 1);
             tmpl.Signature_Type_Only__c = tmplData.get('Signature_Type_Only__c') == true;
             tmpl.Default_Email_Message__c = (String) tmplData.get('Default_Email_Message__c');
             tmpl.Form_Fields_Config__c = (String) tmplData.get('Form_Fields_Config__c');
@@ -8598,6 +8640,9 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                     'Hide_Signer_Decline__c',
                     'Attached_Documents__c',
                     'Attached_Document_Markup__c',
+                    'Signature_Expiry_Days__c',
+                    'Signature_Reminder_Every_Days__c',
+                    'Signature_Reminder_For_Days__c',
                     'Signature_Type_Only__c',
                     'Default_Email_Message__c',
                     'Form_Fields_Config__c',
@@ -9401,5 +9446,31 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
         } catch (Exception e) {
             throw DocGenService.ahe(e, 'Error deleting asset.');
         }
+    }
+
+    /**
+     * Dura: a template's day count from the editor or an import bundle. Blank, or anything that
+     * isn't a whole number from min to 365, is stored as blank (the org default applies).
+     */
+    @TestVisible
+    private static Decimal templateDays(Object value, Integer min) {
+        if (value == null) {
+            return null;
+        }
+        String text = String.valueOf(value).trim();
+        if (String.isBlank(text)) {
+            return null;
+        }
+        Decimal days;
+        try {
+            days = Decimal.valueOf(text);
+        } catch (TypeException e) {
+            return null;
+        }
+        if (days.scale() > 0 && days != days.round(System.RoundingMode.DOWN)) {
+            return null;
+        }
+        Integer whole = days.intValue();
+        return (whole < min || whole > 365) ? null : whole;
     }
 }

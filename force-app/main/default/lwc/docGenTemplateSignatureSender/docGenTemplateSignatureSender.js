@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import { LightningElement, api, wire, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -13,6 +14,7 @@ import getTemplateSignaturePlacements from '@salesforce/apex/DocGenSignatureSend
 import getDocumentPreviewPdfBase64 from '@salesforce/apex/DocGenSignatureSenderController.getDocumentPreviewPdfBase64';
 import resendSignatureRequest from '@salesforce/apex/DocGenSignatureSenderController.resendSignatureRequest';
 import cancelSignatureRequest from '@salesforce/apex/DocGenSignatureSenderController.cancelSignatureRequest';
+import getSendDefaults from '@salesforce/apex/DocGenSignatureReminderRules.getSendDefaults';
 
 let signerIdCounter = 0;
 let templateIdCounter = 0;
@@ -43,7 +45,15 @@ export default class DocGenTemplateSignatureSender extends NavigationMixin(Light
     // #verification — per-send overrides ('Inherit' falls back to template/org default)
     @track verificationOverride = 'Inherit';
     @track prefillOverride = 'Inherit';
-    @track expirationDays = null; // per-send signing-window override (blank = org default)
+    // Dura: link expiry date and reminder schedule. Until the sender changes them they follow the
+    // selected template's defaults (then the org's); see the schedule getters below.
+    @track expiresOn = null;
+    @track reminderMode = null;
+    @track reminderEveryDays = null;
+    @track remindersUntil = null;
+    _expiryTouched = false;
+    _remindersTouched = false;
+    @track sendDefaults = { expiryDays: 2, remindersOn: false, maxDays: 365 };
 
     // Signers
     @track signers = [];
@@ -89,12 +99,28 @@ export default class DocGenTemplateSignatureSender extends NavigationMixin(Light
                 // #208 — namespace-aware read: prefixed in subscriber orgs, bare in dev.
                 defaultMessage: t.Default_Email_Message__c || t.portwoodglobal__Default_Email_Message__c || '',
                 // #412 — Off (default) / Optional / Required; same namespace-aware read.
-                attachedDocuments: t.Attached_Documents__c || t.portwoodglobal__Attached_Documents__c || 'Off'
+                attachedDocuments: t.Attached_Documents__c || t.portwoodglobal__Attached_Documents__c || 'Off',
+                // Dura: expiry and reminder defaults (0 is a real value, so not ||).
+                expiryDays: this._templateNumber(t, 'Signature_Expiry_Days__c'),
+                remindEvery: this._templateNumber(t, 'Signature_Reminder_Every_Days__c'),
+                remindFor: this._templateNumber(t, 'Signature_Reminder_For_Days__c')
             }));
         } else if (error) {
             this.docGenTemplateOptions = [];
         }
         this._checkInitialLoad();
+    }
+
+    @wire(getSendDefaults)
+    wiredSendDefaults({ data }) {
+        if (data) {
+            this.sendDefaults = { ...this.sendDefaults, ...data };
+        }
+    }
+
+    _templateNumber(t, field) {
+        const v = t[field] !== undefined ? t[field] : t['portwoodglobal__' + field];
+        return v === undefined || v === null ? null : Number(v);
     }
 
     _wireCallsReturned = 0;
@@ -138,6 +164,7 @@ export default class DocGenTemplateSignatureSender extends NavigationMixin(Light
     get isGenerateDisabled() {
         if (this.selectedTemplates.length === 0 || this.signers.length === 0) return true;
         if (this.attachmentsRequired && !this.hasSelectedAttachments) return true; // #412
+        if (this.scheduleInvalid) return true; // Dura: expiry or reminder dates out of range
         return this.signers.some((s) => !s.signerName || !s.signerEmail || !s.roleName);
     }
 
@@ -409,8 +436,127 @@ export default class DocGenTemplateSignatureSender extends NavigationMixin(Light
         this.emailSubject = event.detail.value || '';
     }
 
-    handleExpirationDaysChange(event) {
-        this.expirationDays = event.detail.value;
+    // --- Dura: link expiry and reminders (single-template path) ---
+
+    get _scheduleTemplate() {
+        if (!this.isSingleTemplate) return null;
+        return this.docGenTemplateOptions.find((o) => o.value === this.selectedTemplates[0].templateId) || null;
+    }
+
+    _isoInDays(days) {
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        const pad = (n) => String(n).padStart(2, '0');
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    }
+
+    get todayIso() {
+        return this._isoInDays(0);
+    }
+
+    get maxDateIso() {
+        return this._isoInDays(this.sendDefaults.maxDays || 365);
+    }
+
+    get expiresOnValue() {
+        if (this._expiryTouched) return this.expiresOn;
+        const t = this._scheduleTemplate;
+        const days = t && t.expiryDays > 0 ? t.expiryDays : this.sendDefaults.expiryDays;
+        return this._isoInDays(days || 2);
+    }
+
+    get reminderModeValue() {
+        if (this._remindersTouched) return this.reminderMode;
+        const t = this._scheduleTemplate;
+        if (!t || t.remindEvery === null) return 'ORG';
+        return t.remindEvery > 0 ? 'EVERY' : 'NONE';
+    }
+
+    get reminderEveryValue() {
+        if (this._remindersTouched) return this.reminderEveryDays;
+        const t = this._scheduleTemplate;
+        return t && t.remindEvery > 0 ? t.remindEvery : 2;
+    }
+
+    get remindersUntilValue() {
+        if (this._remindersTouched) return this.remindersUntil;
+        const t = this._scheduleTemplate;
+        return t && t.remindEvery > 0 && t.remindFor > 0 ? this._isoInDays(t.remindFor) : null;
+    }
+
+    get isReminderEvery() {
+        return this.reminderModeValue === 'EVERY';
+    }
+
+    get reminderModeOptions() {
+        return [
+            { label: 'Every few days', value: 'EVERY' },
+            { label: 'Standard schedule (Signature Settings)', value: 'ORG' },
+            { label: 'No reminders', value: 'NONE' }
+        ];
+    }
+
+    get reminderSummary() {
+        const mode = this.reminderModeValue;
+        if (mode === 'NONE') return 'No reminders will be sent.';
+        if (!this.sendDefaults.remindersOn) {
+            return 'Reminders are switched off in Signature Settings, so none will be sent.';
+        }
+        if (mode === 'ORG') return 'Reminders follow the standard schedule in Signature Settings.';
+        const every = parseInt(this.reminderEveryValue, 10) || 1;
+        const until = this.remindersUntilValue;
+        return (
+            'Anyone who has not signed gets a reminder every ' +
+            (every === 1 ? 'day' : every + ' days') +
+            (until ? ' until ' + this._shortDate(until) + '.' : ' until the link expires.')
+        );
+    }
+
+    _shortDate(iso) {
+        const [y, m, d] = iso.split('-').map((n) => parseInt(n, 10));
+        return new Date(y, m - 1, d).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    }
+
+    _takeReminderValues() {
+        if (this._remindersTouched) return;
+        this.reminderMode = this.reminderModeValue;
+        this.reminderEveryDays = this.reminderEveryValue;
+        this.remindersUntil = this.remindersUntilValue;
+        this._remindersTouched = true;
+    }
+
+    handleExpiresOnChange(event) {
+        this.expiresOn = event.detail.value || null;
+        this._expiryTouched = true;
+    }
+
+    handleReminderModeChange(event) {
+        this._takeReminderValues();
+        this.reminderMode = event.detail.value;
+    }
+
+    handleReminderEveryChange(event) {
+        this._takeReminderValues();
+        this.reminderEveryDays = event.detail.value;
+    }
+
+    handleRemindersUntilChange(event) {
+        this._takeReminderValues();
+        this.remindersUntil = event.detail.value || null;
+    }
+
+    get scheduleInvalid() {
+        if (!this.isSingleTemplate) return false;
+        const today = this.todayIso;
+        const exp = this.expiresOnValue;
+        if (!exp || exp < today || exp > this.maxDateIso) return true;
+        if (this.isReminderEvery) {
+            const every = parseInt(this.reminderEveryValue, 10);
+            if (!(every >= 1 && every <= 365)) return true;
+            const until = this.remindersUntilValue;
+            if (until && until < today) return true;
+        }
+        return false;
     }
 
     // --- Template Selection ---
@@ -795,7 +941,11 @@ export default class DocGenTemplateSignatureSender extends NavigationMixin(Light
                     emailSubject: (this.emailSubject || '').trim() || null,
                     requireVerification: this.requireVerificationValue,
                     prefillSignerEmail: this.prefillValue,
-                    expirationDays: parseInt(this.expirationDays, 10) || null
+                    // Dura: what the sender sees is what is sent (template defaults pre-filled).
+                    expiresOn: this.expiresOnValue,
+                    reminderMode: this.reminderModeValue,
+                    reminderEveryDays: this.isReminderEvery ? parseInt(this.reminderEveryValue, 10) : null,
+                    remindersUntil: this.isReminderEvery ? this.remindersUntilValue || null : null
                 };
                 // #412 — existing record PDFs shown to the signer alongside the template.
                 if (this.orderedSelectedAttachments.length > 0) {

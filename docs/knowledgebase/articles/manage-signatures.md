@@ -26,6 +26,8 @@ An administrator sets the default in **Portwood → Signatures**. A send can ove
 
 Reminders use hour offsets such as `24, 72, 168`. They go to pending signers while the request remains valid, subject to the configured scheduled job and email setup.
 
+A template can set its own expiry and reminder schedule in days, which the sender sees and can change, and a sent request can be extended or have its reminders changed from the Signature Status card. See [Set link expiry and reminders](#signature-expiry-reminders).
+
 #### Signing in person
 
 Portwood Admin users can use **Sign In Person** when it is offered for a pending signer. Confirm the identity-check attestation only after doing that check. The bypass is recorded in the audit history.

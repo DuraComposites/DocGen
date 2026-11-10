@@ -1,4 +1,5 @@
 <template>
+    <!-- Modified by Dura Composites Ltd. -->
     <div class="admin-workspace" onannounce={handleA11yAnnounce}>
         <!-- Page-level ARIA live region. Children dispatch a bubbling
              CustomEvent('announce', {detail:{message:'…'}, composed:true}) and
@@ -3877,6 +3878,49 @@
                                             max-length="4000"
                                             field-level-help="Default text for the {Message} token in signature request emails sent from this template. Pre-filled for the sender; a message typed at send time always wins. Blank uses the generic default."
                                         ></lightning-textarea>
+                                        <!-- Dura: signing link expiry and reminder defaults -->
+                                        <lightning-input
+                                            type="number"
+                                            label="Link Expires After (Days)"
+                                            value={editTemplateExpiryDays}
+                                            min="1"
+                                            max="365"
+                                            placeholder="Org default"
+                                            onchange={handleExpiryDaysChange}
+                                            field-level-help="How long signing links from this template stay valid. The sender sees the date and can change it. Blank uses the org default from Signature Settings."
+                                            class="slds-var-m-top_medium"
+                                        ></lightning-input>
+                                        <div class="slds-grid slds-var-m-top_medium">
+                                            <div class="slds-size_1-of-2 slds-var-p-right_x-small">
+                                                <lightning-input
+                                                    type="number"
+                                                    label="Remind Every (Days)"
+                                                    value={editTemplateRemindEvery}
+                                                    min="0"
+                                                    max="365"
+                                                    placeholder="Org schedule"
+                                                    onchange={handleRemindEveryChange}
+                                                    field-level-help="Days between reminder emails to signers who haven't signed. 0 sends none. Blank follows the org reminder schedule. Reminders only go out while the reminder job is on in Signature Settings."
+                                                ></lightning-input>
+                                            </div>
+                                            <template if:true={showRemindFor}>
+                                                <div class="slds-size_1-of-2 slds-var-p-left_x-small">
+                                                    <lightning-input
+                                                        type="number"
+                                                        label="Keep Reminding For (Days)"
+                                                        value={editTemplateRemindFor}
+                                                        min="1"
+                                                        max="365"
+                                                        placeholder="Until expiry"
+                                                        onchange={handleRemindForChange}
+                                                        field-level-help="Stop reminding this many days after sending. Blank keeps reminding until the link expires."
+                                                    ></lightning-input>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <p class="slds-text-body_small slds-text-color_weak slds-var-m-top_x-small">
+                                            {templateScheduleSummary}
+                                        </p>
                                     </div>
                                 </div>
                             </div>

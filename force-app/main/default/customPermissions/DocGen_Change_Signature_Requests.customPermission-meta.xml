@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomPermission xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Dura Composites Ltd. (new file) -->
+    <description>Extend a sent signature request's link and change its reminders (Signature Status card).</description>
+    <label>Change Sent Signature Requests</label>
+</CustomPermission>

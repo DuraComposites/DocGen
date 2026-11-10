@@ -35,6 +35,87 @@
                                 <span class={r.pillClass}>{r.statusLabel}</span>
                             </div>
                             <p class="muted small">{r.signerNames} · {r.summary}</p>
+                            <template lwc:if={r.hasPlan}>
+                                <p class="muted small plan">
+                                    <span>{r.plan}</span>
+                                    <template lwc:if={r.canChange}>
+                                        <button class="link" data-id={r.id} onclick={handleStartExtend}>
+                                            {r.extendLabel}
+                                        </button>
+                                        <button class="link" data-id={r.id} onclick={handleStartReminders}>
+                                            Reminders
+                                        </button>
+                                    </template>
+                                </p>
+                            </template>
+
+                            <template lwc:if={r.isEditingExpiry}>
+                                <div class="editor">
+                                    <lightning-input
+                                        type="date"
+                                        label="Link expires on"
+                                        value={editExpiresOn}
+                                        min={todayIso}
+                                        max={maxDateIso}
+                                        onchange={handleEditExpiresOn}
+                                    ></lightning-input>
+                                    <p class="muted small">
+                                        Signers can use their link until the end of this day. The change goes on the
+                                        timeline with your name.
+                                    </p>
+                                    <div class="editor-actions">
+                                        <lightning-button label="Cancel" onclick={handleCancelEdit}></lightning-button>
+                                        <lightning-button
+                                            variant="brand"
+                                            label="Save"
+                                            data-id={r.id}
+                                            disabled={saving}
+                                            onclick={handleSaveExpiry}
+                                        ></lightning-button>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template lwc:if={r.isEditingReminders}>
+                                <div class="editor">
+                                    <lightning-combobox
+                                        label="Reminders"
+                                        options={reminderModeOptions}
+                                        value={editMode}
+                                        onchange={handleEditMode}
+                                    ></lightning-combobox>
+                                    <template lwc:if={editIsEvery}>
+                                        <div class="editor-row">
+                                            <lightning-input
+                                                type="number"
+                                                label="Every (days)"
+                                                min="1"
+                                                max="365"
+                                                value={editEvery}
+                                                onchange={handleEditEvery}
+                                            ></lightning-input>
+                                            <lightning-input
+                                                type="date"
+                                                label="Until (optional)"
+                                                min={todayIso}
+                                                value={editUntil}
+                                                field-level-help="Leave blank to keep reminding until the link expires."
+                                                onchange={handleEditUntil}
+                                            ></lightning-input>
+                                        </div>
+                                    </template>
+                                    <div class="editor-actions">
+                                        <lightning-button label="Cancel" onclick={handleCancelEdit}></lightning-button>
+                                        <lightning-button
+                                            variant="brand"
+                                            label="Save"
+                                            data-id={r.id}
+                                            disabled={saving}
+                                            onclick={handleSaveReminders}
+                                        ></lightning-button>
+                                    </div>
+                                </div>
+                            </template>
 
                             <button class="toggle" data-id={r.id} onclick={handleToggle} aria-expanded={r.expanded}>
                                 <lightning-icon icon-name={r.toggleIcon} size="xx-small"></lightning-icon>

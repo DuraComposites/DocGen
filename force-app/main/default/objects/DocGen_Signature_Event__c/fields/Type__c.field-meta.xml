@@ -32,6 +32,16 @@
                 <default>false</default>
                 <label>Expired link opened</label>
             </value>
+            <value>
+                <fullName>Expiry changed</fullName>
+                <default>false</default>
+                <label>Expiry changed</label>
+            </value>
+            <value>
+                <fullName>Reminders changed</fullName>
+                <default>false</default>
+                <label>Reminders changed</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>
