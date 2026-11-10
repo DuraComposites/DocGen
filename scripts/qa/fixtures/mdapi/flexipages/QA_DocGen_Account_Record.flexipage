@@ -27,6 +27,13 @@
                 <identifier>qaDocGenSignatureSender</identifier>
             </componentInstance>
         </itemInstances>
+        <!-- Modified by Dura Composites Ltd.: the Signature Status card. -->
+        <itemInstances>
+            <componentInstance>
+                <componentName>portwoodglobal:docGenSignatureStatus</componentName>
+                <identifier>qaDocGenSignatureStatus</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>main</name>
         <type>Region</type>
     </flexiPageRegions>

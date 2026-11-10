@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Schedulable class that sends reminder emails to pending signers.
  * Runs on a schedule (e.g., hourly) and checks each pending signer against the
@@ -147,6 +148,8 @@ public with sharing class DocGenSignatureReminderSchedulable implements Schedula
             );
             /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
             Database.update(signersToUpdate, false, AccessLevel.SYSTEM_MODE);
+            // Dura: one timeline entry per reminder (DocGenSignatureEvents); automatic, so no actor.
+            DocGenSignatureEvents.logForSigners(null, signersToUpdate, DocGenSignatureEvents.REMINDER_SENT, false);
         }
     }
 

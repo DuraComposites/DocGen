@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 public without sharing class DocGenSignatureController {
     private static Boolean preparedPdfSave = false;
     private static final String INCOMPLETE_SIGNATURE_FIELDS_MESSAGE =
@@ -430,6 +431,8 @@ public without sharing class DocGenSignatureController {
             ) {
                 applySigningBrand(res, signers[0].Signature_Request__r.Id);
                 res.errorMessage = 'This signature link has expired. Please request a new one.';
+                // Dura: the signer came back after the link lapsed (DocGenSignatureEvents).
+                DocGenSignatureEvents.logExpiredOpen(signers[0].Signature_Request__r.Id, signers[0].Id);
                 return res;
             }
             return validateSignerToken(signers[0]);
@@ -923,6 +926,17 @@ public without sharing class DocGenSignatureController {
             // #412 M2 — Off / Decline only / Approve or decline
             'markup' => DocGenSignatureAttachments.markupMode(gate.signer)
         };
+    }
+
+    /**
+     * Dura: the signing page calls this once the document is on screen, to record the signer's
+     * visit with the browser's user agent (DocGenSignerVisits). The page must send it: Visualforce
+     * remoting calls have no request headers to read. Token-bound like every guest call; records
+     * nothing before the email code has been entered. Never throws.
+     */
+    @RemoteAction
+    public static void recordVisit(String token, String userAgent) {
+        DocGenSignerVisits.recordForToken(token, userAgent);
     }
 
     /**

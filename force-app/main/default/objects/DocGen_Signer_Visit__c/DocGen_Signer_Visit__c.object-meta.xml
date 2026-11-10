@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Dura Composites Ltd. (new file) -->
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description
+    >One row per visit a signer makes to their signing link: when it started, when it was last active, how many page loads it covered, and the kind of device. Page loads less than 30 minutes apart on the same kind of device are one visit. Written by the signing page; read by the Signature Status card.</description>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>false</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <label>Signer Visit</label>
+    <nameField>
+        <displayFormat>SV-{000000}</displayFormat>
+        <label>Visit</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Signer Visits</pluralLabel>
+    <sharingModel>ControlledByParent</sharingModel>
+    <visibility>Public</visibility>
+</CustomObject>

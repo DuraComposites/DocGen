@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Dura Composites Ltd. (new file) -->
+    <fullName>First_Visited_At__c</fullName>
+    <description>When the signer first opened their signing link. Automated visits are left out.</description>
+    <inlineHelpText>When the signer first opened their signing link.</inlineHelpText>
+    <label>First Opened</label>
+    <summarizedField>DocGen_Signer_Visit__c.Visited_At__c</summarizedField>
+    <summaryFilterItems>
+        <field>DocGen_Signer_Visit__c.Device__c</field>
+        <operation>notEqual</operation>
+        <value>Automated</value>
+    </summaryFilterItems>
+    <summaryForeignKey>DocGen_Signer_Visit__c.Signer__c</summaryForeignKey>
+    <summaryOperation>min</summaryOperation>
+    <trackTrending>false</trackTrending>
+    <type>Summary</type>
+</CustomField>

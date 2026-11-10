@@ -24,11 +24,18 @@ if (cons.isEmpty()) {
 }
 
 // --- 2. Three sample drawings (A3 landscape PDFs), made once ---
+// Matched by exact title: a signer's marked-up copy ("DEMO-100 ... - markup - ...") lands on
+// the same account and must not be attached to the next request as a fourth drawing.
+List<String> drawingTitles = new List<String>{
+    'DEMO-100 General arrangement',
+    'DEMO-101 Section A-A',
+    'DEMO-102 Fixing details'
+};
 List<String> drawingIds = new List<String>();
 for (ContentDocumentLink l : [
     SELECT ContentDocument.LatestPublishedVersionId
     FROM ContentDocumentLink
-    WHERE LinkedEntityId = :acct.Id AND ContentDocument.Title LIKE 'DEMO-1%'
+    WHERE LinkedEntityId = :acct.Id AND ContentDocument.Title IN :drawingTitles
     ORDER BY ContentDocument.Title
 ]) {
     drawingIds.add(l.ContentDocument.LatestPublishedVersionId);

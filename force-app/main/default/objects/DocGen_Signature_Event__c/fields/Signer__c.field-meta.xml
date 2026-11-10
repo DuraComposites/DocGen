@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Dura Composites Ltd. (new file) -->
+    <fullName>Signer__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>The signer it concerns. Blank for whole-request events such as a revoke.</description>
+    <label>Signer</label>
+    <referenceTo>DocGen_Signer__c</referenceTo>
+    <relationshipLabel>Signature Events</relationshipLabel>
+    <relationshipName>Signature_Events</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Dura Composites Ltd. (new file) -->
+    <fullName>Actor__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Who did it, for a resend or revoke. Blank for automatic or signer events.</description>
+    <label>By</label>
+    <referenceTo>User</referenceTo>
+    <relationshipName>DocGen_Signature_Events</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

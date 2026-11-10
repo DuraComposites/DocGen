@@ -1,0 +1,88 @@
+<!-- Dura Composites Ltd. (new file) -->
+<template>
+    <lightning-card title={cardTitle} icon-name="standard:contract">
+        <lightning-button-icon
+            slot="actions"
+            icon-name="utility:refresh"
+            alternative-text="Refresh"
+            title="Refresh"
+            onclick={handleRefresh}
+        ></lightning-button-icon>
+
+        <div class="body">
+            <template lwc:if={loading}>
+                <div class="spinner-holder">
+                    <lightning-spinner alternative-text="Loading signature requests" size="small"></lightning-spinner>
+                </div>
+            </template>
+            <template lwc:if={error}>
+                <p class="slds-text-color_error">{error}</p>
+            </template>
+            <template lwc:if={isEmpty}>
+                <p class="muted">No signature requests yet.</p>
+            </template>
+
+            <template for:each={groups} for:item="g">
+                <section key={g.key} class="group">
+                    <template lwc:if={g.showHeader}>
+                        <a class="group-heading" data-id={g.recordId} onclick={handleOpenRecord}>{g.heading}</a>
+                    </template>
+
+                    <template for:each={g.requests} for:item="r">
+                        <article key={r.key} class="request">
+                            <div class="request-head">
+                                <a class="title" data-id={r.id} onclick={handleOpenRecord}>{r.title}</a>
+                                <span class={r.pillClass}>{r.statusLabel}</span>
+                            </div>
+                            <p class="muted small">{r.signerNames} · {r.summary}</p>
+
+                            <button class="toggle" data-id={r.id} onclick={handleToggle} aria-expanded={r.expanded}>
+                                <lightning-icon icon-name={r.toggleIcon} size="xx-small"></lightning-icon>
+                                <span>{r.toggleLabel}</span>
+                            </button>
+
+                            <template lwc:if={r.expanded}>
+                                <ol class="timeline">
+                                    <template for:each={r.items} for:item="t">
+                                        <li key={t.key} class="event">
+                                            <span class={t.dotClass}></span>
+                                            <template lwc:if={t.hasTime}>
+                                                <lightning-formatted-date-time
+                                                    class="when"
+                                                    value={t.at}
+                                                    weekday="short"
+                                                    day="numeric"
+                                                    month="short"
+                                                    hour="2-digit"
+                                                    minute="2-digit"
+                                                ></lightning-formatted-date-time>
+                                            </template>
+                                            <span class={t.textClass}>{t.text}</span>
+                                        </li>
+                                    </template>
+                                </ol>
+                                <template lwc:if={r.hasDrawings}>
+                                    <template for:each={r.drawingLines} for:item="line">
+                                        <p key={line} class="small drawing">
+                                            <lightning-icon icon-name="utility:file" size="xx-small"></lightning-icon>
+                                            <span>{line}</span>
+                                        </p>
+                                    </template>
+                                </template>
+                                <template lwc:if={r.hasSignedFile}>
+                                    <lightning-button
+                                        label="Signed PDF"
+                                        icon-name="doctype:pdf"
+                                        variant="base"
+                                        data-id={r.signedFileId}
+                                        onclick={handleOpenSignedFile}
+                                    ></lightning-button>
+                                </template>
+                            </template>
+                        </article>
+                    </template>
+                </section>
+            </template>
+        </div>
+    </lightning-card>
+</template>

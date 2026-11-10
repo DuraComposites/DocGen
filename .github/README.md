@@ -10,9 +10,12 @@ We use DocGen in our own Salesforce org. This fork holds the features we need th
 
 The list of what this fork changes. Every pull request that changes behaviour adds a row.
 
-| Change                                       | Pull request |
-| -------------------------------------------- | ------------ |
-| _None yet. The first changes are in review._ |              |
+| Change                                                                                                                                                | Pull request                                          |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Signing page renders PDFs at the device's resolution and stays sharp when zoomed                                                                      | [#2](https://github.com/DuraComposites/DocGen/pull/2) |
+| Drawing approval: attach PDFs from the record to a signature request; signers must open and confirm them; an approval register in the signed PDF      | [#3](https://github.com/DuraComposites/DocGen/pull/3) |
+| Drawing markup: signers mark up attached documents; markups saved to the record; "approved with comments"                                             | [#4](https://github.com/DuraComposites/DocGen/pull/4) |
+| Signature Status card: a timeline per request (sent, opened, reminders, resends, revokes, expiry, signed or declined), grouped across related records | [#8](https://github.com/DuraComposites/DocGen/pull/8) |
 
 ## Install
 

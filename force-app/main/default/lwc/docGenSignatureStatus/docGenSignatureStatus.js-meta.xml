@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Dura Composites Ltd. (new file) -->
+    <apiVersion>66.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Signature Status</masterLabel>
+    <description>Each signature request on this record as a timeline: sent, opened, reminders, signed.</description>
+    <targets>
+        <target>lightning__RecordPage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage">
+            <property
+                name="relatedRecords"
+                type="String"
+                label="Also show requests on related records"
+                description="Child object and its lookup to this record, e.g. SBQQ__Quote__c.SBQQ__Opportunity2__c on an Opportunity page. Separate several with commas. Leave blank for this record only."
+            />
+            <supportedFormFactors>
+                <supportedFormFactor type="Large" />
+                <supportedFormFactor type="Small" />
+            </supportedFormFactors>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

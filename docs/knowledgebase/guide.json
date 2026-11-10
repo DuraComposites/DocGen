@@ -834,6 +834,27 @@
             }
         },
         {
+            "slug": "signature-status",
+            "title": "See each request as a timeline",
+            "group": "sign",
+            "audience": "Administrators and senders",
+            "minutes": 5,
+            "summary": "Add the Signature Status card: sent, opened, reminders, resends, revokes and how each request ended, also grouped across related records.",
+            "sources": [
+                "force-app/main/default/lwc/docGenSignatureStatus",
+                "force-app/main/default/classes/DocGenSignatureStatusController.cls",
+                "force-app/main/default/classes/DocGenSignerVisits.cls",
+                "force-app/main/default/classes/DocGenSignatureEvents.cls"
+            ],
+            "related": ["manage-signatures", "sign-attached-documents", "setup-signatures"],
+            "aliases": [],
+            "review": {
+                "version": "3.63.0",
+                "date": "2026-11-08",
+                "method": "org-and-source"
+            }
+        },
+        {
             "slug": "setup-signatures",
             "title": "Set up external signing",
             "group": "sign",
