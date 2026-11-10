@@ -7,7 +7,7 @@ description: Constraints that only bite in a real managed-package install of Doc
 
 # Managed-package constraints
 
-DocGen ships as **Managed 2GP**, namespace `duradocgen`. A large class of bugs
+DocGen ships as **Managed 2GP**, namespace `duracomp`. A large class of bugs
 exists only in a real subscriber install and **cannot be reproduced in a no-namespace
 scratch org**. If something works in dev and fails in an install, start here.
 
@@ -36,7 +36,7 @@ scratch org** — a no-namespace staging org cannot show you the failure.
 ## API names are frozen forever
 
 Everything shipped is immutable: `DocGen_Template__c`, `DocGenService`, `DocGen_Admin`,
-the `duradocgen` namespace, the `Canvas` picklist value. Display names (labels,
+the `duracomp` namespace, the `Canvas` picklist value. Display names (labels,
 descriptions, user-visible strings) can change; API names cannot.
 
 Two scheduled job names deliberately keep their old strings because they're matched by
@@ -50,7 +50,7 @@ feature — the workaround is inert stubs.
 
 In a subscriber org, SObject field keys come back **namespace-prefixed**:
 
-- `row.Field__c` is `undefined` in a shipped package — it's `row.duradocgen__Field__c`.
+- `row.Field__c` is `undefined` in a shipped package — it's `row.duracomp__Field__c`.
   Use `@salesforce/schema` imports or a normalizing mapper in LWC.
 - `getPopulatedFieldsAsMap()` keys are prefixed too. Prefer direct field access.
 

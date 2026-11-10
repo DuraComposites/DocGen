@@ -15,7 +15,7 @@ Use these references when your task needs precise syntax or custom code. The beg
 
 #### Use the managed-package namespace
 
-In Apex outside the package, exported class references use the `duradocgen` namespace. Salesforce object and field API names use `duradocgen__`.
+In Apex outside the package, exported class references use the `duracomp` namespace. Salesforce object and field API names use `duracomp__`.
 
 Prefer a template's stable API Name where an action supports it. Record IDs are specific to an org. Some actions still require a Template ID; check that action's inputs rather than assuming all actions accept the same key.
 

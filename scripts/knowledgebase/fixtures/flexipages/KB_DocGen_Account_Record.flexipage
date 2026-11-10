@@ -18,13 +18,13 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>duradocgen:docGenRunner</componentName>
+                <componentName>duracomp:docGenRunner</componentName>
                 <identifier>qaDocGenRunner</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
             <componentInstance>
-                <componentName>duradocgen:docGenSignatureSender</componentName>
+                <componentName>duracomp:docGenSignatureSender</componentName>
                 <identifier>qaDocGenSignatureSender</identifier>
             </componentInstance>
         </itemInstances>

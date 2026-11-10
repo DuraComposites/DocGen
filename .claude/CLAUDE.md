@@ -21,7 +21,7 @@ This checkout is **DuraComposites/DocGen**, Dura Composites' fork of Portwood. T
 - `UserGuide.md` is generated from `docs/knowledgebase/` (articles + `guide.json`) by `npm run guide:build`. Never edit it by hand; CI runs `npm run guide:check`.
 - The repository is public. Never commit customer data, real drawings, org IDs, usernames or credentials.
 - The product is **DocGen**. Nothing this fork ships may say Portwood or use Portwood's logo, links or support addresses. After merging any Portwood code (a release or a fix), run `node scripts/dura/rebrand.mjs`, then fix the links it lists. Portwood's name stays only in the licence, attribution, Portwood's own history and these fork docs.
-- Packaging: the namespace will be `duradocgen` (chosen 2026-11-09, not yet registered or linked to the `prod` Dev Hub). `sfdx-project.json` still names Portwood's package. **Don't run `sf package version create`** until the packaging work sets this up.
+- Packaging: the namespace is `duracomp`, registered 2026-11-09 in a Developer Edition org. It is Dura's shared namespace, so other Dura packages can join it later; DocGen's component names are taken within it. It is not yet linked to the `prod` Dev Hub. `sfdx-project.json` still names Portwood's package. **Don't run `sf package version create`** until the packaging work sets this up.
 
 ## Windows
 

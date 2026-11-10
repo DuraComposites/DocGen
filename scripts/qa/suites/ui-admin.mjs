@@ -39,8 +39,8 @@ import { launch, login, openTab, inPage, HIT_TEST } from '../lib/browser.mjs';
 import { runAnonymous, debugLines } from '../lib/sf.mjs';
 import { check, skip, suiteResult, SEVERITY } from '../lib/report.mjs';
 
-const APP = 'duradocgen__DocGen_Template_Manager';
-const HUB = 'duradocgen__DocGen_Command_Hub';
+const APP = 'duracomp__DocGen_Template_Manager';
+const HUB = 'duracomp__DocGen_Command_Hub';
 const PREFIX = 'QAUI-';
 
 const msg = (e) => String((e && e.message) || e).slice(0, 200);
@@ -348,7 +348,7 @@ async function awaitToast(page, re, timeout = 9000) {
 /* ================================================================== *
  * Org-side probes — namespace-agnostic
  * ================================================================== *
- * docgen-verify is a NAMESPACED install (duradocgen__DocGen_Template__c);
+ * docgen-verify is a NAMESPACED install (duracomp__DocGen_Template__c);
  * a source-deployed scratch org is not. Every probe discovers the real object
  * name and namespace prefix at runtime so the suite works against either.
  */

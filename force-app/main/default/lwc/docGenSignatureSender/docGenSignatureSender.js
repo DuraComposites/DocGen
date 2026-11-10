@@ -112,7 +112,7 @@ export default class DocGenSignatureSender extends NavigationMixin(LightningElem
                 }));
             this.drafts = (context.drafts || []).map((draft) => ({
                 id: draft.Id,
-                title: draft.Document_Title_Format__c || draft.duradocgen__Document_Title_Format__c || draft.Name
+                title: draft.Document_Title_Format__c || draft.duracomp__Document_Title_Format__c || draft.Name
             }));
             this.error = null;
         } catch (err) {

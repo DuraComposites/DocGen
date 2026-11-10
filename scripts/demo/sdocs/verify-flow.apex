@@ -46,43 +46,43 @@ if (after.Last_Signature_Request_Id__c == null) {
     System.debug('FLOW-TEST FAIL — no signature request id stamped on the project');
 } else {
     Id reqId = (Id) after.Last_Signature_Request_Id__c;
-    for (duradocgen__DocGen_Signature_Request__c r : [
-        SELECT Id, Name, duradocgen__Status__c, duradocgen__Related_Record_Id__c
-        FROM duradocgen__DocGen_Signature_Request__c
+    for (duracomp__DocGen_Signature_Request__c r : [
+        SELECT Id, Name, duracomp__Status__c, duracomp__Related_Record_Id__c
+        FROM duracomp__DocGen_Signature_Request__c
         WHERE Id = :reqId
     ]) {
         System.debug(
             'FLOW-TEST REQUEST ' +
                 r.Name +
                 ' status=' +
-                r.duradocgen__Status__c +
+                r.duracomp__Status__c +
                 ' related=' +
-                r.duradocgen__Related_Record_Id__c
+                r.duracomp__Related_Record_Id__c
         );
     }
-    for (duradocgen__DocGen_Signer__c s : [
+    for (duracomp__DocGen_Signer__c s : [
         SELECT
             Id,
-            duradocgen__Signer_Name__c,
-            duradocgen__Signer_Email__c,
-            duradocgen__Role_Name__c,
-            duradocgen__Status__c,
-            duradocgen__Secure_Token__c
-        FROM duradocgen__DocGen_Signer__c
-        WHERE duradocgen__Signature_Request__c = :reqId
+            duracomp__Signer_Name__c,
+            duracomp__Signer_Email__c,
+            duracomp__Role_Name__c,
+            duracomp__Status__c,
+            duracomp__Secure_Token__c
+        FROM duracomp__DocGen_Signer__c
+        WHERE duracomp__Signature_Request__c = :reqId
     ]) {
         System.debug(
             'FLOW-TEST SIGNER ' +
-                s.duradocgen__Signer_Name__c +
+                s.duracomp__Signer_Name__c +
                 ' <' +
-                s.duradocgen__Signer_Email__c +
+                s.duracomp__Signer_Email__c +
                 '>' +
                 ' role=' +
-                s.duradocgen__Role_Name__c +
+                s.duracomp__Role_Name__c +
                 ' status=' +
-                s.duradocgen__Status__c +
+                s.duracomp__Status__c +
                 ' token=' +
-                (String.isBlank(s.duradocgen__Secure_Token__c) ? 'MISSING' : 'present')
+                (String.isBlank(s.duracomp__Secure_Token__c) ? 'MISSING' : 'present')
         );
     }
     // The generated document should be linked to the project, not floating.

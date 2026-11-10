@@ -164,7 +164,7 @@
         <label>DocGen — Create Signature Request</label>
         <locationX>176</locationX>
         <locationY>407</locationY>
-        <actionName>duradocgen__DocGenSignatureFlowAction</actionName>
+        <actionName>duracomp__DocGenSignatureFlowAction</actionName>
         <actionType>apex</actionType>
         <connector>
             <targetReference>Was_It_Created</targetReference>
@@ -279,7 +279,7 @@
 
     <variables>
         <name>clientSigner</name>
-        <apexClass>duradocgen__DocGenSigner</apexClass>
+        <apexClass>duracomp__DocGenSigner</apexClass>
         <dataType>Apex</dataType>
         <isCollection>false</isCollection>
         <isInput>false</isInput>
@@ -287,7 +287,7 @@
     </variables>
     <variables>
         <name>signerList</name>
-        <apexClass>duradocgen__DocGenSigner</apexClass>
+        <apexClass>duracomp__DocGenSigner</apexClass>
         <dataType>Apex</dataType>
         <isCollection>true</isCollection>
         <isInput>false</isInput>

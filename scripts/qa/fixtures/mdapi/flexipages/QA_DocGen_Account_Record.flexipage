@@ -17,20 +17,20 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>duradocgen:docGenRunner</componentName>
+                <componentName>duracomp:docGenRunner</componentName>
                 <identifier>qaDocGenRunner</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
             <componentInstance>
-                <componentName>duradocgen:docGenSignatureSender</componentName>
+                <componentName>duracomp:docGenSignatureSender</componentName>
                 <identifier>qaDocGenSignatureSender</identifier>
             </componentInstance>
         </itemInstances>
         <!-- Modified by Dura Composites Ltd.: the Signature Status card. -->
         <itemInstances>
             <componentInstance>
-                <componentName>duradocgen:docGenSignatureStatus</componentName>
+                <componentName>duracomp:docGenSignatureStatus</componentName>
                 <identifier>qaDocGenSignatureStatus</identifier>
             </componentInstance>
         </itemInstances>

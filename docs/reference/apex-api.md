@@ -4,13 +4,13 @@
 
 This advanced reference accompanies the [task-based knowledgebase](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md). Retained from the existing guide and reviewed against the 3.60.0 source. Use the task articles for current installation and user workflows.
 
-Call DocGen from an appropriate Apex or Flow transaction. Rendering can have transaction constraints; verify the actual entry point and use an asynchronous boundary when required. **`DocGenService` is the `global`, subscriber-callable API** — prefix as `duradocgen.DocGenService` from your own code. The controller classes referenced later in this chapter (`DocGenController`, `DocGenBulkController`) are the package's own UI endpoints and are **not callable from subscriber code** — they're documented for reference; automate through `DocGenService` or the Flow actions instead.
+Call DocGen from an appropriate Apex or Flow transaction. Rendering can have transaction constraints; verify the actual entry point and use an asynchronous boundary when required. **`DocGenService` is the `global`, subscriber-callable API** — prefix as `duracomp.DocGenService` from your own code. The controller classes referenced later in this chapter (`DocGenController`, `DocGenBulkController`) are the package's own UI endpoints and are **not callable from subscriber code** — they're documented for reference; automate through `DocGenService` or the Flow actions instead.
 
 > The signatures below describe the current exported entry points. Verify the installed version and the source contract when adding an integration.
 
 ### 12.1 `DocGenService` — synchronous generation
 
-Primary entry point from Apex. Call from a supported rendering transaction. From a trigger or a transaction that has already performed DML, enqueue work into a fresh transaction rather than rendering synchronously. All methods listed below are `global` in the managed namespace `duradocgen` — call them directly from subscriber Apex.
+Primary entry point from Apex. Call from a supported rendering transaction. From a trigger or a transaction that has already performed DML, enqueue work into a fresh transaction rather than rendering synchronously. All methods listed below are `global` in the managed namespace `duracomp` — call them directly from subscriber Apex.
 
 | Method                                                                                                                   | Returns                                | Purpose                                                                                                                                                                                                                                  |
 | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -23,26 +23,26 @@ Primary entry point from Apex. Call from a supported rendering transaction. From
 
 ```apex
 // Example: render in a fresh supported worker transaction after approval
-Id contentDocId = duradocgen.DocGenService.generateDocument(
+Id contentDocId = duracomp.DocGenService.generateDocument(
     'a0zXXXXXXXXXXXXX',   // template ID
     accountId,            // record ID
     'PDF'                 // force PDF regardless of template setting
 );
 
 // Example: invoice generation referencing a Custom Label for the template Id
-Id invoicePdf = duradocgen.DocGenService.generateDocument(
+Id invoicePdf = duracomp.DocGenService.generateDocument(
     System.Label.Invoice_Document_Template_Id,
     invRecordId
 );
 
 // Example: render a PDF in-memory and email it without ever creating a File
-Map<String, Object> result = duradocgen.DocGenService.generatePdfBlob(templateId, oppId);
+Map<String, Object> result = duracomp.DocGenService.generatePdfBlob(templateId, oppId);
 Blob pdf = (Blob) result.get('blob');
 String title = (String) result.get('title');
 // ...attach to a Messaging.SingleEmailMessage, POST to an external system, etc.
 ```
 
-> **Catching exceptions.** All API methods throw `duradocgen.DocGenException` on validation failures (locked output format, missing template, PowerPoint→PDF, null `dataMap`, etc.). Subscriber code can catch by name: `catch (duradocgen.DocGenException e) { ... }`.
+> **Catching exceptions.** All API methods throw `duracomp.DocGenException` on validation failures (locked output format, missing template, PowerPoint→PDF, null `dataMap`, etc.). Subscriber code can catch by name: `catch (duracomp.DocGenException e) { ... }`.
 
 > **Sharing & FLS.** The standard data retriever executes its Salesforce queries in user mode, enforcing the running user's record and field access. The `…FromData` overloads accept a caller-supplied data map and bypass that retrieval boundary: caller code is responsible for enforcing access on the values it supplies. A custom provider must also enforce its own access rules.
 
@@ -109,7 +109,7 @@ Example:
 
 ```apex
 /** Subscriber-side example. Deploy to your org after installing DocGen. */
-global with sharing class KBAccountProvider implements duradocgen.DocGenDataProvider {
+global with sharing class KBAccountProvider implements duracomp.DocGenDataProvider {
     global Map<String, Object> getData(Id recordId) {
         Account account = [
             SELECT Name, Industry, Phone
@@ -155,9 +155,9 @@ global with sharing class KBAccountProvider implements duradocgen.DocGenDataProv
 
 ### 12.6 Namespace prefix
 
-The package installs in the `duradocgen` namespace. From subscriber code:
+The package installs in the `duracomp` namespace. From subscriber code:
 
-- **Apex**: prefix — `duradocgen.DocGenService.generateDocument(...)`
+- **Apex**: prefix — `duracomp.DocGenService.generateDocument(...)`
 - **LWC**: call your own Apex wrapper around an exported global service or use the packaged components; package-internal controllers are not a supported subscriber API.
 - **Flow**: actions appear in the palette with the package namespace label
 - **Merge tags in templates**: use each field's exact API name and relationship path, including its namespace when the field has one. Copy tags from the query builder.

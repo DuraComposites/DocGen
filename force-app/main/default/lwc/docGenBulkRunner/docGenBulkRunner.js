@@ -382,7 +382,7 @@ export default class DocGenBulkRunner extends NavigationMixin(LightningElement) 
         return getSavedQueries({ templateId: this.selectedTemplateId })
             .then((data) => {
                 // Normalize to namespace-free keys — raw SObject keys are
-                // duradocgen__-prefixed in subscriber orgs, so reading
+                // duracomp__-prefixed in subscriber orgs, so reading
                 // q.Query_Condition__c directly only works unpackaged.
                 this.savedQueries = (data || []).map((q) => ({
                     Id: q.Id,

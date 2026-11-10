@@ -100,14 +100,14 @@ function apexLiteral(s) {
  * A subscriber org with the managed package INSTALLED has no namespace of its own,
  * so that field comes back empty and the installer generated bare
  * `DocGen_Template__c` references — which compile-fail with "Invalid type" against
- * an org where the object is really `duradocgen__DocGen_Template__c`.
+ * an org where the object is really `duracomp__DocGen_Template__c`.
  *
  * The two cases are genuinely different orgs, and neither is inferable from org
  * metadata: a --no-namespace scratch org (source-deployed, bare names) and a real
  * install (namespaced). So probe for the object instead of predicting it.
  */
 async function detectNamespace(org) {
-    for (const ns of ['duradocgen__', '']) {
+    for (const ns of ['duracomp__', '']) {
         const { stdout } = await run('curl', [
             '-sS',
             '-o',
@@ -140,10 +140,10 @@ async function main() {
 
     const org = await orgInfo(ORG);
     // DETECTED, not read from the manifest. The manifest hardcodes
-    // "duradocgen__" because it was written for a sandbox with the managed
+    // "duracomp__" because it was written for a sandbox with the managed
     // package installed. Pointed at a --no-namespace scratch org — where the
     // objects are source-deployed under BARE names — every generated Apex
-    // statement then references duradocgen__DocGen_Template__c, which does
+    // statement then references duracomp__DocGen_Template__c, which does
     // not exist there. The installer reported "Creating template records ..." and
     // created ZERO, with the per-template errors scrolling past in a log nobody
     // reads. The org itself is the authority on its own namespace.
@@ -154,7 +154,7 @@ async function main() {
         ns = await detectNamespace(org);
         if (ns === null) {
             console.error(
-                `\nERROR: ${ORG} has no DocGen_Template__c under either "duradocgen__" or the ` +
+                `\nERROR: ${ORG} has no DocGen_Template__c under either "duracomp__" or the ` +
                     `default namespace. DocGen is not installed (or not deployed) in this org. ` +
                     `Install the package or deploy force-app first, then re-run.`
             );

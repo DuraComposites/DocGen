@@ -1283,7 +1283,7 @@ public with sharing class DocGenHtmlRenderer {
 
     /**
      * Namespaced static resource URLs need the package namespace prefixed
-     * (`duradocgen__DocGenPdfGlyphs`) when this code is running inside an
+     * (`duracomp__DocGenPdfGlyphs`) when this code is running inside an
      * installed managed package — a bare `/resource/DocGenPdfGlyphs/...` only
      * resolves in an unnamespaced/unpackaged org. Queries the StaticResource
      * record's own NamespacePrefix directly rather than relying on any Apex

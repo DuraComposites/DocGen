@@ -17,13 +17,13 @@ See the generated [global declarations](#apex-surface) for every published DTO f
 #### Generate through a request object
 
 ```apex
-duradocgen.DocGenFlowAction.Request input = new duradocgen.DocGenFlowAction.Request();
+duracomp.DocGenFlowAction.Request input = new duracomp.DocGenFlowAction.Request();
 input.templateApiName = 'KB_Account_Brief';
 input.recordId = accountId;
 input.saveToRecord = true;
-List<duradocgen.DocGenFlowAction.Response> results =
-    duradocgen.DocGenFlowAction.generateDocument(
-        new List<duradocgen.DocGenFlowAction.Request>{input});
+List<duracomp.DocGenFlowAction.Response> results =
+    duracomp.DocGenFlowAction.generateDocument(
+        new List<duracomp.DocGenFlowAction.Request>{input});
 if (!results[0].success) {
     System.debug(LoggingLevel.ERROR, results[0].errorMessage);
 }
@@ -36,21 +36,21 @@ The Generate Document request above was compiled and executed against the instal
 #### Build current signers
 
 ```apex
-duradocgen.DocGenSigner signer = new duradocgen.DocGenSigner();
+duracomp.DocGenSigner signer = new duracomp.DocGenSigner();
 signer.name = 'Jordan Rivera';
 signer.email = 'jordan@example.com'; // replace with an intended recipient you control for testing
 signer.role = 'Customer'; // matches {@Signature_Customer} in the practice template
-duradocgen.DocGenSignatureFlowAction.Request input =
-    new duradocgen.DocGenSignatureFlowAction.Request();
+duracomp.DocGenSignatureFlowAction.Request input =
+    new duracomp.DocGenSignatureFlowAction.Request();
 input.templateApiName = 'KB_Signing_Practice';
 input.relatedRecordId = accountId;
-input.signerRecords = new List<duradocgen.DocGenSigner>{signer};
+input.signerRecords = new List<duracomp.DocGenSigner>{signer};
 input.signingOrder = 'Single';
 input.sendEmails = false;
 input.requireEmailVerification = false; // deliberate no-code test; choose your real policy
-List<duradocgen.DocGenSignatureFlowAction.Result> results =
-    duradocgen.DocGenSignatureFlowAction.generate(
-        new List<duradocgen.DocGenSignatureFlowAction.Request>{input});
+List<duracomp.DocGenSignatureFlowAction.Result> results =
+    duracomp.DocGenSignatureFlowAction.generate(
+        new List<duracomp.DocGenSignatureFlowAction.Request>{input});
 // Check success/errorMessage before consuming signatureRequestId or signerUrls.
 ```
 

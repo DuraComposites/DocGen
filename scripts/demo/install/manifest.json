@@ -1,5 +1,5 @@
 {
-    "namespace": "duradocgen__",
+    "namespace": "duracomp__",
     "_pageFooter": "<div style=\"text-align:center;font-size:8.5pt;color:#8795a3;\">Page {PageNumber} of {TotalPages}</div>",
     "templates": [
         {

@@ -49,7 +49,7 @@
             requireVerification: state.requireVerification, prefill: state.prefill, subject: state.subject,
             message: state.message, delivery: state.delivery, brandId: state.brandId };
     }
-    function namespaceValue(row, name) { return row[name] == null ? row['duradocgen__' + name] : row[name]; }
+    function namespaceValue(row, name) { return row[name] == null ? row['duracomp__' + name] : row[name]; }
     function missingSignatures() {
         return state.recipients.filter(function (person) {
             return !state.fields.some(function (field) { return field.recipientKey === person.key && field.type === 'Full'; });

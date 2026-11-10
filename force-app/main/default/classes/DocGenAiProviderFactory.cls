@@ -46,7 +46,7 @@ public with sharing class DocGenAiProviderFactory {
         Type providerType = Type.forName(className);
         if (providerType == null) {
             // Subscriber namespace first (their own class), then ours.
-            providerType = Type.forName('duradocgen', className);
+            providerType = Type.forName('duracomp', className);
         }
         if (providerType == null) {
             return new DocGenUnavailableProvider(NOT_CONFIGURED);

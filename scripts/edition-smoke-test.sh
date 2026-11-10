@@ -18,7 +18,7 @@
 #   What IS reachable in a subscriber org on any edition: the REST Actions API over
 #   the package's `global` @InvocableMethod surface. This script builds a template
 #   from scratch with plain record DML and then renders it through
-#   duradocgen__DocGenFlowAction — the same entry point a customer's Flow uses.
+#   duracomp__DocGenFlowAction — the same entry point a customer's Flow uses.
 #
 # It proves the install is functional end to end: object + field metadata landed,
 # the permission set grants what the merge engine needs, ContentVersion plumbing
@@ -107,22 +107,22 @@ cv_id="$(sf api request rest "/services/data/v${api_version}/sobjects/ContentVer
 check "Template body ContentVersion created" "true"
 
 echo "==> 3. Creating the template + active version"
-template_id="$(sf data create record --target-org "$ORG" -s duradocgen__DocGen_Template__c \
-    -v "Name='DocGen Edition Smoke' duradocgen__Base_Object_API__c=Account duradocgen__Type__c=HTML duradocgen__Output_Format__c=PDF duradocgen__Is_Active__c=true" --json \
+template_id="$(sf data create record --target-org "$ORG" -s duracomp__DocGen_Template__c \
+    -v "Name='DocGen Edition Smoke' duracomp__Base_Object_API__c=Account duracomp__Type__c=HTML duracomp__Output_Format__c=PDF duracomp__Is_Active__c=true" --json \
     | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["id"])')"
 
-version_id="$(sf data create record --target-org "$ORG" -s duradocgen__DocGen_Template_Version__c \
-    -v "duradocgen__Template__c=$template_id duradocgen__Content_Version_Id__c=$cv_id duradocgen__Base_Object_API__c=Account duradocgen__Type__c=HTML duradocgen__Output_Format__c=PDF duradocgen__Is_Active__c=true" --json \
+version_id="$(sf data create record --target-org "$ORG" -s duracomp__DocGen_Template_Version__c \
+    -v "duracomp__Template__c=$template_id duracomp__Content_Version_Id__c=$cv_id duracomp__Base_Object_API__c=Account duracomp__Type__c=HTML duracomp__Output_Format__c=PDF duracomp__Is_Active__c=true" --json \
     | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["id"])')"
 check "Template + version records created" "true"
 
-echo "==> 4. Generating a PDF through duradocgen__DocGenFlowAction (REST Actions API)"
+echo "==> 4. Generating a PDF through duracomp__DocGenFlowAction (REST Actions API)"
 cat > "$tmp_dir/action.json" <<JSON
 {"inputs":[{"templateId":"${template_id}","recordId":"${account_id}","saveToRecord":true,"documentTitle":"DocGen Edition Smoke Output"}]}
 JSON
 
 action_out="$(sf api request rest \
-    "/services/data/v${api_version}/actions/custom/apex/duradocgen__DocGenFlowAction" \
+    "/services/data/v${api_version}/actions/custom/apex/duracomp__DocGenFlowAction" \
     --target-org "$ORG" --method POST --body "@$tmp_dir/action.json" 2>&1 || true)"
 
 echo "$action_out" > "$tmp_dir/action-out.json"
@@ -185,7 +185,7 @@ if [[ "$KEEP" == "true" ]]; then
     echo "  (--keep) left behind: account=$account_id template=$template_id"
     echo "  artifacts in $tmp_dir"
 else
-    sf data delete record --target-org "$ORG" -s duradocgen__DocGen_Template__c -i "$template_id" >/dev/null 2>&1 || true
+    sf data delete record --target-org "$ORG" -s duracomp__DocGen_Template__c -i "$template_id" >/dev/null 2>&1 || true
     sf data delete record --target-org "$ORG" -s Account -i "$account_id" >/dev/null 2>&1 || true
     echo "  removed smoke records"
 fi

@@ -18,35 +18,35 @@
 // resolves to the PDF viewer.
 //
 // Do not hand-edit the URL to the other page. In v3.54.0 the typed-name page
-// (/apex/duradocgen__DocGenSignature) cannot finish a signature — it hangs
+// (/apex/duracomp__DocGenSignature) cannot finish a signature — it hangs
 // on "Saving your signature..." because its saveSignature remoting call passes
 // five arguments to a six-argument method. Fixed in the repo, not in the
 // installed package.
 // ============================================================================
 
-duradocgen__DocGen_Signer__c s = [
+duracomp__DocGen_Signer__c s = [
     SELECT
         Id,
-        duradocgen__Signer_Name__c,
-        duradocgen__Signer_Email__c,
-        duradocgen__Secure_Token__c,
-        duradocgen__Status__c,
-        duradocgen__Signature_Request__r.Name,
-        duradocgen__Signature_Request__r.duradocgen__Render_Data_Snapshot__c,
-        duradocgen__Signature_Request__r.duradocgen__Source_Document_Id__c
-    FROM duradocgen__DocGen_Signer__c
-    WHERE duradocgen__Status__c = 'Pending'
+        duracomp__Signer_Name__c,
+        duracomp__Signer_Email__c,
+        duracomp__Secure_Token__c,
+        duracomp__Status__c,
+        duracomp__Signature_Request__r.Name,
+        duracomp__Signature_Request__r.duracomp__Render_Data_Snapshot__c,
+        duracomp__Signature_Request__r.duracomp__Source_Document_Id__c
+    FROM duracomp__DocGen_Signer__c
+    WHERE duracomp__Status__c = 'Pending'
     ORDER BY CreatedDate DESC
     LIMIT 1
 ];
 
 Boolean isPdfViewer =
-    s.duradocgen__Signature_Request__r.duradocgen__Render_Data_Snapshot__c != null ||
-    s.duradocgen__Signature_Request__r.duradocgen__Source_Document_Id__c != null;
+    s.duracomp__Signature_Request__r.duracomp__Render_Data_Snapshot__c != null ||
+    s.duracomp__Signature_Request__r.duracomp__Source_Document_Id__c != null;
 String page = isPdfViewer ? 'DocGenSignaturePdf' : 'DocGenSignature';
 String base = URL.getOrgDomainUrl().toExternalForm();
 
-System.debug('SIGN-URL request = ' + s.duradocgen__Signature_Request__r.Name);
-System.debug('SIGN-URL signer  = ' + s.duradocgen__Signer_Name__c + ' <' + s.duradocgen__Signer_Email__c + '>');
+System.debug('SIGN-URL request = ' + s.duracomp__Signature_Request__r.Name);
+System.debug('SIGN-URL signer  = ' + s.duracomp__Signer_Name__c + ' <' + s.duracomp__Signer_Email__c + '>');
 System.debug('SIGN-URL page    = ' + page + (isPdfViewer ? ' (guided PDF viewer)' : ' (classic typed-name)'));
-System.debug('SIGN-URL open    = ' + base + '/apex/duradocgen__' + page + '?token=' + s.duradocgen__Secure_Token__c);
+System.debug('SIGN-URL open    = ' + base + '/apex/duracomp__' + page + '?token=' + s.duracomp__Secure_Token__c);

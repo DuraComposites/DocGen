@@ -37,11 +37,11 @@ Field access, supported value conversion, and validation rules still apply. A fa
 Correct the mapped field, permissions, or validation issue first. The global **Write Back Signer Form Fields** action accepts only the completed request Id and re-derives the allowed fields from its configuration. It does not accept arbitrary field/value instructions from the guest.
 
 ```apex
-duradocgen.DocGenFieldWritebackService.WritebackRequest retry =
-    new duradocgen.DocGenFieldWritebackService.WritebackRequest();
+duracomp.DocGenFieldWritebackService.WritebackRequest retry =
+    new duracomp.DocGenFieldWritebackService.WritebackRequest();
 retry.requestId = completedRequestId;
-duradocgen.DocGenFieldWritebackService.writeBackFields(
-    new List<duradocgen.DocGenFieldWritebackService.WritebackRequest>{retry});
+duracomp.DocGenFieldWritebackService.writeBackFields(
+    new List<duracomp.DocGenFieldWritebackService.WritebackRequest>{retry});
 ```
 
 The action returns no success DTO and logs failures instead of throwing them back into signing. Verify the target value and audit after a retry. Test an optional blank answer, required answer, invalid value, inaccessible field, validation-rule failure, and multi-signer request before enabling this in a business process.

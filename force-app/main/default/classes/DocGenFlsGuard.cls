@@ -354,7 +354,7 @@ public with sharing class DocGenFlsGuard {
 
     /**
      * Field-map lookup that handles both unnamespaced (`query_config__c`)
-     * and namespaced (`duradocgen__query_config__c`) key formats.
+     * and namespaced (`duracomp__query_config__c`) key formats.
      * Scratch orgs deployed `--no-namespace` produce bare keys; the
      * package-build context produces keys with the namespace prefix
      * applied. Returning null is the "not found" signal; callers throw.
@@ -369,7 +369,7 @@ public with sharing class DocGenFlsGuard {
             return f;
         }
         // Try with the package namespace prefix — package-build / managed-install context.
-        f = fields.get('duradocgen__' + lower);
+        f = fields.get('duracomp__' + lower);
         if (f != null) {
             return f;
         }

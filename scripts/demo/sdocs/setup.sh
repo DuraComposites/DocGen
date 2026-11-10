@@ -61,7 +61,7 @@ say() { printf '\n\033[1m▸ %s\033[0m\n' "$1"; }
 # ── 1. the org ───────────────────────────────────────────────────────────────
 if [[ "$CREATE" == true ]]; then
     say "Creating scratch org '$ORG' (${DAYS}d, hub: $HUB)"
-    # --no-namespace: a subscriber does not OWN duradocgen, it receives the
+    # --no-namespace: a subscriber does not OWN duracomp, it receives the
     # namespace from the package. Creating this org namespaced would let
     # visibility bugs pass that a real customer would hit.
     sf org create scratch \
@@ -81,7 +81,7 @@ fi
 # AFTER the install, never before: assigning first (or forgetting) makes
 # anonymous-Apex FLS report "No such column" on fields that plainly exist.
 say "Assigning DocGen permission sets"
-for ps in duradocgen__DocGen_Admin duradocgen__DocGen_User; do
+for ps in duracomp__DocGen_Admin duracomp__DocGen_User; do
     if out="$(sf org assign permset --target-org "$ORG" --name "$ps" 2>&1)"; then
         echo "   $ps assigned"
     elif printf '%s' "$out" | grep -qiE 'duplicate|already assigned'; then
@@ -133,7 +133,7 @@ done
 # ── 5. templates ─────────────────────────────────────────────────────────────
 # No DOCGEN_DEMO_NS override any more. The installer used to need one here
 # because it took the namespace from `sf org display`, which reports NOTHING for
-# a subscriber org — the org does not own duradocgen, it received it — so the
+# a subscriber org — the org does not own duracomp, it received it — so the
 # generated Apex referenced bare DocGen_Template__c and created zero templates.
 # It now PROBES the org for whichever prefix the object really carries, which is
 # the only thing that distinguishes a real install from a --no-namespace scratch

@@ -25,7 +25,7 @@ public with sharing class DocGenSetupController {
     /**
      * Returns fresh (non-cached) settings as a plain map with unqualified field names.
      * In managed packages, SObject field names are returned with the namespace prefix
-     * (e.g., duradocgen__Experience_Site_Url__c), which breaks LWC property access.
+     * (e.g., duracomp__Experience_Site_Url__c), which breaks LWC property access.
      * This method strips the prefix so the LWC can use simple field names.
      */
     @AuraEnabled

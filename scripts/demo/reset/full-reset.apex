@@ -8,7 +8,7 @@
 //          installed managed package. (To remove the schema too, see README.)
 // Run: sf apex run --target-org dave@example.com.demo -f "DEMO TEMPLATES/reset/full-reset.apex"
 // ============================================================================
-String NS = 'duradocgen__';
+String NS = 'duracomp__';
 Set<String> DEMO_ACCT_NAMES = new Set<String>{
     'Northwind Traders',
     'Summit Components Inc.',

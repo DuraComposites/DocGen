@@ -5,9 +5,9 @@ These global helpers support specific jobs. Read the input limits before putting
 #### Merge DocGen-native PDFs
 
 ```apex
-Blob packet = duradocgen.DocGenPdfMerger.mergePdfs(
+Blob packet = duracomp.DocGenPdfMerger.mergePdfs(
     new List<Blob>{firstPdf, secondPdf}, true);
-Integer pages = duradocgen.DocGenPdfMerger.pageCount(packet);
+Integer pages = duracomp.DocGenPdfMerger.pageCount(packet);
 ```
 
 `mergePdfCvs(List<Id>, Boolean)` accepts ContentVersion Ids and loads parts incrementally. Passing `true` adds a blank page after every odd-length part, including the last part. Two one-page parts therefore produce four pages. The blank pages carry no page number; the content pages retain numbering baked into their original render.
@@ -23,9 +23,9 @@ Map<String, String> tokens = new Map<String, String>{
     'SignerName' => 'Jordan Rivera', 'DocumentTitle' => 'Practice document',
     'SignatureUrl' => 'https://example.com/practice'
 };
-duradocgen.DocGenEmailTemplateService.RenderedEmail email =
-    duradocgen.DocGenEmailTemplateService.render(
-        duradocgen.DocGenEmailTemplateService.TYPE_REQUEST, tokens);
+duracomp.DocGenEmailTemplateService.RenderedEmail email =
+    duracomp.DocGenEmailTemplateService.render(
+        duracomp.DocGenEmailTemplateService.TYPE_REQUEST, tokens);
 String subject = email.subject;
 String html = email.htmlBody;
 String plainText = email.plainBody;
@@ -39,7 +39,7 @@ The rendered subject and body were checked in the fresh org. No email was sent b
 
 ```apex
 System.schedule('DocGen transient cleanup', '0 0 * * * ?',
-    new duradocgen.DocGenChartCvReaper());
+    new duracomp.DocGenChartCvReaper());
 ```
 
 Inspect Scheduled Jobs first so you do not add duplicate schedules. `reap()` is also exported and returns the number cleaned. The current helper targets old, orphan transient `chart_`/`pdfpart_` files, with age/job-state checks and a bounded batch. It is not a general Salesforce Files retention policy.

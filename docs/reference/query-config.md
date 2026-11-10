@@ -107,13 +107,13 @@ Applies to both sync and giant-query paths.
 
 ### Apex Data Provider (V4 — class-backed templates)
 
-When the data you need to render isn't an SObject — external API responses, computed totals, cross-object aggregations, anything SOQL can't reach — implement the `duradocgen.DocGenDataProvider` interface in your org and bind a template to that class. The merge engine calls your class at render time and uses whatever Map you return.
+When the data you need to render isn't an SObject — external API responses, computed totals, cross-object aggregations, anything SOQL can't reach — implement the `duracomp.DocGenDataProvider` interface in your org and bind a template to that class. The merge engine calls your class at render time and uses whatever Map you return.
 
 #### Step 1 — write the provider class in your org
 
 ```apex
 /** Subscriber-side example. Deploy to your org after installing DocGen. */
-global with sharing class KBAccountProvider implements duradocgen.DocGenDataProvider {
+global with sharing class KBAccountProvider implements duracomp.DocGenDataProvider {
     global Map<String, Object> getData(Id recordId) {
         Account account = [
             SELECT Name, Industry, Phone
@@ -161,14 +161,14 @@ The sample deliberately returns at most 100 Contacts; its count reflects those r
 
 Two methods are required, both `global`. `getData` returns a `Map<String, Object>`; `getFieldNames` returns the list of merge tags shown in the wizard.
 
-The interface lives in the managed package — reference it with the full namespace: `duradocgen.DocGenDataProvider`.
+The interface lives in the managed package — reference it with the full namespace: `duracomp.DocGenDataProvider`.
 
 #### Step 2 — bind a template to the class
 
 In the DocGen app → New Template:
 
 1. **Step 1 — Data Source**: pick **Apex Class (Data Provider)** instead of Salesforce Record.
-2. **Data Provider Class**: search for your class name (e.g., `KBAccountProvider`). The picker filters to classes implementing `duradocgen.DocGenDataProvider`. Select yours.
+2. **Data Provider Class**: search for your class name (e.g., `KBAccountProvider`). The picker filters to classes implementing `duracomp.DocGenDataProvider`. Select yours.
 3. The wizard validates the class, calls `getFieldNames()`, and displays the available merge tags.
 4. **Step 2** lands directly on the connected-provider view. Compose your template body using the merge tags as you would for any other template.
 5. **Step 3** — review and save.
@@ -181,7 +181,7 @@ Same as any template. The DocGen app's Generate button, the **Generate Document*
 
 ```apex
 // From Apex — exactly the same call shape as a SOQL-backed template
-Id contentDocId = duradocgen.DocGenService.generateDocument(templateId, accountId, null);
+Id contentDocId = duracomp.DocGenService.generateDocument(templateId, accountId, null);
 ```
 
 #### Common patterns

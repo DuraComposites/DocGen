@@ -2271,16 +2271,16 @@ In the fresh scratch org, Salesforce had already provisioned a Sites domain. A n
 
 #### 2. Name and activate the site
 
-| Field                      | Example or choice                                                                                  |
-| -------------------------- | -------------------------------------------------------------------------------------------------- |
-| Site Label                 | DocGen Signing                                                                                     |
-| Site Name                  | DocGen_Signing; check the generated value                                                          |
-| Site Contact               | The internal user responsible for this site                                                        |
-| Default Record Owner       | An appropriate active internal user                                                                |
-| Default Web Address        | A short unused path such as `sign`                                                                 |
-| Active                     | Selected                                                                                           |
-| Active Site Home Page      | Use the lookup to choose `duradocgen.DocGenSignature`, or your organization's neutral landing page |
-| Clickjack Protection Level | Leave the recommended same-origin protection for this standalone signing site                      |
+| Field                      | Example or choice                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| Site Label                 | DocGen Signing                                                                                   |
+| Site Name                  | DocGen_Signing; check the generated value                                                        |
+| Site Contact               | The internal user responsible for this site                                                      |
+| Default Record Owner       | An appropriate active internal user                                                              |
+| Default Web Address        | A short unused path such as `sign`                                                               |
+| Active                     | Selected                                                                                         |
+| Active Site Home Page      | Use the lookup to choose `duracomp.DocGenSignature`, or your organization's neutral landing page |
+| Clickjack Protection Level | Leave the recommended same-origin protection for this standalone signing site                    |
 
 Use the home-page lookup rather than guessing its API spelling. Managed pages appear with the namespace, and typed lookup values can fail to resolve. The home page does not replace the complete signing URL generated for each request.
 
@@ -2298,10 +2298,10 @@ Your domain will differ. The example is a base address, not a signing link.
 
 1. On Site Details, find **Site Visualforce Pages** and click **Edit**.
 2. Move these pages into **Enabled Visualforce Pages**:
-    - `duradocgen.DocGenSignature`
-    - `duradocgen.DocGenSignaturePdf`
-    - `duradocgen.DocGenVerify`
-    - `duradocgen.DocGenSign`
+    - `duracomp.DocGenSignature`
+    - `duracomp.DocGenSignaturePdf`
+    - `duracomp.DocGenVerify`
+    - `duracomp.DocGenSign`
 3. Save.
 
 The home page may already be enabled. `DocGenSignaturePrepare` is the authenticated preparation UI used by your internal senders; it is not one of the public pages to add for this setup.
@@ -2361,7 +2361,7 @@ In **Setup → Digital Experiences → All Sites**, open the site's **Workspaces
 
 #### 2. Enable the packaged public pages
 
-Find this site's guest profile/public access settings. In its **Enabled Visualforce Page Access**, enable the packaged pages `DocGenSignature`, `DocGenSignaturePdf`, `DocGenVerify`, and `DocGenSign` in the `duradocgen` namespace.
+Find this site's guest profile/public access settings. In its **Enabled Visualforce Page Access**, enable the packaged pages `DocGenSignature`, `DocGenSignaturePdf`, `DocGenVerify`, and `DocGenSign` in the `duracomp` namespace.
 
 Open that guest profile's actual user and assign **DocGen Guest Signature** under Permission Set Assignments. Keep the assignment tied to the correct site's guest user. Do not use the logged-in member profile as a substitute for guest access.
 
@@ -2498,11 +2498,11 @@ Field access, supported value conversion, and validation rules still apply. A fa
 Correct the mapped field, permissions, or validation issue first. The global **Write Back Signer Form Fields** action accepts only the completed request Id and re-derives the allowed fields from its configuration. It does not accept arbitrary field/value instructions from the guest.
 
 ```apex
-duradocgen.DocGenFieldWritebackService.WritebackRequest retry =
-    new duradocgen.DocGenFieldWritebackService.WritebackRequest();
+duracomp.DocGenFieldWritebackService.WritebackRequest retry =
+    new duracomp.DocGenFieldWritebackService.WritebackRequest();
 retry.requestId = completedRequestId;
-duradocgen.DocGenFieldWritebackService.writeBackFields(
-    new List<duradocgen.DocGenFieldWritebackService.WritebackRequest>{retry});
+duracomp.DocGenFieldWritebackService.writeBackFields(
+    new List<duracomp.DocGenFieldWritebackService.WritebackRequest>{retry});
 ```
 
 The action returns no success DTO and logs failures instead of throwing them back into signing. Verify the target value and audit after a retry. Test an optional blank answer, required answer, invalid value, inaccessible field, validation-rule failure, and multi-signer request before enabling this in a business process.
@@ -2758,22 +2758,22 @@ An accepted background job is not a finished document. Store the returned **Job 
 
 #### Read the actual job record
 
-In subscriber Apex and Flow, use **DocGen Job** (`duradocgen__DocGen_Job__c`) with the access granted to the running user. These are useful API fields:
+In subscriber Apex and Flow, use **DocGen Job** (`duracomp__DocGen_Job__c`) with the access granted to the running user. These are useful API fields:
 
-| Field                                                        | Meaning                                       |
-| ------------------------------------------------------------ | --------------------------------------------- |
-| `duradocgen__Status__c`                                      | Persisted job state                           |
-| `duradocgen__Total_Records__c`                               | Intended record count                         |
-| `duradocgen__Success_Count__c`, `duradocgen__Error_Count__c` | Outcome counts                                |
-| `duradocgen__Error_Log__c`                                   | Recorded error details                        |
-| `duradocgen__Merged_PDF_CV__c`                               | Combined output ContentVersion, when produced |
+| Field                                                    | Meaning                                       |
+| -------------------------------------------------------- | --------------------------------------------- |
+| `duracomp__Status__c`                                    | Persisted job state                           |
+| `duracomp__Total_Records__c`                             | Intended record count                         |
+| `duracomp__Success_Count__c`, `duracomp__Error_Count__c` | Outcome counts                                |
+| `duracomp__Error_Log__c`                                 | Recorded error details                        |
+| `duracomp__Merged_PDF_CV__c`                             | Combined output ContentVersion, when produced |
 
 ```apex
-duradocgen__DocGen_Job__c job = [
-    SELECT duradocgen__Status__c, duradocgen__Success_Count__c,
-        duradocgen__Error_Count__c, duradocgen__Merged_PDF_CV__c,
-        duradocgen__Error_Log__c
-    FROM duradocgen__DocGen_Job__c
+duracomp__DocGen_Job__c job = [
+    SELECT duracomp__Status__c, duracomp__Success_Count__c,
+        duracomp__Error_Count__c, duracomp__Merged_PDF_CV__c,
+        duracomp__Error_Log__c
+    FROM duracomp__DocGen_Job__c
     WHERE Id = :jobId WITH USER_MODE LIMIT 1
 ];
 ```
@@ -4812,7 +4812,7 @@ Call the managed package from your own Salesforce processes.
 
 ### Generate documents from your own Apex
 
-Use `duradocgen.DocGenService` from subscriber Apex. Start with the method that matches the result your process needs.
+Use `duracomp.DocGenService` from subscriber Apex. Start with the method that matches the result your process needs.
 
 #### Choose the method
 
@@ -4846,7 +4846,7 @@ The example uses `KB_Account_Brief`, the [worked example](#example-library). Rep
 #### Return bytes to another process
 
 ```apex
-Map<String, Object> result = duradocgen.DocGenService.generatePdfBlob(templateId, accountId);
+Map<String, Object> result = duracomp.DocGenService.generatePdfBlob(templateId, accountId);
 Blob pdf = (Blob) result.get('blob');
 String title = (String) result.get('title');
 // Your code can attach the bytes to an email or pass them to another system.
@@ -4859,7 +4859,7 @@ Read all inputs before rendering; keep preceding DML out of the render transacti
 
 The standard retrieval path uses user-mode queries. A prepared map skips the source-record retrieval; template, file, font, and other supporting queries can still consume SOQL budget. Prepared maps and custom providers bypass that retrieval, so caller code must enforce access on the data it supplies. `with sharing` alone does not enforce field access.
 
-Catch `duradocgen.DocGenException` for DocGen validation failures, and handle other platform/transaction failures in your job framework. Log safe identifiers and the failure reason; do not write entire documents, signing URLs, or sensitive merged values into logs.
+Catch `duracomp.DocGenException` for DocGen validation failures, and handle other platform/transaction failures in your job framework. Log safe identifiers and the failure reason; do not write entire documents, signing URLs, or sensitive merged values into logs.
 
 The package's `DocGenController` and `DocGenBulkController` are internal UI controllers, not exported subscriber APIs. `@AuraEnabled` does not make a public controller global. Call the exported service/actions or your own authorized wrapper.
 
@@ -4886,7 +4886,7 @@ global interface DocGenDataProvider {
 }
 ```
 
-Your class implements `duradocgen.DocGenDataProvider`; expose both methods as global. `getData()` supplies values and `getFieldNames()` supplies the authoring field list. The old one-method example was incomplete.
+Your class implements `duracomp.DocGenDataProvider`; expose both methods as global. `getData()` supplies values and `getFieldNames()` supplies the authoring field list. The old one-method example was incomplete.
 
 Use the complete [KBAccountProvider class](https://github.com/DuraComposites/DocGen/blob/main/docs/knowledgebase/examples/apex/KBAccountProvider.cls) and its [metadata file](https://github.com/DuraComposites/DocGen/blob/main/docs/knowledgebase/examples/apex/KBAccountProvider.cls-meta.xml). It uses `with sharing` and `WITH USER_MODE`, selects standard Account/Contact fields, limits the Contact query to 100, and implements both methods. The ContactCount is the count of those returned rows, not a claim to count unlimited Contacts.
 
@@ -4958,13 +4958,13 @@ See the generated [global declarations](#apex-surface) for every published DTO f
 #### Generate through a request object
 
 ```apex
-duradocgen.DocGenFlowAction.Request input = new duradocgen.DocGenFlowAction.Request();
+duracomp.DocGenFlowAction.Request input = new duracomp.DocGenFlowAction.Request();
 input.templateApiName = 'KB_Account_Brief';
 input.recordId = accountId;
 input.saveToRecord = true;
-List<duradocgen.DocGenFlowAction.Response> results =
-    duradocgen.DocGenFlowAction.generateDocument(
-        new List<duradocgen.DocGenFlowAction.Request>{input});
+List<duracomp.DocGenFlowAction.Response> results =
+    duracomp.DocGenFlowAction.generateDocument(
+        new List<duracomp.DocGenFlowAction.Request>{input});
 if (!results[0].success) {
     System.debug(LoggingLevel.ERROR, results[0].errorMessage);
 }
@@ -4977,21 +4977,21 @@ The Generate Document request above was compiled and executed against the instal
 #### Build current signers
 
 ```apex
-duradocgen.DocGenSigner signer = new duradocgen.DocGenSigner();
+duracomp.DocGenSigner signer = new duracomp.DocGenSigner();
 signer.name = 'Jordan Rivera';
 signer.email = 'jordan@example.com'; // replace with an intended recipient you control for testing
 signer.role = 'Customer'; // matches {@Signature_Customer} in the practice template
-duradocgen.DocGenSignatureFlowAction.Request input =
-    new duradocgen.DocGenSignatureFlowAction.Request();
+duracomp.DocGenSignatureFlowAction.Request input =
+    new duracomp.DocGenSignatureFlowAction.Request();
 input.templateApiName = 'KB_Signing_Practice';
 input.relatedRecordId = accountId;
-input.signerRecords = new List<duradocgen.DocGenSigner>{signer};
+input.signerRecords = new List<duracomp.DocGenSigner>{signer};
 input.signingOrder = 'Single';
 input.sendEmails = false;
 input.requireEmailVerification = false; // deliberate no-code test; choose your real policy
-List<duradocgen.DocGenSignatureFlowAction.Result> results =
-    duradocgen.DocGenSignatureFlowAction.generate(
-        new List<duradocgen.DocGenSignatureFlowAction.Request>{input});
+List<duracomp.DocGenSignatureFlowAction.Result> results =
+    duracomp.DocGenSignatureFlowAction.generate(
+        new List<duracomp.DocGenSignatureFlowAction.Request>{input});
 // Check success/errorMessage before consuming signatureRequestId or signerUrls.
 ```
 
@@ -5022,9 +5022,9 @@ These global helpers support specific jobs. Read the input limits before putting
 #### Merge DocGen-native PDFs
 
 ```apex
-Blob packet = duradocgen.DocGenPdfMerger.mergePdfs(
+Blob packet = duracomp.DocGenPdfMerger.mergePdfs(
     new List<Blob>{firstPdf, secondPdf}, true);
-Integer pages = duradocgen.DocGenPdfMerger.pageCount(packet);
+Integer pages = duracomp.DocGenPdfMerger.pageCount(packet);
 ```
 
 `mergePdfCvs(List<Id>, Boolean)` accepts ContentVersion Ids and loads parts incrementally. Passing `true` adds a blank page after every odd-length part, including the last part. Two one-page parts therefore produce four pages. The blank pages carry no page number; the content pages retain numbering baked into their original render.
@@ -5040,9 +5040,9 @@ Map<String, String> tokens = new Map<String, String>{
     'SignerName' => 'Jordan Rivera', 'DocumentTitle' => 'Practice document',
     'SignatureUrl' => 'https://example.com/practice'
 };
-duradocgen.DocGenEmailTemplateService.RenderedEmail email =
-    duradocgen.DocGenEmailTemplateService.render(
-        duradocgen.DocGenEmailTemplateService.TYPE_REQUEST, tokens);
+duracomp.DocGenEmailTemplateService.RenderedEmail email =
+    duracomp.DocGenEmailTemplateService.render(
+        duracomp.DocGenEmailTemplateService.TYPE_REQUEST, tokens);
 String subject = email.subject;
 String html = email.htmlBody;
 String plainText = email.plainBody;
@@ -5056,7 +5056,7 @@ The rendered subject and body were checked in the fresh org. No email was sent b
 
 ```apex
 System.schedule('DocGen transient cleanup', '0 0 * * * ?',
-    new duradocgen.DocGenChartCvReaper());
+    new duracomp.DocGenChartCvReaper());
 ```
 
 Inspect Scheduled Jobs first so you do not add duplicate schedules. `reap()` is also exported and returns the number cleaned. The current helper targets old, orphan transient `chart_`/`pdfpart_` files, with age/job-state checks and a bounded batch. It is not a general Salesforce Files retention policy.
@@ -5079,7 +5079,7 @@ _Developers · 9 min read · Reviewed for 3.60.0_
 
 This inventory is generated from the same source checkout as the guide. It includes core global types, nested request/result types and fields, interface methods, and the optional Agentforce extension. It gives you an exact place to check an overload or DTO field while using the worked integration articles.
 
-**Before you start:** Use the `duradocgen` namespace for core types in subscriber Apex. The optional extension requires its own installation/setup. Published legacy members remain in this list; their presence does not make them the preferred API for new work. Read the [action compatibility notes](#apex-actions) and [utility limits](#apex-utilities).
+**Before you start:** Use the `duracomp` namespace for core types in subscriber Apex. The optional extension requires its own installation/setup. Published legacy members remain in this list; their presence does not make them the preferred API for new work. Read the [action compatibility notes](#apex-actions) and [utility limits](#apex-utilities).
 
 A source update that changes an exported declaration makes the generated guide stale until it is rebuilt. Review the related integration article and test your subscriber code against the new released package before marking the next release reviewed.
 
@@ -5566,13 +5566,13 @@ Applies to both sync and giant-query paths.
 
 #### Apex Data Provider (V4 — class-backed templates)
 
-When the data you need to render isn't an SObject — external API responses, computed totals, cross-object aggregations, anything SOQL can't reach — implement the `duradocgen.DocGenDataProvider` interface in your org and bind a template to that class. The merge engine calls your class at render time and uses whatever Map you return.
+When the data you need to render isn't an SObject — external API responses, computed totals, cross-object aggregations, anything SOQL can't reach — implement the `duracomp.DocGenDataProvider` interface in your org and bind a template to that class. The merge engine calls your class at render time and uses whatever Map you return.
 
 ##### Step 1 — write the provider class in your org
 
 ```apex
 /** Subscriber-side example. Deploy to your org after installing DocGen. */
-global with sharing class KBAccountProvider implements duradocgen.DocGenDataProvider {
+global with sharing class KBAccountProvider implements duracomp.DocGenDataProvider {
     global Map<String, Object> getData(Id recordId) {
         Account account = [
             SELECT Name, Industry, Phone
@@ -5620,14 +5620,14 @@ The sample deliberately returns at most 100 Contacts; its count reflects those r
 
 Two methods are required, both `global`. `getData` returns a `Map<String, Object>`; `getFieldNames` returns the list of merge tags shown in the wizard.
 
-The interface lives in the managed package — reference it with the full namespace: `duradocgen.DocGenDataProvider`.
+The interface lives in the managed package — reference it with the full namespace: `duracomp.DocGenDataProvider`.
 
 ##### Step 2 — bind a template to the class
 
 In the DocGen app → New Template:
 
 1. **Step 1 — Data Source**: pick **Apex Class (Data Provider)** instead of Salesforce Record.
-2. **Data Provider Class**: search for your class name (e.g., `KBAccountProvider`). The picker filters to classes implementing `duradocgen.DocGenDataProvider`. Select yours.
+2. **Data Provider Class**: search for your class name (e.g., `KBAccountProvider`). The picker filters to classes implementing `duracomp.DocGenDataProvider`. Select yours.
 3. The wizard validates the class, calls `getFieldNames()`, and displays the available merge tags.
 4. **Step 2** lands directly on the connected-provider view. Compose your template body using the merge tags as you would for any other template.
 5. **Step 3** — review and save.
@@ -5640,7 +5640,7 @@ Same as any template. The DocGen app's Generate button, the **Generate Document*
 
 ```apex
 // From Apex — exactly the same call shape as a SOQL-backed template
-Id contentDocId = duradocgen.DocGenService.generateDocument(templateId, accountId, null);
+Id contentDocId = duracomp.DocGenService.generateDocument(templateId, accountId, null);
 ```
 
 ##### Common patterns
@@ -5970,7 +5970,7 @@ Use these references when your task needs precise syntax or custom code. The beg
 
 #### Use the managed-package namespace
 
-In Apex outside the package, exported class references use the `duradocgen` namespace. Salesforce object and field API names use `duradocgen__`.
+In Apex outside the package, exported class references use the `duracomp` namespace. Salesforce object and field API names use `duracomp__`.
 
 Prefer a template's stable API Name where an action supports it. Record IDs are specific to an org. Some actions still require a Template ID; check that action's inputs rather than assuming all actions accept the same key.
 

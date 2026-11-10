@@ -4,22 +4,22 @@ An accepted background job is not a finished document. Store the returned **Job 
 
 #### Read the actual job record
 
-In subscriber Apex and Flow, use **DocGen Job** (`duradocgen__DocGen_Job__c`) with the access granted to the running user. These are useful API fields:
+In subscriber Apex and Flow, use **DocGen Job** (`duracomp__DocGen_Job__c`) with the access granted to the running user. These are useful API fields:
 
-| Field                                                        | Meaning                                       |
-| ------------------------------------------------------------ | --------------------------------------------- |
-| `duradocgen__Status__c`                                      | Persisted job state                           |
-| `duradocgen__Total_Records__c`                               | Intended record count                         |
-| `duradocgen__Success_Count__c`, `duradocgen__Error_Count__c` | Outcome counts                                |
-| `duradocgen__Error_Log__c`                                   | Recorded error details                        |
-| `duradocgen__Merged_PDF_CV__c`                               | Combined output ContentVersion, when produced |
+| Field                                                    | Meaning                                       |
+| -------------------------------------------------------- | --------------------------------------------- |
+| `duracomp__Status__c`                                    | Persisted job state                           |
+| `duracomp__Total_Records__c`                             | Intended record count                         |
+| `duracomp__Success_Count__c`, `duracomp__Error_Count__c` | Outcome counts                                |
+| `duracomp__Error_Log__c`                                 | Recorded error details                        |
+| `duracomp__Merged_PDF_CV__c`                             | Combined output ContentVersion, when produced |
 
 ```apex
-duradocgen__DocGen_Job__c job = [
-    SELECT duradocgen__Status__c, duradocgen__Success_Count__c,
-        duradocgen__Error_Count__c, duradocgen__Merged_PDF_CV__c,
-        duradocgen__Error_Log__c
-    FROM duradocgen__DocGen_Job__c
+duracomp__DocGen_Job__c job = [
+    SELECT duracomp__Status__c, duracomp__Success_Count__c,
+        duracomp__Error_Count__c, duracomp__Merged_PDF_CV__c,
+        duracomp__Error_Log__c
+    FROM duracomp__DocGen_Job__c
     WHERE Id = :jobId WITH USER_MODE LIMIT 1
 ];
 ```

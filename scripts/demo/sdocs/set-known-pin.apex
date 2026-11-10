@@ -10,7 +10,7 @@
 //
 // This is the namespaced, demo-scoped sibling of scripts/set-known-pin.apex —
 // that one targets the "Verification UAT Template" using BARE API names, which
-// do not compile in a subscriber org where everything is duradocgen__.
+// do not compile in a subscriber org where everything is duracomp__.
 //
 // ORDER OF OPERATIONS (the page regenerates a random PIN when you click Send):
 //   1. Open the signing URL and reach the code-entry screen
@@ -30,20 +30,20 @@ for (Demo_Project__c p : [SELECT Id FROM Demo_Project__c WHERE Project_Code__c L
     projIds.add(p.Id);
 }
 
-List<duradocgen__DocGen_Signer__c> signers = [
-    SELECT Id, duradocgen__Signer_Name__c, duradocgen__Signer_Email__c
-    FROM duradocgen__DocGen_Signer__c
+List<duracomp__DocGen_Signer__c> signers = [
+    SELECT Id, duracomp__Signer_Name__c, duracomp__Signer_Email__c
+    FROM duracomp__DocGen_Signer__c
     WHERE
-        duradocgen__Signature_Request__r.duradocgen__Related_Record_Id__c IN :projIds
-        AND duradocgen__Status__c IN ('Pending', 'Viewed')
+        duracomp__Signature_Request__r.duracomp__Related_Record_Id__c IN :projIds
+        AND duracomp__Status__c IN ('Pending', 'Viewed')
 ];
-for (duradocgen__DocGen_Signer__c s : signers) {
-    s.duradocgen__PIN_Hash__c = hash;
-    s.duradocgen__PIN_Expires_At__c = System.now().addHours(24);
-    s.duradocgen__PIN_Attempts__c = 0;
+for (duracomp__DocGen_Signer__c s : signers) {
+    s.duracomp__PIN_Hash__c = hash;
+    s.duracomp__PIN_Expires_At__c = System.now().addHours(24);
+    s.duracomp__PIN_Attempts__c = 0;
     // Null it out so the code step is forced even if a prior run verified.
-    s.duradocgen__PIN_Verified_At__c = null;
-    System.debug('PIN set for ' + s.duradocgen__Signer_Name__c + ' <' + s.duradocgen__Signer_Email__c + '>');
+    s.duracomp__PIN_Verified_At__c = null;
+    System.debug('PIN set for ' + s.duracomp__Signer_Name__c + ' <' + s.duracomp__Signer_Email__c + '>');
 }
 update signers;
 System.debug('KNOWN-PIN ' + KNOWN_PIN + ' set on ' + signers.size() + ' pending signer(s).');

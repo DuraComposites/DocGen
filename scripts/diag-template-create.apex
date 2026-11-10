@@ -16,7 +16,7 @@
  *
  * Read-only except for the final insert, which is rolled back unconditionally.
  */
-String ns = 'duradocgen__';
+String ns = 'duracomp__';
 
 System.debug('DIAG ===== 1. PICKLIST VALUES =====');
 for (String fieldName : new List<String>{ 'Type__c', 'Output_Format__c', 'Page_Margins__c' }) {

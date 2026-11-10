@@ -5600,10 +5600,10 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
     public static List<String> searchDataProviders(String searchTerm) {
         List<String> providers = new List<String>();
         // Match the runtime resolution in DocGenDataRetriever.getRecordDataV4:
-        // unqualified classes (subscriber-org case) AND duradocgen-namespaced
+        // unqualified classes (subscriber-org case) AND duracomp-namespaced
         // classes (dev-org / namespaced-scratch case, also future packaged samples).
         // See issue #63.
-        String query = 'SELECT Name FROM ApexClass WHERE NamespacePrefix IN (null, \'duradocgen\')';
+        String query = 'SELECT Name FROM ApexClass WHERE NamespacePrefix IN (null, \'duracomp\')';
         if (String.isNotBlank(searchTerm)) {
             query += ' AND Name LIKE \'%' + String.escapeSingleQuotes(searchTerm) + '%\'';
         }
@@ -5643,7 +5643,7 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
 
         Type providerType = Type.forName(className);
         if (providerType == null) {
-            providerType = Type.forName('duradocgen', className);
+            providerType = Type.forName('duracomp', className);
         }
         if (providerType == null) {
             result.put('valid', false);

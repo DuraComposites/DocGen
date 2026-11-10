@@ -15,20 +15,20 @@
  * gating install for everyone. Both measured 2026-07-26. Keeping them in this
  * extension is what lets DocGen stay installable everywhere.
  *
- * The extension shares the `duradocgen` namespace with the base package, so
+ * The extension shares the `duracomp` namespace with the base package, so
  * `DocGenAiProviderFactory.get()` finds this class through its existing
- * `Type.forName('duradocgen', className)` fallback — the base package needs
+ * `Type.forName('duracomp', className)` fallback — the base package needs
  * no knowledge of the extension at all.
  *
  * A subscriber can still supply their own provider instead: implement
- * `duradocgen.DocGenAiProvider` and name the class in
+ * `duracomp.DocGenAiProvider` and name the class in
  * DocGen Settings > AI Provider Class. See UserGuide section 5.7.11.
  *
  * MUST BE `global`, NOT `public`. The base package instantiates this class by
  * name via Type.forName + newInstance. A `public` class is invisible across a
  * 2GP package boundary EVEN IN THE SAME NAMESPACE, so with `public` both
  * Type.forName('DocGenEinsteinProvider') and
- * Type.forName('duradocgen', 'DocGenEinsteinProvider') return null, the
+ * Type.forName('duracomp', 'DocGenEinsteinProvider') return null, the
  * factory falls through to DocGenUnavailableProvider, and the Designer hides the
  * button with everything correctly installed. Measured 2026-07-26 in a real
  * two-package install (extension v1.0.0.1). The same rule bit the build in the
@@ -47,7 +47,6 @@
  *  - Budget 10-25 seconds for a 5KB document.
  */
 global with sharing class DocGenEinsteinProvider implements DocGenAiProvider {
-
     /** Free Text input on the Flex template. Both 'Input:X' and 'Input.X' work. */
     private static final String INPUT_KEY = 'Input:Instructions';
 
@@ -132,7 +131,7 @@ global with sharing class DocGenEinsteinProvider implements DocGenAiProvider {
      * Reads the packaged CUSTOM SETTING directly rather than calling
      * DocGenAiProviderFactory. That class is `public`, so it is NOT visible
      * across a namespace boundary — a subscriber class calling it fails to
-     * compile with "Type is not visible: duradocgen.DocGenAiProviderFactory".
+     * compile with "Type is not visible: duracomp.DocGenAiProviderFactory".
      * Measured against a real managed install, 2026-07-26. The custom setting is
      * Public and IS readable, which is why this route works.
      */

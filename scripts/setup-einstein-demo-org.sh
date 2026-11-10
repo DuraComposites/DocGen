@@ -62,7 +62,7 @@ if sf org display --target-org "$ALIAS" >/dev/null 2>&1; then
     echo "==> Reusing existing org (pass --recreate to rebuild)"
 else
     echo "==> Creating scratch org (Einstein1AIPlatform + Prompt Builder)"
-    # --no-namespace: a subscriber does not own duradocgen, it receives it.
+    # --no-namespace: a subscriber does not own duracomp, it receives it.
     sf org create scratch \
         --definition-file "$DEF_FILE" \
         --alias "$ALIAS" \

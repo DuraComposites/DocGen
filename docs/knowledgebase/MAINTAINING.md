@@ -111,8 +111,8 @@ sf package install --package <released-04t-id> --target-org <kb-org> \
   --security-type AdminsOnly --no-prompt --wait 20
 
 sf org assign permset --target-org <kb-org> \
-  --name duradocgen__DocGen_Admin \
-  --name duradocgen__DocGen_Button_Manager
+  --name duracomp__DocGen_Admin \
+  --name duracomp__DocGen_Button_Manager
 
 sf apex run --target-org <kb-org> --file scripts/knowledgebase/seed.apex
 node scripts/knowledgebase/seed-templates.mjs <kb-org>

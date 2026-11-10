@@ -2,7 +2,7 @@
 // ============================================================================
 // SDocs-replacement demo — prove both templates actually render.
 //
-// Uses duradocgen.DocGenService.generateDocument, which is `global` and
+// Uses duracomp.DocGenService.generateDocument, which is `global` and
 // therefore the only generation entry point visible in a SUBSCRIBER org. The
 // repo's e2e-*.apex suites call DocGenController / processXmlForTest, which are
 // `public` and invisible here by construction — do not reach for them.
@@ -13,10 +13,10 @@
 // ============================================================================
 
 Map<String, Id> tpl = new Map<String, Id>();
-for (duradocgen__DocGen_Template__c t : [
+for (duracomp__DocGen_Template__c t : [
     SELECT Id, Name
-    FROM duradocgen__DocGen_Template__c
-    WHERE duradocgen__Category__c = 'Project Delivery'
+    FROM duracomp__DocGen_Template__c
+    WHERE duracomp__Category__c = 'Project Delivery'
 ]) {
     tpl.put(t.Name, t.Id);
 }
@@ -35,7 +35,7 @@ for (
         // Returns a ContentDOCUMENT id (069…), not a ContentVersion (068…).
         // Querying ContentVersion by it throws "List has no rows", which reads
         // like a generation failure and is really a wrong key prefix.
-        Id docId = duradocgen.DocGenService.generateDocument(tid, p.Id);
+        Id docId = duracomp.DocGenService.generateDocument(tid, p.Id);
         ContentVersion cv = [
             SELECT Id, Title, ContentSize, FileExtension
             FROM ContentVersion

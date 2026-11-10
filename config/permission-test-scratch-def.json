@@ -1,7 +1,7 @@
 {
     "orgName": "DocGen Permission Test",
     "edition": "developer",
-    "description": "Scratch org for testing DocGen permission sets against real non-admin users. Created WITH the duradocgen namespace on purpose: the Designer bugs that only appear under Lightning Web Security's per-namespace sandbox are invisible in a no-namespace org. Note the trade-off — the scripts/e2e-*.apex files use bare (unprefixed) class and field references and will NOT compile here; run those against a --no-namespace org instead.",
+    "description": "Scratch org for testing DocGen permission sets against real non-admin users. Created WITH the duracomp namespace on purpose: the Designer bugs that only appear under Lightning Web Security's per-namespace sandbox are invisible in a no-namespace org. Note the trade-off — the scripts/e2e-*.apex files use bare (unprefixed) class and field references and will NOT compile here; run those against a --no-namespace org instead.",
     "features": ["EnableSetPasswordInApi", "Sites"],
     "settings": {
         "languageSettings": {

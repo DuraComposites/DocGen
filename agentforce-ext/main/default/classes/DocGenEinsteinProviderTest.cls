@@ -70,7 +70,7 @@ private class DocGenEinsteinProviderTest {
         // through the failure message rather than by calling the factory: that
         // class is `public`, and `public` is NOT visible across a 2GP package
         // boundary even inside the same namespace. Calling it fails the PACKAGE
-        // BUILD with "Type is not visible: duradocgen.DocGenAiProviderFactory"
+        // BUILD with "Type is not visible: duracomp.DocGenAiProviderFactory"
         // — measured 2026-07-26, and the provider's own header warns about it.
         // Reading the custom setting directly is the supported route, and it is
         // what resolveTemplateName() does.

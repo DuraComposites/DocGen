@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
     <!-- Modified by Dura Composites Ltd. -->
     <flexiPageRegions>
@@ -30,13 +30,13 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>duradocgen:docGenRunner</componentName>
+                <componentName>duracomp:docGenRunner</componentName>
                 <identifier>projDocGenRunner</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
             <componentInstance>
-                <componentName>duradocgen:docGenSignatureSender</componentName>
+                <componentName>duracomp:docGenSignatureSender</componentName>
                 <identifier>projSignatureSender</identifier>
             </componentInstance>
         </itemInstances>

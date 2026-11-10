@@ -2223,7 +2223,7 @@ public with sharing class DocGenDataRetriever {
         // Resolve class — try plain name first, then with package namespace
         Type providerType = Type.forName(providerClassName);
         if (providerType == null) {
-            providerType = Type.forName('duradocgen', providerClassName);
+            providerType = Type.forName('duracomp', providerClassName);
         }
         if (providerType == null) {
             throw new DocGenException(

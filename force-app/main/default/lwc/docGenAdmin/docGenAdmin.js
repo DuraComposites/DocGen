@@ -258,7 +258,7 @@ const F = {
     // #161 follow-up — dedicated storage for Signer Inputs form-field config.
     // The field has no @salesforce/schema import yet (backend ships it in
     // parallel), so resolve its namespace from an already-resolved field's
-    // prefix (e.g. `duradocgen__` in subscriber orgs, '' in staging).
+    // prefix (e.g. `duracomp__` in subscriber orgs, '' in staging).
     FormFieldsConfig:
         QUERY_CONFIG_FIELD.fieldApiName.slice(0, QUERY_CONFIG_FIELD.fieldApiName.length - 'Query_Config__c'.length) +
         'Form_Fields_Config__c',
@@ -5711,7 +5711,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
                         activateVariant: isActive ? 'neutral' : 'brand',
                         // Namespace-safe disable flag for the Activate/Delete buttons —
                         // raw 'Is_Active__c' keys don't exist on subscriber-org rows
-                        // (they're duradocgen__-prefixed there).
+                        // (they're duracomp__-prefixed there).
                         disableAction: !!isActive,
                         bodyCvId: v[F.VerCvId] || '',
                         bodyCvFileName: ''
@@ -5952,7 +5952,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
     }
 
     // Namespace-aware truthy check — F.QueryConfig resolves to the namespaced
-    // field name in subscriber orgs (e.g. duradocgen__Query_Config__c), so
+    // field name in subscriber orgs (e.g. duracomp__Query_Config__c), so
     // the modal must read via this getter rather than `previewVersion.Query_Config__c`.
     get hasPreviewVersionQuery() {
         const v = this.previewVersion?.[F.QueryConfig];

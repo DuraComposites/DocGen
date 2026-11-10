@@ -2487,7 +2487,7 @@ export default class DocGenCanvas extends LightningElement {
         try {
             const rows = (await getTemplateVersions({ templateId: this.templateId })) || [];
             this.versions = rows.map((v) => {
-                const isActive = v.Is_Active__c === true || v.duradocgen__Is_Active__c === true;
+                const isActive = v.Is_Active__c === true || v.duracomp__Is_Active__c === true;
                 const when = v.CreatedDate ? new Date(v.CreatedDate).toLocaleString() : '';
                 return {
                     label: (isActive ? '★ ' : '') + (v.Name || 'Version') + (when ? ' · ' + when : ''),

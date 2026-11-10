@@ -16,16 +16,16 @@ In the fresh scratch org, Salesforce had already provisioned a Sites domain. A n
 
 #### 2. Name and activate the site
 
-| Field                      | Example or choice                                                                                  |
-| -------------------------- | -------------------------------------------------------------------------------------------------- |
-| Site Label                 | DocGen Signing                                                                                     |
-| Site Name                  | DocGen_Signing; check the generated value                                                          |
-| Site Contact               | The internal user responsible for this site                                                        |
-| Default Record Owner       | An appropriate active internal user                                                                |
-| Default Web Address        | A short unused path such as `sign`                                                                 |
-| Active                     | Selected                                                                                           |
-| Active Site Home Page      | Use the lookup to choose `duradocgen.DocGenSignature`, or your organization's neutral landing page |
-| Clickjack Protection Level | Leave the recommended same-origin protection for this standalone signing site                      |
+| Field                      | Example or choice                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| Site Label                 | DocGen Signing                                                                                   |
+| Site Name                  | DocGen_Signing; check the generated value                                                        |
+| Site Contact               | The internal user responsible for this site                                                      |
+| Default Record Owner       | An appropriate active internal user                                                              |
+| Default Web Address        | A short unused path such as `sign`                                                               |
+| Active                     | Selected                                                                                         |
+| Active Site Home Page      | Use the lookup to choose `duracomp.DocGenSignature`, or your organization's neutral landing page |
+| Clickjack Protection Level | Leave the recommended same-origin protection for this standalone signing site                    |
 
 Use the home-page lookup rather than guessing its API spelling. Managed pages appear with the namespace, and typed lookup values can fail to resolve. The home page does not replace the complete signing URL generated for each request.
 
@@ -43,10 +43,10 @@ Your domain will differ. The example is a base address, not a signing link.
 
 1. On Site Details, find **Site Visualforce Pages** and click **Edit**.
 2. Move these pages into **Enabled Visualforce Pages**:
-    - `duradocgen.DocGenSignature`
-    - `duradocgen.DocGenSignaturePdf`
-    - `duradocgen.DocGenVerify`
-    - `duradocgen.DocGenSign`
+    - `duracomp.DocGenSignature`
+    - `duracomp.DocGenSignaturePdf`
+    - `duracomp.DocGenVerify`
+    - `duracomp.DocGenSign`
 3. Save.
 
 The home page may already be enabled. `DocGenSignaturePrepare` is the authenticated preparation UI used by your internal senders; it is not one of the public pages to add for this setup.

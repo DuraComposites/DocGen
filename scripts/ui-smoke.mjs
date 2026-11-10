@@ -67,8 +67,8 @@ function frontDoorUrl(org) {
 function tabPath(org) {
     // Three shapes, and org namespace alone does not distinguish them:
     //   source-deployed, no namespace   -> DocGen_Template_Manager
-    //   namespaced scratch org          -> duradocgen__DocGen_Template_Manager
-    //   SUBSCRIBER org, package INSTALLED -> duradocgen__DocGen_Template_Manager
+    //   namespaced scratch org          -> duracomp__DocGen_Template_Manager
+    //   SUBSCRIBER org, package INSTALLED -> duracomp__DocGen_Template_Manager
     //     ...but `sf org display` reports namespace: null there, because a subscriber
     //     org does not OWN the namespace, it receives it from the package. Reading only
     //     the org namespace therefore gets the install case exactly backwards, so also

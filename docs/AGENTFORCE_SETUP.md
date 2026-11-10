@@ -48,4 +48,4 @@ failure for a managed package.
 **The route that remains open** is an extension package: a separate
 Einstein-requiring package carrying the provider class and the prompt template.
 The base package needs no change — `DocGenAiProviderFactory` already resolves
-the provider in the subscriber namespace first, then in `duradocgen`.
+the provider in the subscriber namespace first, then in `duracomp`.

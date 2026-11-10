@@ -11,7 +11,7 @@
 //   1. Leaves alone the files that must keep Portwood's name (licence, attribution, Portwood's own
 //      history and process docs, packaging config) and links to Portwood's own issues and PRs.
 //   2. Points links at this fork: GitHub URLs, the User Guide, demo company names and addresses.
-//   3. Renames the namespace (portwoodglobal -> duradocgen) and the product (Portwood -> DocGen).
+//   3. Renames the namespace (portwoodglobal -> duracomp) and the product (Portwood -> DocGen).
 //   4. Adds "Modified by Dura Composites Ltd." to each changed file (Apache-2.0 section 4(b)).
 //
 // Anything it can't decide (a portwood.dev link it doesn't know, a Slack thread, a support address)
@@ -77,7 +77,7 @@ const ASK = [/[\w.+-]*@?portwood\.dev\b[^\s"'<>)\]`]*/g, /https?:\/\/portwoodcom
 
 /** The namespace and the product name. */
 const NAMES = [
-    [/portwoodglobal/g, 'duradocgen'],
+    [/portwoodglobal/g, 'duracomp'],
     [/Portwood DocGen/g, 'DocGen'],
     [/PORTWOOD DOCGEN/g, 'DOCGEN'],
     [/PORTWOOD/g, 'DOCGEN'],

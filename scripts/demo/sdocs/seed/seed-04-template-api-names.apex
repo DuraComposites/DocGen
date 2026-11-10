@@ -16,13 +16,13 @@ Map<String, String> apiNames = new Map<String, String>{
     'Project Acceptance Certificate' => 'Project_Acceptance_Certificate'
 };
 
-List<duradocgen__DocGen_Template__c> ups = new List<duradocgen__DocGen_Template__c>();
-for (duradocgen__DocGen_Template__c t : [
-    SELECT Id, Name, duradocgen__API_Name__c
-    FROM duradocgen__DocGen_Template__c
+List<duracomp__DocGen_Template__c> ups = new List<duracomp__DocGen_Template__c>();
+for (duracomp__DocGen_Template__c t : [
+    SELECT Id, Name, duracomp__API_Name__c
+    FROM duracomp__DocGen_Template__c
     WHERE Name IN :apiNames.keySet()
 ]) {
-    t.duradocgen__API_Name__c = apiNames.get(t.Name);
+    t.duracomp__API_Name__c = apiNames.get(t.Name);
     ups.add(t);
     System.debug('SEED-04 ' + t.Name + ' -> API_Name=' + apiNames.get(t.Name) + ' (' + t.Id + ')');
 }

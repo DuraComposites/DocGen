@@ -12,7 +12,7 @@
 #
 # NAMESPACE
 # ---------
-# A FlexiPage names its components exactly: `duradocgen:docGenRunner` in a
+# A FlexiPage names its components exactly: `duracomp:docGenRunner` in a
 # namespaced org, `c:docGenRunner` in one created with --no-namespace. There is
 # no wildcard. The checked-in fixture therefore only ever matched ONE org shape,
 # and deploying it to the other fails with "We couldn't retrieve the design time

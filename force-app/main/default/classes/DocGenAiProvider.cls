@@ -25,7 +25,7 @@
  *
  * EXAMPLE
  * -------
- *   public with sharing class MyAiProvider implements duradocgen.DocGenAiProvider {
+ *   public with sharing class MyAiProvider implements duracomp.DocGenAiProvider {
  *       public Boolean isAvailable() {
  *           return true;
  *       }

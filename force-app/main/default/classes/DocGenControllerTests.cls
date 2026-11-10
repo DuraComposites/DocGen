@@ -6143,7 +6143,7 @@ private class DocGenControllerTests {
             Base_Object_API__c = 'Account',
             Type__c = 'Word',
             Output_Format__c = 'PDF',
-            Required_Permission_Sets__c = 'duradocgen__docgen_admin'
+            Required_Permission_Sets__c = 'duracomp__docgen_admin'
         );
         insert gated;
 

@@ -26,7 +26,7 @@
 # renders blank for real users and works fine for you. Reproducing that needs users
 # whose access comes only from the DocGen permission sets.
 #
-# NOTE ON NAMESPACE: default mode creates the org WITH the duradocgen namespace so
+# NOTE ON NAMESPACE: default mode creates the org WITH the duracomp namespace so
 # namespace-sensitive behaviour (LWS sandbox, prefixed SObject keys) is representative.
 # --install mode does the opposite on purpose — a subscriber does not own the namespace,
 # it receives it from the package.
@@ -73,7 +73,7 @@ if sf org display --target-org "$ALIAS" >/dev/null 2>&1; then
 else
     echo "==> Creating scratch org"
     # Install mode creates the org WITHOUT the namespace: a subscriber org does not
-    # own duradocgen, it receives it from the package. Creating it namespaced
+    # own duracomp, it receives it from the package. Creating it namespaced
     # would let namespace-visibility bugs pass that a real customer would hit.
     ns_flag=()
     if [[ -n "$INSTALL_VERSION" ]]; then

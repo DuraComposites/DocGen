@@ -83,13 +83,13 @@ for (const e of examples) {
     const html = fs.readFileSync(path.join(root, 'docs/knowledgebase/examples', e.file), 'utf8');
     const query = typeof e.query === 'string' ? e.query : JSON.stringify(e.query);
     lines.push(`{
-        List<duradocgen__DocGen_Template__c> existing = [SELECT Id FROM duradocgen__DocGen_Template__c WHERE duradocgen__API_Name__c = ${q(e.api)} LIMIT 1];
+        List<duracomp__DocGen_Template__c> existing = [SELECT Id FROM duracomp__DocGen_Template__c WHERE duracomp__API_Name__c = ${q(e.api)} LIMIT 1];
         if (existing.isEmpty()) {
             ContentVersion body = new ContentVersion(Title=${q(e.name + ' body')}, PathOnClient=${q(e.file)}, VersionData=EncodingUtil.base64Decode(${q(Buffer.from(html).toString('base64'))}));
             insert body;
-            duradocgen__DocGen_Template__c template = new duradocgen__DocGen_Template__c(Name=${q(e.name)}, duradocgen__API_Name__c=${q(e.api)}, duradocgen__Type__c='HTML', duradocgen__Output_Format__c='PDF', duradocgen__Base_Object_API__c=${q(e.object)}, duradocgen__Query_Config__c=${q(query)}, duradocgen__Is_Active__c=true, duradocgen__Category__c='Knowledgebase examples', duradocgen__Test_Record_Id__c=${e.object === 'Account' ? 'sampleAccount' : 'sampleOpportunity'});
+            duracomp__DocGen_Template__c template = new duracomp__DocGen_Template__c(Name=${q(e.name)}, duracomp__API_Name__c=${q(e.api)}, duracomp__Type__c='HTML', duracomp__Output_Format__c='PDF', duracomp__Base_Object_API__c=${q(e.object)}, duracomp__Query_Config__c=${q(query)}, duracomp__Is_Active__c=true, duracomp__Category__c='Knowledgebase examples', duracomp__Test_Record_Id__c=${e.object === 'Account' ? 'sampleAccount' : 'sampleOpportunity'});
             insert template;
-            insert new duradocgen__DocGen_Template_Version__c(duradocgen__Template__c=template.Id,duradocgen__Is_Active__c=true,duradocgen__Content_Version_Id__c=body.Id);
+            insert new duracomp__DocGen_Template_Version__c(duracomp__Template__c=template.Id,duracomp__Is_Active__c=true,duracomp__Content_Version_Id__c=body.Id);
         }
     }`);
 }

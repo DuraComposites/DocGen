@@ -124,7 +124,7 @@ Most customers don't need this. Use the bundled signing pages ([§11.6.1](https:
 
 ### 11.10 Polling an async job from a screen Flow
 
-Bulk and Giant Query actions return a `jobId`. Read `duradocgen__DocGen_Job__c` through Get Records or an authorized user-mode query. The [asynchronous-job walkthrough](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#async-jobs) lists the actual stored states, result fields, partial-success handling, and screen refresh loop.
+Bulk and Giant Query actions return a `jobId`. Read `duracomp__DocGen_Job__c` through Get Records or an authorized user-mode query. The [asynchronous-job walkthrough](https://github.com/DuraComposites/DocGen/blob/main/UserGuide.md#async-jobs) lists the actual stored states, result fields, partial-success handling, and screen refresh loop.
 
 Screen Flows do not support Wait elements. Use a Screen/Refresh loop for an interactive check, or a supported asynchronous automation pattern for unattended completion. Do not add a tight polling loop in one transaction. `DocGenBulkController.getJobStatus` is a package-internal endpoint and cannot be called by subscriber Apex.
 
