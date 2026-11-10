@@ -22,6 +22,7 @@
   "packageAliases": {
     "Portwood@3.63.0-1": "04tVx000001CfejIAC",
     "DocGen": "0HoQ50000003kKrKAI",
-    "DocGen@1.0.0-1": "04tQ500000CAuzhIAD"
+    "DocGen@1.0.0-1": "04tQ500000CAuzhIAD",
+    "DocGen@1.0.0-2": "04tQ500000CAwqDIAT"
   }
 }
