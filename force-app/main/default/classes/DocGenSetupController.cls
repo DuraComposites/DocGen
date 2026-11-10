@@ -411,7 +411,7 @@ public with sharing class DocGenSetupController {
         }
 
         // Auto-schedule or abort the reminder job
-        String jobName = 'DocGen Signature Reminders';
+        String jobName = 'DocGen Signature Reminders (duracomp)';
         try {
             // Abort existing job if any
             /* code-analyzer-suppress ApexFlsViolation */

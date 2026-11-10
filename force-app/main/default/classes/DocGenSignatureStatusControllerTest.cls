@@ -112,12 +112,15 @@ private class DocGenSignatureStatusControllerTest {
             EmailEncodingKey = 'UTF-8',
             LanguageLocaleKey = 'en_US'
         );
-        insert u;
-        insert new PermissionSetAssignment(
-            AssigneeId = u.Id,
-            PermissionSetId = [SELECT Id FROM PermissionSet WHERE Name = 'DocGen_User' LIMIT 1]
-            .Id
-        );
+        // In its own context, so a test can create the user after inserting records (no MIXED_DML_OPERATION).
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            insert u;
+            insert new PermissionSetAssignment(
+                AssigneeId = u.Id,
+                PermissionSetId = [SELECT Id FROM PermissionSet WHERE Name = 'DocGen_User' LIMIT 1]
+                .Id
+            );
+        }
         return u;
     }
 
@@ -171,12 +174,18 @@ private class DocGenSignatureStatusControllerTest {
     @IsTest
     static void groupsRequestsOnRelatedRecords() {
         Account acct = [SELECT Id FROM Account WHERE Name = 'Status Card Test'];
-        Test.startTest();
-        List<DocGenSignatureStatusController.RecordGroup> groups = DocGenSignatureStatusController.getTimeline(
-            acct.Id,
-            'Contact.AccountId, NotAnObject__c.Foo__c, Contact.Name'
-        );
-        Test.stopTest();
+        // As a DocGen user: in a clean org (the package build org) the running user has no access to
+        // DocGen's fields, and a USER_MODE query reports a field it can't see as "No such column".
+        User u = docGenUser();
+        List<DocGenSignatureStatusController.RecordGroup> groups;
+        System.runAs(u) {
+            Test.startTest();
+            groups = DocGenSignatureStatusController.getTimeline(
+                acct.Id,
+                'Contact.AccountId, NotAnObject__c.Foo__c, Contact.Name'
+            );
+            Test.stopTest();
+        }
 
         Assert.areEqual(2, groups.size(), 'This record, then the contact; bad specs are ignored');
         Assert.isTrue(groups[0].isThisRecord);
@@ -210,12 +219,13 @@ private class DocGenSignatureStatusControllerTest {
         DocGenSignatureEvents.logExpiredOpen(expired.Id, lapsed.Id);
         DocGenSignatureEvents.logForRequest(revoked.Id, DocGenSignatureEvents.REVOKED, true);
 
-        Test.startTest();
-        List<DocGenSignatureStatusController.RecordGroup> groups = DocGenSignatureStatusController.getTimeline(
-            acct.Id,
-            null
-        );
-        Test.stopTest();
+        User u = docGenUser();
+        List<DocGenSignatureStatusController.RecordGroup> groups;
+        System.runAs(u) {
+            Test.startTest();
+            groups = DocGenSignatureStatusController.getTimeline(acct.Id, null);
+            Test.stopTest();
+        }
 
         Map<Id, DocGenSignatureStatusController.RequestStatus> byId = new Map<Id, DocGenSignatureStatusController.RequestStatus>();
         for (DocGenSignatureStatusController.RequestStatus r : groups[0].requests) {

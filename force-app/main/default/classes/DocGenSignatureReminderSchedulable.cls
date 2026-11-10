@@ -11,7 +11,7 @@
  * ONE catch-up reminder rather than a burst: reminders are nags, not an audit
  * trail, and bursting risks the org's daily email limit.
  *
- * Schedule via: System.schedule('DocGen Signature Reminders', '0 0 * * * ?', new DocGenSignatureReminderSchedulable());
+ * Schedule via: System.schedule('DocGen Signature Reminders (duracomp)', '0 0 * * * ?', new DocGenSignatureReminderSchedulable());
  */
 public with sharing class DocGenSignatureReminderSchedulable implements Schedulable {
     // Test-injectable threshold override — allows tests to bypass CreatedDate filtering
