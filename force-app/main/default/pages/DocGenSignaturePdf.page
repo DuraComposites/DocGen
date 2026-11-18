@@ -165,6 +165,18 @@
                     border-color: #ba0517;
                     box-shadow: 0 0 0 1px #ba0517;
                 }
+                /* Dura: "at least one of" hint and file-field upload status */
+                .form-group-hint {
+                    font-size: 0.8125rem;
+                    color: #444;
+                    margin: 0.5rem 0 0.25rem;
+                }
+                .form-file-status {
+                    display: block;
+                    font-size: 0.75rem;
+                    color: #2e844a;
+                    margin-top: 0.25rem;
+                }
                 .form-checkbox-row {
                     display: flex;
                     align-items: center;
@@ -4225,9 +4237,11 @@
 
                         document.getElementById('pdf-doc-title').textContent = data.brandName || 'Document Signature';
                         document.getElementById('pdf-signer-name').textContent = data.signerName || '';
-                        if (data.roleName) {
+                        // Dura: the badge shows the brand's badge label or company name, not the
+                        // signer's role (the role is the template tag name that places the signature).
+                        if (data.badgeLabel) {
                             var badge = document.getElementById('pdf-role-badge');
-                            badge.textContent = data.roleName;
+                            badge.textContent = data.badgeLabel;
                             badge.style.display = 'inline-block';
                         }
                         if (isMultiSigner) {
@@ -6347,12 +6361,7 @@
                             for (var cj = 0; cj < ffCertShown.length; cj++) {
                                 var fdef = ffCertShown[cj];
                                 var frawv = ffCertVals[fdef.key];
-                                var fdisp;
-                                if (fdef.type === 'checkbox') {
-                                    fdisp = frawv === true || frawv === 'true' ? 'Yes' : 'No';
-                                } else {
-                                    fdisp = frawv == null || frawv === '' ? '—' : String(frawv);
-                                }
+                                var fdisp = formFieldDisplay(fdef, frawv) || '—';
                                 page.drawText((fdef.label || fdef.key) + ': ' + fdisp, {
                                     x: 60,
                                     y: y,
@@ -6838,12 +6847,7 @@
                                                 var fkey = fhit.needle.substring(5, fhit.needle.length - 2);
                                                 var fdef = defByKey[fkey];
                                                 var fraw = ffValues[fkey];
-                                                var ftext;
-                                                if (fdef && fdef.type === 'checkbox') {
-                                                    ftext = fraw === true || fraw === 'true' ? 'Yes' : 'No';
-                                                } else {
-                                                    ftext = fraw == null ? '' : String(fraw);
-                                                }
+                                                var ftext = formFieldDisplay(fdef, fraw);
                                                 if (!ftext) continue;
                                                 var frect = DocGenPdfViewer.hitToPdfRect(fhit);
                                                 if (!frect || !pages[frect.pageIndex]) continue;
@@ -7087,6 +7091,8 @@
                         }
                         if (!formFieldsRendered) {
                             var html = '';
+                            var groupLabels = formFieldGroupLabels(fields);
+                            var groupHinted = {};
                             for (var i = 0; i < fields.length; i++) {
                                 var f = fields[i];
                                 var inputId = 'ff-' + f.key;
@@ -7095,6 +7101,51 @@
                                     ? ' <span class="form-required-marker" aria-hidden="true">*</span>'
                                     : '';
                                 var type = f.type || 'text';
+                                // Dura: "at least one of" group. One hint before the group's
+                                // first field; the group's error shows under each of its fields.
+                                if (f.atLeastOneGroup && !groupHinted[f.atLeastOneGroup]) {
+                                    groupHinted[f.atLeastOneGroup] = true;
+                                    html +=
+                                        '<p class="form-group-hint">Provide at least one of: ' +
+                                        escapeHtml(groupLabels[f.atLeastOneGroup].join(', ')) +
+                                        '.</p>';
+                                }
+                                if (type === 'file') {
+                                    // Dura: file field. Uploaded when the signer presses Continue
+                                    // (uploadPendingFormFiles); the value becomes the file's Id.
+                                    var accept = (f.accept && f.accept.length ? f.accept : ['pdf'])
+                                        .map(function (e) {
+                                            return '.' + e;
+                                        })
+                                        .join(',');
+                                    html +=
+                                        '<div class="form-group">' +
+                                        '<label for="' +
+                                        inputId +
+                                        '">' +
+                                        escapeHtml(f.label) +
+                                        marker +
+                                        '</label>' +
+                                        '<input id="' +
+                                        inputId +
+                                        '" type="file" class="form-input form-file" accept="' +
+                                        escapeHtml(accept) +
+                                        '" data-key="' +
+                                        escapeHtml(f.key) +
+                                        '" data-file="1" data-required="' +
+                                        (f.required ? '1' : '0') +
+                                        '"' +
+                                        req +
+                                        ' />' +
+                                        '<span class="form-file-status" id="' +
+                                        inputId +
+                                        '-status"></span>' +
+                                        '<span class="form-field-error" id="' +
+                                        inputId +
+                                        '-err" role="alert"></span>' +
+                                        '</div>';
+                                    continue;
+                                }
                                 if (type === 'checkbox') {
                                     html +=
                                         '<div class="form-group">' +
@@ -7200,6 +7251,9 @@
                         var valid = true;
                         if (!container) return { valid: true, values: values };
                         var inputs = container.querySelectorAll('[data-key]');
+                        var defs = signerData && signerData.formFields ? signerData.formFields : [];
+                        var defByKey = {};
+                        for (var d = 0; d < defs.length; d++) defByKey[defs[d].key] = defs[d];
                         for (var i = 0; i < inputs.length; i++) {
                             var el = inputs[i];
                             var key = el.getAttribute('data-key');
@@ -7207,7 +7261,26 @@
                             var errEl = document.getElementById(el.id + '-err');
                             var val;
                             var missing = false;
-                            if (el.type === 'checkbox') {
+                            var fileError = '';
+                            if (el.getAttribute('data-file') === '1') {
+                                // Dura: a chosen file counts as filled; its value is the uploaded
+                                // file's Id once uploadPendingFormFiles has run.
+                                var chosen = el.files && el.files.length ? el.files[0] : null;
+                                var up = uploadedFormFiles[key];
+                                val = chosen ? (up && up.file === chosen ? up.id : PENDING_FILE) : '';
+                                missing = required && !val;
+                                if (chosen) fileError = formFileProblem(defByKey[key], chosen);
+                                if (fileError) {
+                                    valid = false;
+                                    values[key] = val;
+                                    if (errEl) {
+                                        errEl.textContent = fileError;
+                                        errEl.style.display = '';
+                                    }
+                                    if (el.classList) el.classList.add('form-input_invalid');
+                                    continue;
+                                }
+                            } else if (el.type === 'checkbox') {
                                 val = el.checked;
                                 missing = required && !el.checked;
                             } else {
@@ -7230,7 +7303,131 @@
                                 if (el.classList) el.classList.remove('form-input_invalid');
                             }
                         }
+                        // Dura: "at least one of" groups. The server checks the same rule.
+                        var groupLabels = formFieldGroupLabels(defs);
+                        for (var g in groupLabels) {
+                            if (!Object.prototype.hasOwnProperty.call(groupLabels, g)) continue;
+                            var filled = false;
+                            for (var gi = 0; gi < defs.length; gi++) {
+                                if (defs[gi].atLeastOneGroup !== g) continue;
+                                var gv = values[defs[gi].key];
+                                if (gv === true || (typeof gv === 'string' && gv !== '')) filled = true;
+                            }
+                            if (filled) continue;
+                            valid = false;
+                            for (var gj = 0; gj < defs.length; gj++) {
+                                if (defs[gj].atLeastOneGroup !== g) continue;
+                                var gErr = document.getElementById('ff-' + defs[gj].key + '-err');
+                                if (gErr && !gErr.textContent) {
+                                    gErr.textContent = 'Provide at least one of: ' + groupLabels[g].join(', ') + '.';
+                                    gErr.style.display = '';
+                                }
+                            }
+                        }
                         return { valid: valid, values: values };
+                    }
+
+                    // Dura: { group: [labels] } for the "at least one of" groups in field order.
+                    function formFieldGroupLabels(fields) {
+                        var out = {};
+                        for (var i = 0; i < (fields || []).length; i++) {
+                            var g = fields[i].atLeastOneGroup;
+                            if (!g) continue;
+                            if (!out[g]) out[g] = [];
+                            out[g].push(fields[i].label || fields[i].key);
+                        }
+                        return out;
+                    }
+
+                    // ===== Dura: signer file fields =====
+                    // key → { file: File, id: ContentVersion Id, name } for files already uploaded.
+                    var uploadedFormFiles = {};
+                    var PENDING_FILE = '__pending__';
+
+                    // Problem with a chosen file (type or size), or '' when it can be uploaded.
+                    function formFileProblem(def, file) {
+                        var accept = def && def.accept && def.accept.length ? def.accept : ['pdf'];
+                        var dot = file.name.lastIndexOf('.');
+                        var ext = dot > 0 ? file.name.substring(dot + 1).toLowerCase() : '';
+                        if (accept.indexOf(ext) < 0) {
+                            return 'Please choose a file of type: ' + accept.join(', ').toUpperCase() + '.';
+                        }
+                        var max = def && def.maxSizeBytes ? def.maxSizeBytes : 2097152;
+                        if (file.size > max) {
+                            return 'This file is too large. The limit is ' + Math.round(max / 1048576) + ' MB.';
+                        }
+                        if (file.size === 0) return 'This file is empty.';
+                        return '';
+                    }
+
+                    // Uploads every chosen file not yet uploaded, one at a time, then calls
+                    // done(errorMessage or null). Fills uploadedFormFiles.
+                    function uploadPendingFormFiles(done) {
+                        var container = document.getElementById('modal-form-fields');
+                        var inputs = container ? container.querySelectorAll('[data-file="1"]') : [];
+                        var queue = [];
+                        for (var i = 0; i < inputs.length; i++) {
+                            var el = inputs[i];
+                            var key = el.getAttribute('data-key');
+                            var chosen = el.files && el.files.length ? el.files[0] : null;
+                            var up = uploadedFormFiles[key];
+                            if (chosen && !(up && up.file === chosen)) queue.push({ el: el, key: key, file: chosen });
+                        }
+                        function next() {
+                            if (!queue.length) return done(null);
+                            var item = queue.shift();
+                            var statusEl = document.getElementById(item.el.id + '-status');
+                            if (statusEl) statusEl.textContent = 'Uploading ' + item.file.name + '…';
+                            var reader = new FileReader();
+                            reader.onerror = function () {
+                                if (statusEl) statusEl.textContent = '';
+                                done('The file could not be read. Please choose it again.');
+                            };
+                            reader.onload = function () {
+                                var result = String(reader.result || '');
+                                var base64 =
+                                    result.indexOf(',') >= 0 ? result.substring(result.indexOf(',') + 1) : result;
+                                Visualforce.remoting.Manager.invokeAction(
+                                    '{!$RemoteAction.DocGenSignatureController.uploadFormFieldFile}',
+                                    token,
+                                    item.key,
+                                    item.file.name,
+                                    base64,
+                                    function (res, event) {
+                                        if (!event.status || !res || res.success !== true) {
+                                            if (statusEl) statusEl.textContent = '';
+                                            done(
+                                                (res && res.message) ||
+                                                    (event && event.message) ||
+                                                    'The file could not be uploaded. Please try again.'
+                                            );
+                                            return;
+                                        }
+                                        uploadedFormFiles[item.key] = {
+                                            file: item.file,
+                                            id: res.contentVersionId,
+                                            name: res.fileName || item.file.name
+                                        };
+                                        if (statusEl)
+                                            statusEl.textContent = 'Uploaded: ' + (res.fileName || item.file.name);
+                                        next();
+                                    },
+                                    { escape: false, timeout: 120000 }
+                                );
+                            };
+                            reader.readAsDataURL(item.file);
+                        }
+                        next();
+                    }
+
+                    // How a form-field value reads on the certificate and in {?key} stamps.
+                    function formFieldDisplay(def, raw) {
+                        if (def && def.type === 'checkbox') return raw === true || raw === 'true' ? 'Yes' : 'No';
+                        if (def && def.type === 'file') {
+                            var up = uploadedFormFiles[def.key];
+                            return raw ? (up && up.id === raw ? up.name : 'File uploaded') : '';
+                        }
+                        return raw == null ? '' : String(raw);
                     }
 
                     function showFormFields() {
@@ -7292,6 +7489,27 @@
                         var ff = validateFormFields();
                         if (!ff.valid) {
                             updateSignSubmitState();
+                            return;
+                        }
+                        // Dura: upload chosen files first; their values become the file Ids.
+                        var needsUpload = false;
+                        for (var k in ff.values) {
+                            if (ff.values[k] === PENDING_FILE) needsUpload = true;
+                        }
+                        if (needsUpload) {
+                            var btn = document.getElementById('btn-sign-submit');
+                            btn.disabled = true;
+                            btn.textContent = 'Uploading…';
+                            uploadPendingFormFiles(function (err) {
+                                btn.textContent = 'Continue';
+                                if (err) {
+                                    showModalMsg(err, 'error');
+                                    updateSignSubmitState();
+                                    return;
+                                }
+                                showModalMsg('', 'info');
+                                handleFieldsContinue();
+                            });
                             return;
                         }
                         collectedFormFieldJson = JSON.stringify(ff.values);

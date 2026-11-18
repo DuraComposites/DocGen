@@ -3,7 +3,7 @@
     <!-- Dura Composites Ltd. (new file) -->
     <apiVersion>66.0</apiVersion>
     <isExposed>true</isExposed>
-    <masterLabel>Signature Status</masterLabel>
+    <masterLabel>DocGen Signature Status</masterLabel>
     <description>Each signature request on this record as a timeline: sent, opened, reminders, signed.</description>
     <targets>
         <target>lightning__RecordPage</target>

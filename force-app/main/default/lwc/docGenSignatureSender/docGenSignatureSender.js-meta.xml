@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Modified by Dura Composites Ltd. -->
     <apiVersion>66.0</apiVersion>
     <isExposed>true</isExposed>
+    <masterLabel>DocGen Signature Sender</masterLabel>
+    <description>Send this record's DocGen template for e-signature: choose signers, order and message.</description>
     <targets>
         <target>lightning__RecordAction</target>
         <target>lightning__RecordPage</target>

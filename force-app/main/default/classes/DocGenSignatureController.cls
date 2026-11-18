@@ -158,6 +158,11 @@ public without sharing class DocGenSignatureController {
         public Integer attachmentCount;
         @AuraEnabled
         public String brandName;
+        // Dura: text for the badge at the top right of the signing page. The brand's
+        // Signing_Badge_Label__c, else its company name. Replaces the signer's role there:
+        // the role is the template tag name (it places the signature), not a label for people.
+        @AuraEnabled
+        public String badgeLabel;
         @AuraEnabled
         public String brandColor;
         @AuraEnabled
@@ -252,14 +257,17 @@ public without sharing class DocGenSignatureController {
         }
         // Load the template config for this request (SYSTEM_MODE — guest has no
         // DocGen CRUD; token-bound capability already established by the caller).
-        DocGenFlsGuard.guestAssertAccessible(DocGen_Signature_Request__c.sObjectType, new Set<String>{ 'Template__c' });
+        DocGenFlsGuard.guestAssertAccessible(
+            DocGen_Signature_Request__c.sObjectType,
+            new Set<String>{ 'Template__c', 'Related_Record_Id__c' }
+        );
         DocGenFlsGuard.guestAssertAccessible(
             DocGen_Template__c.sObjectType,
             new Set<String>{ 'Form_Fields_Config__c' }
         );
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
         List<DocGen_Signature_Request__c> reqs = [
-            SELECT Template__c, Template__r.Form_Fields_Config__c
+            SELECT Template__c, Template__r.Form_Fields_Config__c, Related_Record_Id__c
             FROM DocGen_Signature_Request__c
             WHERE Id = :requestId
             WITH SYSTEM_MODE
@@ -278,6 +286,9 @@ public without sharing class DocGenSignatureController {
         if (clean == null) {
             return;
         }
+        // Dura: file fields hold a ContentVersion Id from uploadFormFieldFile. Check each is a
+        // file of this request (throws otherwise), then link it to the related record.
+        DocGenFieldWritebackService.linkUploadedFiles(defs, clean, requestId, reqs[0].Related_Record_Id__c);
 
         DocGen_Signer__c signerUpd = new DocGen_Signer__c(Id = signerId);
         signerUpd.Field_Data_Json__c = JSON.serialize(clean);
@@ -940,6 +951,27 @@ public without sharing class DocGenSignatureController {
     }
 
     /**
+     * Dura: saves a file the signer chose for a 'file' form field (e.g. a purchase order).
+     * Token-bound and PIN-gated like the attachment calls (resolveSigner). The file is
+     * kept on the signature request; it is checked and linked to the related record when
+     * the signer completes. Returns { success, contentVersionId, fileName } or
+     * { success: false, message }. Never throws for a bad file, so the page can show why.
+     */
+    @RemoteAction
+    public static Map<String, Object> uploadFormFieldFile(
+        String token,
+        String fieldKey,
+        String fileName,
+        String base64Data
+    ) {
+        DocGenSignatureAttachments.GuestResult gate = DocGenSignatureAttachments.resolveSigner(token);
+        if (gate.status != 200) {
+            return new Map<String, Object>{ 'success' => false, 'message' => gate.error };
+        }
+        return DocGenFieldWritebackService.saveUploadedFile(gate.signer, fieldKey, fileName, base64Data);
+    }
+
+    /**
      * #412 — records that the signer opened attached document [index]. The page calls this once
      * the document's first page has rendered; approval is refused until every attached document
      * has been opened (see saveCompositedSignedPdf).
@@ -1033,6 +1065,9 @@ public without sharing class DocGenSignatureController {
         res.brandName = brand != null && String.isNotBlank(brand.Company_Name__c)
             ? brand.Company_Name__c
             : (settings == null ? 'DocGen' : settings.Company_Name__c);
+        res.badgeLabel = brand != null && String.isNotBlank(brand.Signing_Badge_Label__c)
+            ? brand.Signing_Badge_Label__c
+            : res.brandName;
         res.brandColor = brand != null && String.isNotBlank(brand.Brand_Color__c)
             ? brand.Brand_Color__c
             : (settings == null ? '#0176D3' : settings.Signature_Email_Brand_Color__c);

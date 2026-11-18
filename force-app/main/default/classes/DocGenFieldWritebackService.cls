@@ -42,6 +42,34 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
     // contract pinned with the frontend: key is [A-Za-z0-9_]+.
     private static final Pattern KEY_PATTERN = Pattern.compile('^[A-Za-z0-9_]+$');
 
+    // Dura: signer file uploads (type 'file'). The page sends the file as base64 through
+    // Visualforce remoting; the cap keeps the request and the decoded Blob inside the
+    // synchronous heap. 2 MB of file is about 2.8 million base64 characters.
+    public static final Integer MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
+    private static final Integer MAX_UPLOAD_BASE64 = ((MAX_UPLOAD_BYTES + 2) / 3) * 4;
+    // A token holder can upload; this caps how many files one request can collect.
+    private static final Integer MAX_UPLOADS_PER_REQUEST = 25;
+    // Extensions a file field may accept. A field's "accept" list is narrowed to these;
+    // anything a browser could run (html, svg, js) is never accepted.
+    private static final Set<String> SAFE_UPLOAD_EXTENSIONS = new Set<String>{
+        'pdf',
+        'png',
+        'jpg',
+        'jpeg',
+        'gif',
+        'tif',
+        'tiff',
+        'doc',
+        'docx',
+        'xls',
+        'xlsx',
+        'csv',
+        'txt'
+    };
+    private static final Pattern CONTENT_VERSION_ID = Pattern.compile('^068[A-Za-z0-9]{12}([A-Za-z0-9]{3})?$');
+    // Characters not allowed in an uploaded file name (path separators, Windows-reserved).
+    private static final Pattern UNSAFE_FILE_NAME_CHARS = Pattern.compile('[\\\\/:*?"<>|\\r\\n\\t]');
+
     /**
      * One configured signer form field, parsed from the template's
      * Form_Fields_Config__c formFields[] array.
@@ -50,12 +78,17 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
         public String key;
         public String label;
         public String fieldApiName;
-        public String type; // text | number | date | checkbox | picklist
+        public String type; // text | number | date | checkbox | picklist | file
         public Boolean required = false;
         public Boolean writeback = false;
         public String mergeTag;
         public List<String> choices = new List<String>();
         public Boolean listOnCertificate = false;
+        // Dura: fields sharing a group name are "at least one of": the signer must fill
+        // one or more of them (e.g. a PO number or a PO file). Blank = no group.
+        public String atLeastOneGroup;
+        // Dura: for type 'file', the accepted extensions (lower case, no dot). Default pdf.
+        public List<String> accept = new List<String>();
     }
 
     /**
@@ -121,6 +154,11 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
             def.writeback = boolVal(row.get('writeback'));
             def.mergeTag = stringVal(row.get('mergeTag'));
             def.listOnCertificate = boolVal(row.get('listOnCertificate'));
+            String grp = stringVal(row.get('atLeastOneGroup'));
+            def.atLeastOneGroup = String.isBlank(grp) ? null : grp.trim();
+            if (def.type == 'file') {
+                def.accept = parseAccept(row.get('accept'));
+            }
             Object choicesRaw = row.get('choices');
             if (choicesRaw instanceof List<Object>) {
                 for (Object c : (List<Object>) choicesRaw) {
@@ -152,7 +190,10 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
                     'type' => def.type,
                     'required' => def.required,
                     'choices' => def.choices,
-                    'listOnCertificate' => def.listOnCertificate
+                    'listOnCertificate' => def.listOnCertificate,
+                    'atLeastOneGroup' => def.atLeastOneGroup,
+                    'accept' => def.accept,
+                    'maxSizeBytes' => def.type == 'file' ? MAX_UPLOAD_BYTES : null
                 }
             );
         }
@@ -196,7 +237,299 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
             }
             clean.put(def.key, coerced);
         }
+        assertAtLeastOneGroups(defs, clean);
         return clean;
+    }
+
+    /**
+     * Dura: the "at least one of" rule. For every atLeastOneGroup, at least one field in
+     * the group must have a value (a ticked checkbox counts; an unticked one does not).
+     * Throws AuraHandledException naming the fields, so the signer sees what to fill.
+     */
+    @TestVisible
+    private static void assertAtLeastOneGroups(List<FormFieldDef> defs, Map<String, Object> clean) {
+        Map<String, List<FormFieldDef>> groups = new Map<String, List<FormFieldDef>>();
+        for (FormFieldDef def : defs) {
+            if (String.isBlank(def.atLeastOneGroup)) {
+                continue;
+            }
+            if (!groups.containsKey(def.atLeastOneGroup)) {
+                groups.put(def.atLeastOneGroup, new List<FormFieldDef>());
+            }
+            groups.get(def.atLeastOneGroup).add(def);
+        }
+        for (String grp : groups.keySet()) {
+            Boolean filled = false;
+            List<String> labels = new List<String>();
+            for (FormFieldDef def : groups.get(grp)) {
+                labels.add(String.isNotBlank(def.label) ? def.label : def.key);
+                if (hasValue(clean.get(def.key))) {
+                    filled = true;
+                }
+            }
+            if (!filled) {
+                throw new AuraHandledException('Please complete at least one of: ' + String.join(labels, ', ') + '.');
+            }
+        }
+    }
+
+    private static Boolean hasValue(Object v) {
+        if (v instanceof Boolean) {
+            return (Boolean) v;
+        }
+        return v != null && String.isNotBlank(String.valueOf(v));
+    }
+
+    /**
+     * Dura: saves a file the signer uploaded for a 'file' form field. The caller has
+     * already resolved the signer from the token (DocGenSignatureAttachments.resolveSigner:
+     * token, expiry, state and email PIN). The file is saved as a ContentVersion published
+     * to the signature request only; linkUploadedFiles links it to the related record when
+     * the signer completes, so a file from an abandoned or declined signing never reaches
+     * the record. Returns the ContentVersion Id the page puts in the field's value.
+     */
+    public static Map<String, Object> saveUploadedFile(
+        DocGen_Signer__c signer,
+        String fieldKey,
+        String fileName,
+        String base64Data
+    ) {
+        Id requestId = signer.Signature_Request__c;
+        FormFieldDef def = null;
+        for (FormFieldDef d : parseConfig(templateConfigFor(requestId))) {
+            if (d.key == fieldKey && d.type == 'file') {
+                def = d;
+            }
+        }
+        if (def == null) {
+            return uploadFail('This document does not take a file for that field.');
+        }
+        String name = String.isBlank(fileName) ? '' : UNSAFE_FILE_NAME_CHARS.matcher(fileName.trim()).replaceAll('_');
+        Integer dot = name.lastIndexOf('.');
+        String ext = dot > 0 ? name.substring(dot + 1).toLowerCase() : '';
+        if (!def.accept.contains(ext)) {
+            return uploadFail('Please upload a file of type: ' + String.join(def.accept, ', ').toUpperCase() + '.');
+        }
+        if (String.isBlank(base64Data)) {
+            return uploadFail('The file is empty.');
+        }
+        if (base64Data.length() > MAX_UPLOAD_BASE64) {
+            return uploadFail('The file is too large. The limit is ' + (MAX_UPLOAD_BYTES / (1024 * 1024)) + ' MB.');
+        }
+        if (ext == 'pdf' && !base64Data.startsWith('JVBERi0')) {
+            return uploadFail('That file is not a valid PDF.');
+        }
+        DocGenFlsGuard.guestAssertAccessible(
+            ContentDocumentLink.sObjectType,
+            new Set<String>{ 'ContentDocumentId', 'LinkedEntityId' }
+        );
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        Integer existing = [
+            SELECT COUNT()
+            FROM ContentDocumentLink
+            WHERE LinkedEntityId = :requestId
+            WITH SYSTEM_MODE
+        ];
+        if (existing >= MAX_UPLOADS_PER_REQUEST) {
+            return uploadFail('No more files can be added to this request. Contact the sender.');
+        }
+        Blob data;
+        try {
+            data = EncodingUtil.base64Decode(base64Data);
+        } catch (Exception e) {
+            return uploadFail('The file could not be read.');
+        }
+        String who = String.isNotBlank(signer.Signer_Name__c) ? signer.Signer_Name__c : 'the signer';
+        String fieldLabel = String.isNotBlank(def.label) ? def.label : def.key;
+        ContentVersion cv = new ContentVersion();
+        cv.Title = (dot > 0 ? name.substring(0, dot) : name).left(255);
+        cv.PathOnClient = name.left(255);
+        cv.VersionData = data;
+        cv.FirstPublishLocationId = requestId;
+        cv.Description = ('Uploaded by ' + who + ' on the signing page for "' + fieldLabel + '".').left(1000);
+        DocGenFlsGuard.guestAssertCreateable(
+            cv,
+            new Set<String>{ 'Title', 'PathOnClient', 'VersionData', 'FirstPublishLocationId', 'Description' }
+        );
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        Database.SaveResult sr = Database.insert(cv, false, AccessLevel.SYSTEM_MODE);
+        if (!sr.isSuccess()) {
+            DocGenErrorLogger.warn(
+                'DocGenFieldWritebackService',
+                'Signer file upload',
+                'A signer file could not be saved: ' + sr.getErrors()[0].getMessage(),
+                null,
+                String.valueOf(requestId)
+            );
+            DocGenErrorLogger.flush();
+            return uploadFail('The file could not be saved. Please try again.');
+        }
+        return new Map<String, Object>{
+            'success' => true,
+            'contentVersionId' => String.valueOf(cv.Id),
+            'fileName' => name
+        };
+    }
+
+    /**
+     * Dura: at completion, checks that every file value in the signer's clean field data
+     * is a file uploaded to THIS request (so a signer can't point a field at another
+     * file), then links each one to the related record. Linking is best effort: a failure
+     * is logged, never thrown, so it can't block signing. Throws only when a value is not
+     * a file of this request.
+     */
+    public static void linkUploadedFiles(
+        List<FormFieldDef> defs,
+        Map<String, Object> clean,
+        Id requestId,
+        String relatedRecordId
+    ) {
+        if (defs == null || clean == null || requestId == null) {
+            return;
+        }
+        Map<Id, String> labelByCv = new Map<Id, String>();
+        for (FormFieldDef def : defs) {
+            Object v = clean.get(def.key);
+            if (def.type == 'file' && hasValue(v)) {
+                labelByCv.put((Id) String.valueOf(v), String.isNotBlank(def.label) ? def.label : def.key);
+            }
+        }
+        if (labelByCv.isEmpty()) {
+            return;
+        }
+        Set<Id> cvIds = labelByCv.keySet();
+        DocGenFlsGuard.guestAssertAccessible(ContentVersion.sObjectType, new Set<String>{ 'ContentDocumentId' });
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        Map<Id, ContentVersion> cvs = new Map<Id, ContentVersion>(
+            [SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id IN :cvIds WITH SYSTEM_MODE]
+        );
+        Set<Id> docIds = new Set<Id>();
+        for (ContentVersion cv : cvs.values()) {
+            docIds.add(cv.ContentDocumentId);
+        }
+        DocGenFlsGuard.guestAssertAccessible(
+            ContentDocumentLink.sObjectType,
+            new Set<String>{ 'ContentDocumentId', 'LinkedEntityId' }
+        );
+        Set<Id> onRequest = new Set<Id>();
+        if (!docIds.isEmpty()) {
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            for (ContentDocumentLink l : [
+                SELECT ContentDocumentId
+                FROM ContentDocumentLink
+                WHERE ContentDocumentId IN :docIds AND LinkedEntityId = :requestId
+                WITH SYSTEM_MODE
+            ]) {
+                onRequest.add(l.ContentDocumentId);
+            }
+        }
+        for (Id cvId : cvIds) {
+            ContentVersion cv = cvs.get(cvId);
+            if (cv == null || !onRequest.contains(cv.ContentDocumentId)) {
+                throw new AuraHandledException(
+                    'The file for ' + labelByCv.get(cvId) + ' could not be found. Please upload it again.'
+                );
+            }
+        }
+        Id recordId;
+        try {
+            recordId = String.isBlank(relatedRecordId) ? null : (Id) relatedRecordId;
+        } catch (Exception badId) {
+            recordId = null;
+        }
+        if (recordId == null) {
+            return;
+        }
+        Set<Id> alreadyLinked = new Set<Id>();
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        for (ContentDocumentLink l : [
+            SELECT ContentDocumentId
+            FROM ContentDocumentLink
+            WHERE ContentDocumentId IN :docIds AND LinkedEntityId = :recordId
+            WITH SYSTEM_MODE
+        ]) {
+            alreadyLinked.add(l.ContentDocumentId);
+        }
+        List<ContentDocumentLink> links = new List<ContentDocumentLink>();
+        for (Id docId : docIds) {
+            if (!alreadyLinked.contains(docId)) {
+                links.add(
+                    new ContentDocumentLink(
+                        ContentDocumentId = docId,
+                        LinkedEntityId = recordId,
+                        ShareType = 'V',
+                        Visibility = 'AllUsers'
+                    )
+                );
+            }
+        }
+        if (links.isEmpty()) {
+            return;
+        }
+        DocGenFlsGuard.guestAssertCreateable(
+            links[0],
+            new Set<String>{ 'ContentDocumentId', 'LinkedEntityId', 'ShareType', 'Visibility' }
+        );
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        for (Database.SaveResult sr : Database.insert(links, false, AccessLevel.SYSTEM_MODE)) {
+            if (!sr.isSuccess()) {
+                DocGenErrorLogger.warn(
+                    'DocGenFieldWritebackService',
+                    'Link signer file to record',
+                    'An uploaded file could not be linked to the record: ' + sr.getErrors()[0].getMessage(),
+                    null,
+                    String.valueOf(requestId)
+                );
+            }
+        }
+        DocGenErrorLogger.flush();
+    }
+
+    private static String templateConfigFor(Id requestId) {
+        DocGenFlsGuard.guestAssertAccessible(DocGen_Signature_Request__c.sObjectType, new Set<String>{ 'Template__c' });
+        DocGenFlsGuard.guestAssertAccessible(
+            DocGen_Template__c.sObjectType,
+            new Set<String>{ 'Form_Fields_Config__c' }
+        );
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        List<DocGen_Signature_Request__c> reqs = [
+            SELECT Template__r.Form_Fields_Config__c
+            FROM DocGen_Signature_Request__c
+            WHERE Id = :requestId
+            WITH SYSTEM_MODE
+            LIMIT 1
+        ];
+        return reqs.isEmpty() || reqs[0].Template__r == null ? null : reqs[0].Template__r.Form_Fields_Config__c;
+    }
+
+    private static Map<String, Object> uploadFail(String message) {
+        return new Map<String, Object>{ 'success' => false, 'message' => message };
+    }
+
+    /** Accepted extensions for a file field: config list or comma string, narrowed to the safe set. */
+    @TestVisible
+    private static List<String> parseAccept(Object raw) {
+        List<String> parts = new List<String>();
+        if (raw instanceof List<Object>) {
+            for (Object o : (List<Object>) raw) {
+                if (o != null) {
+                    parts.add(String.valueOf(o));
+                }
+            }
+        } else if (raw != null) {
+            parts.addAll(String.valueOf(raw).split(','));
+        }
+        List<String> accept = new List<String>();
+        for (String part : parts) {
+            String e = part.trim().removeStart('.').toLowerCase();
+            if (SAFE_UPLOAD_EXTENSIONS.contains(e) && !accept.contains(e)) {
+                accept.add(e);
+            }
+        }
+        if (accept.isEmpty()) {
+            accept.add('pdf');
+        }
+        return accept;
     }
 
     /**
@@ -437,6 +770,13 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
             }
         } else if (type == 'checkbox') {
             return s.equalsIgnoreCase('true') || s == '1' || s.equalsIgnoreCase('yes') || s.equalsIgnoreCase('on');
+        } else if (type == 'file') {
+            // The value is the ContentVersion Id saveUploadedFile returned. Shape only here;
+            // linkUploadedFiles checks it belongs to this request.
+            if (!CONTENT_VERSION_ID.matcher(s).matches()) {
+                throw new AuraHandledException('The uploaded file reference is not valid. Please upload it again.');
+            }
+            return String.valueOf((Id) s);
         } else if (type == 'date') {
             try {
                 // Accept ISO yyyy-MM-dd (native HTML date input) — validate by parse.
@@ -488,7 +828,7 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
             return 'text';
         }
         String t = type.trim().toLowerCase();
-        if (t == 'text' || t == 'number' || t == 'date' || t == 'checkbox' || t == 'picklist') {
+        if (t == 'text' || t == 'number' || t == 'date' || t == 'checkbox' || t == 'picklist' || t == 'file') {
             return t;
         }
         return 'text';

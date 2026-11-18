@@ -258,6 +258,27 @@ public with sharing class DocGenSignatureSenderController {
      * strategy, because the guided frozen-body path freezes the loop empty at send and
      * can't repopulate it with signed rows at completion.
      */
+    /**
+     * Dura: a template's signature placements and whether it has a {#Signatures} repeating
+     * block, from one read of the template body. Backs the "DocGen: Get Template Signers"
+     * Flow action (DocGenGetTemplateSignersAction). Placements are sorted by signing order.
+     */
+    public static TemplateSignatureSummary describeTemplateSignatures(Id templateId) {
+        TemplateSignatureSummary out = new TemplateSignatureSummary();
+        String plain = extractTemplatePlainText(templateId);
+        if (plain != null) {
+            out.placements = parseSignaturePlacements(plain);
+            out.hasSignaturesBlock = plain.contains('{#Signatures}');
+        }
+        return out;
+    }
+
+    /** Dura: result of describeTemplateSignatures. */
+    public class TemplateSignatureSummary {
+        public List<PlacementInfo> placements = new List<PlacementInfo>();
+        public Boolean hasSignaturesBlock = false;
+    }
+
     @TestVisible
     private static Boolean templateHasSignaturesLoopBlock(Id templateId) {
         String plain = extractTemplatePlainText(templateId);

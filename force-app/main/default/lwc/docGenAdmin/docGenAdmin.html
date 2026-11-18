@@ -4824,6 +4824,16 @@
                                                                         onchange={handleSignerFieldChoicesChange}
                                                                     ></lightning-input>
                                                                 </template>
+                                                                <lightning-input
+                                                                    class="slds-var-m-top_xx-small"
+                                                                    type="text"
+                                                                    variant="label-hidden"
+                                                                    value={row.atLeastOneGroup}
+                                                                    data-index={row.index}
+                                                                    placeholder="At-least-one group (optional)"
+                                                                    title="Fields with the same group name: the signer must fill at least one of them"
+                                                                    onchange={handleSignerFieldGroupChange}
+                                                                ></lightning-input>
                                                             </td>
                                                             <td>
                                                                 <lightning-combobox
