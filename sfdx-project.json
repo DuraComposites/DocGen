@@ -4,8 +4,9 @@
       "path": "force-app",
       "default": true,
       "package": "DocGen",
-      "versionName": "1.0.0",
-      "versionNumber": "1.0.0.NEXT",
+      "versionName": "1.1.0",
+      "versionNumber": "1.1.0.NEXT",
+      "ancestorVersion": "HIGHEST",
       "definitionFile": "config/build-def.json",
       "postInstallScript": "DocGenEmailTemplateInstall",
       "versionDescription": "Turn any Salesforce record into a finished document: quotes, invoices, contracts, certificates, letters, statements and reports. Build your template in Word, Excel or PowerPoint, or design one in your browser, then drop in the fields you want and DocGen fills them in. Tables grow with your data, charts draw themselves, and images, barcodes and QR codes come along too. Send documents for signature, including drawings for approval and markup, and follow each request from sent to signed. Generate one from a record, thousands at once, or let a Flow do it automatically. Everything runs inside your own Salesforce org, with no external services and no data leaving the platform."
@@ -23,6 +24,7 @@
     "Portwood@3.63.0-1": "04tVx000001CfejIAC",
     "DocGen": "0HoQ50000003kKrKAI",
     "DocGen@1.0.0-1": "04tQ500000CAuzhIAD",
-    "DocGen@1.0.0-2": "04tQ500000CAwqDIAT"
+    "DocGen@1.0.0-2": "04tQ500000CAwqDIAT",
+    "DocGen@1.0.0-3": "04tQ500000CIv0vIAD"
   }
 }
