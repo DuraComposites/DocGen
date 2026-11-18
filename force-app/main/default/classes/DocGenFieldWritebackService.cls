@@ -268,7 +268,7 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
                 }
             }
             if (!filled) {
-                throw new AuraHandledException('Please complete at least one of: ' + String.join(labels, ', ') + '.');
+                throw DocGenService.ahe('Please complete at least one of: ' + String.join(labels, ', ') + '.');
             }
         }
     }
@@ -426,7 +426,7 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
         for (Id cvId : cvIds) {
             ContentVersion cv = cvs.get(cvId);
             if (cv == null || !onRequest.contains(cv.ContentDocumentId)) {
-                throw new AuraHandledException(
+                throw DocGenService.ahe(
                     'The file for ' + labelByCv.get(cvId) + ' could not be found. Please upload it again.'
                 );
             }
@@ -774,7 +774,7 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
             // The value is the ContentVersion Id saveUploadedFile returned. Shape only here;
             // linkUploadedFiles checks it belongs to this request.
             if (!CONTENT_VERSION_ID.matcher(s).matches()) {
-                throw new AuraHandledException('The uploaded file reference is not valid. Please upload it again.');
+                throw DocGenService.ahe('The uploaded file reference is not valid. Please upload it again.');
             }
             return String.valueOf((Id) s);
         } else if (type == 'date') {
