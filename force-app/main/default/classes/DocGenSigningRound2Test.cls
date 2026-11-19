@@ -270,6 +270,12 @@ private class DocGenSigningRound2Test {
             Status__c = 'Signed',
             Signature_Data__c = 'Casey C'
         );
+        // The live rows: the signer who signed shows their signature, the other stays blank.
+        List<Map<String, Object>> rows = DocGenSignatureService.buildSignerLoopData(reqId);
+        Assert.areEqual('Casey C', rows[0].get('Name'));
+        Assert.areEqual('', rows[1].get('Name'), 'An unsigned signer has no signature yet');
+        Assert.areEqual('Dana Director', rows[1].get('RegisteredName'), 'but keeps the invited name');
+        Assert.areEqual('Pending', rows[1].get('Status'));
 
         Test.startTest();
         System.enqueueJob(new DocGenSignatureService.TemplateSignaturePdfQueueable(reqId, true));

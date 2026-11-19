@@ -938,9 +938,15 @@ public without sharing class DocGenSignatureService {
         }
 
         for (DocGen_Signer__c s : signers) {
+            // Dura: the signature line stays blank until the signer has signed (as in the
+            // send-time preview). It matters for the live viewing copy re-rendered while
+            // others are still to sign; at completion everyone has signed.
+            String typed = String.isNotBlank(s.Signature_Data__c)
+                ? s.Signature_Data__c
+                : (s.Status__c == 'Signed' ? s.Signer_Name__c : '');
             rows.add(
                 buildSignerLoopRow(
-                    String.isNotBlank(s.Signature_Data__c) ? s.Signature_Data__c : s.Signer_Name__c,
+                    typed,
                     s.Signer_Name__c,
                     s.Role_Name__c,
                     s.Signer_Email__c,
