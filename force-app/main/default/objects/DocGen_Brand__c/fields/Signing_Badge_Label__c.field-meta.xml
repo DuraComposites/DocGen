@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Signing_Badge_Label__c</fullName>
+    <description
+    >Optional label shown in the badge at the top right of the signing page. Blank shows the brand's company name. The signer's role is never shown there.</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Shown at the top right of the signing page. Leave blank to show the company name.</inlineHelpText>
+    <label>Signing Badge Label</label>
+    <length>80</length>
+    <required>false</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

@@ -11,6 +11,8 @@ Use the right company name, logo, color, and sender throughout a signing request
 5. Choose a logo URL or shared Asset file.
 6. Leave it Active and save.
 
+The badge at the top right of the signing page shows the brand's **Signing page badge** text, or its **Company name** when that is blank. It never shows the signer's role.
+
 An inactive brand is not available for new selections; existing assignments fall back to the org default while it is inactive.
 
 ![The brand editor sets the internal name, displayed company, sender, logo, footer, and color](docs/images/userguide/v3.60/brand-editor.png)

@@ -19,6 +19,9 @@ The list of what this fork changes. Every pull request that changes behaviour ad
 | Link expiry and reminder schedule per template (days), editable at send time and in Flow; extend a link or change reminders from the Signature Status card, recorded on the timeline                | [#9](https://github.com/DuraComposites/DocGen/pull/9)   |
 | Renamed to DocGen: no Portwood name, logo, links, support addresses or community sign-up in the app or guide; namespace references use `duracomp`                                                   | [#10](https://github.com/DuraComposites/DocGen/pull/10) |
 | Packaged as DocGen, a managed package in the `duracomp` namespace; the hourly reminder job is named "DocGen Signature Reminders (duracomp)" so it doesn't cancel Portwood's when both are installed | [#12](https://github.com/DuraComposites/DocGen/pull/12) |
+| Signer inputs: a file upload type (saved on the request, linked to the record on completion) and "at least one of" groups, checked on the page and the server                                       | [#14](https://github.com/DuraComposites/DocGen/pull/14) |
+| Flow action "DocGen: Get Template Signers": a template's signer roles in signing order and whether it has a `{#Signatures}` block                                                                   | [#14](https://github.com/DuraComposites/DocGen/pull/14) |
+| Signing page badge shows the brand's badge label or company name instead of the signer's role; App Builder labels "DocGen Signature Status" and "DocGen Signature Sender"                           | [#14](https://github.com/DuraComposites/DocGen/pull/14) |
 
 ## Install
 

@@ -23,6 +23,8 @@ public with sharing class DocGenBrandController {
         @AuraEnabled
         public String footerText;
         @AuraEnabled
+        public String signingBadgeLabel;
+        @AuraEnabled
         public Boolean isActive;
     }
 
@@ -34,6 +36,7 @@ public with sharing class DocGenBrandController {
         'Logo_Asset_Key__c',
         'Company_Name__c',
         'Footer_Text__c',
+        'Signing_Badge_Label__c',
         'Is_Active__c'
     };
 
@@ -61,6 +64,7 @@ public with sharing class DocGenBrandController {
                 Logo_Asset_Key__c,
                 Company_Name__c,
                 Footer_Text__c,
+                Signing_Badge_Label__c,
                 Is_Active__c
             FROM DocGen_Brand__c
             WITH SYSTEM_MODE
@@ -118,6 +122,7 @@ public with sharing class DocGenBrandController {
         b.Logo_Asset_Key__c = (String) dto.get('logoAssetKey');
         b.Company_Name__c = (String) dto.get('companyName');
         b.Footer_Text__c = (String) dto.get('footerText');
+        b.Signing_Badge_Label__c = (String) dto.get('signingBadgeLabel');
         b.Is_Active__c = dto.get('isActive') == null ? true : (Boolean) dto.get('isActive');
 
         Set<String> writeFields = new Set<String>{
@@ -129,6 +134,7 @@ public with sharing class DocGenBrandController {
             'Logo_Asset_Key__c',
             'Company_Name__c',
             'Footer_Text__c',
+            'Signing_Badge_Label__c',
             'Is_Active__c'
         };
         if (existingId == null) {
@@ -155,6 +161,7 @@ public with sharing class DocGenBrandController {
         d.brandColor = r.Brand_Color__c;
         d.companyName = r.Company_Name__c;
         d.footerText = r.Footer_Text__c;
+        d.signingBadgeLabel = r.Signing_Badge_Label__c;
         d.isActive = r.Is_Active__c;
         return d;
     }

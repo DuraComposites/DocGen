@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getBrands from '@salesforce/apex/DocGenBrandController.getBrands';
@@ -25,6 +26,7 @@ const BLANK_FORM = {
     logoAssetKey: '',
     companyName: '',
     footerText: '',
+    signingBadgeLabel: '',
     isActive: true
 };
 
@@ -178,6 +180,7 @@ export default class DocGenBrands extends LightningElement {
             logoAssetKey: brand.logoAssetKey || '',
             companyName: brand.companyName || '',
             footerText: brand.footerText || '',
+            signingBadgeLabel: brand.signingBadgeLabel || '',
             isActive: brand.isActive !== false
         };
         this.showForm = true;
@@ -206,6 +209,9 @@ export default class DocGenBrands extends LightningElement {
     }
     handleFooterChange(e) {
         this.form = { ...this.form, footerText: e.target.value };
+    }
+    handleBadgeChange(e) {
+        this.form = { ...this.form, signingBadgeLabel: e.target.value };
     }
     handleActiveChange(e) {
         this.form = { ...this.form, isActive: e.target.checked };
@@ -237,6 +243,7 @@ export default class DocGenBrands extends LightningElement {
             logoAssetKey: this.fieldValue('logoAssetKey'),
             companyName: this.fieldValue('companyName'),
             footerText: this.fieldValue('footerText'),
+            signingBadgeLabel: this.fieldValue('signingBadgeLabel'),
             isActive: this.fieldValue('isActive')
         };
         this.isSaving = true;

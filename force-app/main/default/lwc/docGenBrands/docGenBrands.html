@@ -142,6 +142,17 @@
                         ></lightning-input>
 
                         <lightning-input
+                            data-field="signingBadgeLabel"
+                            type="text"
+                            label="Signing page badge"
+                            field-level-help="Shown at the top right of the signing page. Leave blank to show the company name."
+                            max-length="80"
+                            value={form.signingBadgeLabel}
+                            oninput={handleBadgeChange}
+                            class="slds-p-bottom_x-small"
+                        ></lightning-input>
+
+                        <lightning-input
                             data-field="brandColor"
                             type="color"
                             label="Brand color"
