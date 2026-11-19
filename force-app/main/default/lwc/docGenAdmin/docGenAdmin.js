@@ -4095,7 +4095,8 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             { label: 'Number', value: 'number' },
             { label: 'Date', value: 'date' },
             { label: 'Checkbox', value: 'checkbox' },
-            { label: 'Picklist', value: 'picklist' }
+            { label: 'Picklist', value: 'picklist' },
+            { label: 'File upload', value: 'file' }
         ];
     }
 
@@ -4125,6 +4126,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             required: !!row.required,
             writeback: !!row.writeback,
             listOnCertificate: !!row.listOnCertificate,
+            atLeastOneGroup: row.atLeastOneGroup || '',
             mergeTag: row.mergeTag || this._buildSignerMergeTag(row.key),
             choicesText: Array.isArray(row.choices) ? row.choices.join(', ') : row.choices || '',
             isPicklist: (row.type || 'text') === 'picklist',
@@ -4181,7 +4183,9 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
                         writeback: !!f.writeback,
                         mergeTag: f.mergeTag || this._buildSignerMergeTag(f.key),
                         choices: Array.isArray(f.choices) ? f.choices : [],
-                        listOnCertificate: !!f.listOnCertificate
+                        listOnCertificate: !!f.listOnCertificate,
+                        atLeastOneGroup: f.atLeastOneGroup || '',
+                        accept: f.accept
                     }));
                 }
             } catch (e) {
@@ -4204,7 +4208,10 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             writeback: !!f.writeback,
             mergeTag: f.mergeTag || this._buildSignerMergeTag(f.key),
             choices: Array.isArray(f.choices) ? f.choices : [],
-            listOnCertificate: !!f.listOnCertificate
+            listOnCertificate: !!f.listOnCertificate,
+            // Dura: "at least one of" group and, for file fields, accepted extensions.
+            ...(f.atLeastOneGroup ? { atLeastOneGroup: f.atLeastOneGroup } : {}),
+            ...(f.accept ? { accept: f.accept } : {})
         }));
         this.editFormFieldsConfig = JSON.stringify({ formFields: serialized });
     }
@@ -4301,6 +4308,13 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             .map((s) => s.trim())
             .filter((s) => s.length > 0);
         this._updateSignerFieldRow(Number(event.currentTarget.dataset.index), { choices });
+    }
+
+    handleSignerFieldGroupChange(event) {
+        const raw = event.detail ? event.detail.value : event.target.value;
+        this._updateSignerFieldRow(Number(event.currentTarget.dataset.index), {
+            atLeastOneGroup: String(raw || '').trim()
+        });
     }
 
     handleSignerFieldCertificateChange(event) {

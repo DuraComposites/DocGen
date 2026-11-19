@@ -6,12 +6,33 @@ Ask a signer for a PO number, selected date, acknowledgement, or other informati
 
 1. Open the template editor and choose **Signer Inputs**.
 2. Click **Add Field**.
-3. Set the **Label** and **Type**: text, number, date, checkbox, or picklist. Supply choices for a picklist.
+3. Set the **Label** and **Type**: text, number, date, checkbox, picklist, or file upload. Supply choices for a picklist.
 4. Choose **Required** if the signer must answer.
 5. Copy the generated **Merge Tag**. Its stable key uses letters, numbers, and underscores.
 6. Choose **On Certificate** if the answer should appear on the completion certificate.
 7. To update Salesforce after signing, select a suitable **Mapped Field** on the related record and enable **Write Back**.
 8. Save the intended version and test a practice signing request.
+
+#### Ask for a file
+
+A **File upload** input lets the signer attach a file, such as a purchase order, before they sign. PDF is accepted by default, up to 2 MB. The file is saved on the signature request when the signer presses **Continue**, and is linked to the related record when they finish signing; a file from a signing that is abandoned or declined never reaches the record. The input's answer is the file's ContentVersion Id, so writeback and Flows can find it. The certificate shows the file name.
+
+To accept other types, add an `accept` list to the input in the template's form-field configuration, for example `"accept": "pdf,png,jpg"`. Only document and image types are allowed (pdf, png, jpg, jpeg, gif, tif, tiff, doc, docx, xls, xlsx, csv, txt).
+
+#### Ask for at least one of several inputs
+
+Give two or more inputs the same **At-least-one group** name (under the label in the editor) and the signer must fill at least one of them. For example, a PO number or a PO file:
+
+```json
+{
+    "formFields": [
+        { "key": "PO_Number", "label": "PO number", "type": "text", "atLeastOneGroup": "po" },
+        { "key": "PO_File", "label": "PO file", "type": "file", "atLeastOneGroup": "po", "accept": "pdf" }
+    ]
+}
+```
+
+Leave **Required** off on grouped inputs. The signing page and the server both check the rule. A ticked checkbox counts as filled; an unticked one does not.
 
 #### Place the answer
 

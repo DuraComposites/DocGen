@@ -4,6 +4,21 @@ Create a signing request automatically when a record is ready for approval or ac
 
 **Before you start:** Test the template, signature roles, public signing path, and email sender manually. This article is for a Flow builder.
 
+#### Read the template's signers
+
+To build one signer row per role from the template itself, add **DocGen: Get Template Signers** first.
+
+| Input                                    | What to supply             |
+| ---------------------------------------- | -------------------------- |
+| **Template API Name** or **Template Id** | The template you will send |
+
+| Output                   | What it holds                                                                                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Signers**              | A collection of **DocGenTemplateSigner**: **role** (from `{@Signature_Role:Order:Type}`, underscores as spaces) and **signingOrder**, one per role, in signing order |
+| **Has Signatures Block** | True when the template has a `{#Signatures}` repeating block, so the document can take signers beyond its fixed roles                                                |
+
+A role used by several tags appears once, at its lowest order. Pass each **role** unchanged as the signer's role: it is what places the signature.
+
 #### 1. Prepare the signer resources
 
 Create a single **Apex-Defined** variable using the packaged **DocGenSigner** class and a collection variable of the same type.

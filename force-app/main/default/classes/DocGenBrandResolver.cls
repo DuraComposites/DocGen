@@ -88,6 +88,7 @@ public without sharing class DocGenBrandResolver {
                 'Logo_Height__c',
                 'Company_Name__c',
                 'Footer_Text__c',
+                'Signing_Badge_Label__c',
                 'Is_Active__c'
             }
         );
@@ -104,6 +105,7 @@ public without sharing class DocGenBrandResolver {
                 Logo_Height__c,
                 Company_Name__c,
                 Footer_Text__c,
+                Signing_Badge_Label__c,
                 Is_Active__c
             FROM DocGen_Brand__c
             WHERE Id = :brandId AND Is_Active__c = TRUE

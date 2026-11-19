@@ -132,6 +132,23 @@
         ]
     },
     {
+        "name": "DocGenGetTemplateSignersAction",
+        "package": "Core",
+        "file": "force-app/main/default/classes/DocGenGetTemplateSignersAction.cls",
+        "declarations": [
+            "global with sharing class DocGenGetTemplateSignersAction",
+            "global class Request",
+            "global Request()",
+            "global Id templateId",
+            "global String templateApiName",
+            "global class Result",
+            "global Result()",
+            "global List<DocGenTemplateSigner> signers",
+            "global Boolean hasSignaturesBlock",
+            "global static List<Result> getSigners(List<Request> requests)"
+        ]
+    },
+    {
         "name": "DocGenGiantQueryFlowAction",
         "package": "Core",
         "file": "force-app/main/default/classes/DocGenGiantQueryFlowAction.cls",
@@ -342,6 +359,17 @@
             "global String email",
             "global String role",
             "global Id contactId"
+        ]
+    },
+    {
+        "name": "DocGenTemplateSigner",
+        "package": "Core",
+        "file": "force-app/main/default/classes/DocGenTemplateSigner.cls",
+        "declarations": [
+            "global class DocGenTemplateSigner",
+            "global DocGenTemplateSigner()",
+            "global String role",
+            "global Integer signingOrder"
         ]
     },
     {

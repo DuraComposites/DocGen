@@ -2205,6 +2205,8 @@ Use the right company name, logo, color, and sender throughout a signing request
 5. Choose a logo URL or shared Asset file.
 6. Leave it Active and save.
 
+The badge at the top right of the signing page shows the brand's **Signing page badge** text, or its **Company name** when that is blank. It never shows the signer's role.
+
 An inactive brand is not available for new selections; existing assignments fall back to the org default while it is inactive.
 
 ![The brand editor sets the internal name, displayed company, sender, logo, footer, and color](docs/images/userguide/v3.60/brand-editor.png)
@@ -2467,12 +2469,33 @@ Ask a signer for a PO number, selected date, acknowledgement, or other informati
 
 1. Open the template editor and choose **Signer Inputs**.
 2. Click **Add Field**.
-3. Set the **Label** and **Type**: text, number, date, checkbox, or picklist. Supply choices for a picklist.
+3. Set the **Label** and **Type**: text, number, date, checkbox, picklist, or file upload. Supply choices for a picklist.
 4. Choose **Required** if the signer must answer.
 5. Copy the generated **Merge Tag**. Its stable key uses letters, numbers, and underscores.
 6. Choose **On Certificate** if the answer should appear on the completion certificate.
 7. To update Salesforce after signing, select a suitable **Mapped Field** on the related record and enable **Write Back**.
 8. Save the intended version and test a practice signing request.
+
+#### Ask for a file
+
+A **File upload** input lets the signer attach a file, such as a purchase order, before they sign. PDF is accepted by default, up to 2 MB. The file is saved on the signature request when the signer presses **Continue**, and is linked to the related record when they finish signing; a file from a signing that is abandoned or declined never reaches the record. The input's answer is the file's ContentVersion Id, so writeback and Flows can find it. The certificate shows the file name.
+
+To accept other types, add an `accept` list to the input in the template's form-field configuration, for example `"accept": "pdf,png,jpg"`. Only document and image types are allowed (pdf, png, jpg, jpeg, gif, tif, tiff, doc, docx, xls, xlsx, csv, txt).
+
+#### Ask for at least one of several inputs
+
+Give two or more inputs the same **At-least-one group** name (under the label in the editor) and the signer must fill at least one of them. For example, a PO number or a PO file:
+
+```json
+{
+    "formFields": [
+        { "key": "PO_Number", "label": "PO number", "type": "text", "atLeastOneGroup": "po" },
+        { "key": "PO_File", "label": "PO file", "type": "file", "atLeastOneGroup": "po", "accept": "pdf" }
+    ]
+}
+```
+
+Leave **Required** off on grouped inputs. The signing page and the server both check the rule. A ticked checkbox counts as filled; an unticked one does not.
 
 #### Place the answer
 
@@ -2638,6 +2661,21 @@ _Flow builders · 6 min read · Reviewed for 3.60.0_
 Create a signing request automatically when a record is ready for approval or acceptance.
 
 **Before you start:** Test the template, signature roles, public signing path, and email sender manually. This article is for a Flow builder.
+
+#### Read the template's signers
+
+To build one signer row per role from the template itself, add **DocGen: Get Template Signers** first.
+
+| Input                                    | What to supply             |
+| ---------------------------------------- | -------------------------- |
+| **Template API Name** or **Template Id** | The template you will send |
+
+| Output                   | What it holds                                                                                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Signers**              | A collection of **DocGenTemplateSigner**: **role** (from `{@Signature_Role:Order:Type}`, underscores as spaces) and **signingOrder**, one per role, in signing order |
+| **Has Signatures Block** | True when the template has a `{#Signatures}` repeating block, so the document can take signers beyond its fixed roles                                                |
+
+A role used by several tags appears once, at its lowest order. Pass each **role** unchanged as the signer's role: it is what places the signature.
 
 #### 1. Prepare the signer resources
 
@@ -5217,6 +5255,23 @@ global Boolean success
 global static List<Response> generateDocument(List<Request> requests)
 ```
 
+#### DocGenGetTemplateSignersAction
+
+Core · [Source](https://github.com/DuraComposites/DocGen/blob/main/force-app/main/default/classes/DocGenGetTemplateSignersAction.cls)
+
+```apex
+global with sharing class DocGenGetTemplateSignersAction
+global class Request
+global Request()
+global Id templateId
+global String templateApiName
+global class Result
+global Result()
+global List<DocGenTemplateSigner> signers
+global Boolean hasSignaturesBlock
+global static List<Result> getSigners(List<Request> requests)
+```
+
 #### DocGenGiantQueryFlowAction
 
 Core · [Source](https://github.com/DuraComposites/DocGen/blob/main/force-app/main/default/classes/DocGenGiantQueryFlowAction.cls)
@@ -5428,6 +5483,17 @@ global String name
 global String email
 global String role
 global Id contactId
+```
+
+#### DocGenTemplateSigner
+
+Core · [Source](https://github.com/DuraComposites/DocGen/blob/main/force-app/main/default/classes/DocGenTemplateSigner.cls)
+
+```apex
+global class DocGenTemplateSigner
+global DocGenTemplateSigner()
+global String role
+global Integer signingOrder
 ```
 
 #### DocGenEinsteinProvider
