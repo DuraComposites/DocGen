@@ -168,6 +168,11 @@ public without sharing class DocGenSignatureController {
         // same text on the signer's audit, so the page never decides what was agreed.
         @AuraEnabled
         public String consentText;
+        // Dura: on a Sequential request, the names of earlier signers who have not signed yet
+        // (comma-separated); blank when it is this signer's turn. The page shows the document
+        // read-only until then; the server refuses any signature (assertSignerTurn).
+        @AuraEnabled
+        public String waitingFor;
         @AuraEnabled
         public String brandColor;
         @AuraEnabled
@@ -836,6 +841,8 @@ public without sharing class DocGenSignatureController {
         res.signerName = signer.Signer_Name__c;
         res.signerEmail = signer.Signer_Email__c;
         res.roleName = signer.Role_Name__c;
+        List<String> ahead = signersAhead(signer.Id);
+        res.waitingFor = ahead.isEmpty() ? null : String.join(ahead, ', ');
         // #verification — PIN is required only if this request still requires it AND the signer
         // hasn't verified yet. When pre-fill is on, the page may auto-send to signerEmail.
         Boolean requireVerification = parentReq.Require_Email_Verification__c != false; // null → required (default)
@@ -989,6 +996,10 @@ public without sharing class DocGenSignatureController {
         if (gate.status != 200) {
             return new Map<String, Object>{ 'success' => false, 'message' => gate.error };
         }
+        List<String> ahead = signersAhead(gate.signer.Id);
+        if (!ahead.isEmpty()) {
+            return new Map<String, Object>{ 'success' => false, 'message' => notYourTurnMessage(ahead) };
+        }
         return DocGenFieldWritebackService.saveUploadedFile(gate.signer, fieldKey, fileName, base64Data);
     }
 
@@ -1077,6 +1088,71 @@ public without sharing class DocGenSignatureController {
         }
 
         return res;
+    }
+
+    /**
+     * Dura: on a Sequential request, the names of the earlier signers (lower Sort_Order__c)
+     * who have not signed yet, in order. Empty when it is this signer's turn, or when the
+     * request is Parallel or Single. Sequential otherwise only times the emails, so a signer
+     * holding their link early (copied, forwarded, resent) could sign out of order.
+     */
+    @TestVisible
+    private static List<String> signersAhead(Id signerId) {
+        List<String> names = new List<String>();
+        if (signerId == null) {
+            return names;
+        }
+        DocGenFlsGuard.guestAssertAccessible(
+            DocGen_Signer__c.sObjectType,
+            new Set<String>{ 'Signature_Request__c', 'Sort_Order__c', 'Status__c', 'Signer_Name__c' }
+        );
+        DocGenFlsGuard.guestAssertAccessible(
+            DocGen_Signature_Request__c.sObjectType,
+            new Set<String>{ 'Signing_Order__c' }
+        );
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        List<DocGen_Signer__c> me = [
+            SELECT Signature_Request__c, Sort_Order__c, Signature_Request__r.Signing_Order__c
+            FROM DocGen_Signer__c
+            WHERE Id = :signerId
+            WITH SYSTEM_MODE
+            LIMIT 1
+        ];
+        if (
+            me.isEmpty() ||
+            me[0].Sort_Order__c == null ||
+            me[0].Signature_Request__r == null ||
+            me[0].Signature_Request__r.Signing_Order__c != 'Sequential'
+        ) {
+            return names;
+        }
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        for (DocGen_Signer__c earlier : [
+            SELECT Signer_Name__c
+            FROM DocGen_Signer__c
+            WHERE
+                Signature_Request__c = :me[0].Signature_Request__c
+                AND Sort_Order__c < :me[0].Sort_Order__c
+                AND Status__c != 'Signed'
+            WITH SYSTEM_MODE
+            ORDER BY Sort_Order__c ASC
+        ]) {
+            names.add(String.isNotBlank(earlier.Signer_Name__c) ? earlier.Signer_Name__c : 'an earlier signer');
+        }
+        return names;
+    }
+
+    private static String notYourTurnMessage(List<String> ahead) {
+        return 'It is not your turn to sign yet. Waiting for ' + String.join(ahead, ', ') + ' to sign first.';
+    }
+
+    /** Dura: throws (readable message) when an earlier signer on a Sequential request has not signed. */
+    @TestVisible
+    private static void assertSignerTurn(Id signerId) {
+        List<String> ahead = signersAhead(signerId);
+        if (!ahead.isEmpty()) {
+            throw DocGenService.ahe(notYourTurnMessage(ahead));
+        }
     }
 
     /** Dura: the standard consent wording, used when a template sets none. No dashes. */
@@ -1537,6 +1613,8 @@ public without sharing class DocGenSignatureController {
         }
 
         DocGen_Signer__c signer = signers[0];
+        // Dura: on a Sequential request, refuse until every earlier signer has signed.
+        assertSignerTurn(signer.Id);
         if (DocGenSignatureExpiry.isExpired(signer.Signature_Request__r.Expires_At__c, signer.CreatedDate)) {
             throw new AuraHandledException('This signature link has expired.');
         }
@@ -2546,6 +2624,8 @@ public without sharing class DocGenSignatureController {
         }
 
         DocGen_Signer__c signer = signers[0];
+        // Dura: on a Sequential request, refuse until every earlier signer has signed.
+        assertSignerTurn(signer.Id);
         if (DocGenSignatureExpiry.isExpired(signer.Signature_Request__r.Expires_At__c, signer.CreatedDate)) {
             throw new AuraHandledException('This signature link has expired.');
         }
@@ -2967,6 +3047,8 @@ public without sharing class DocGenSignatureController {
         }
 
         DocGen_Signer__c signer = signers[0];
+        // Dura: on a Sequential request, refuse until every earlier signer has signed.
+        assertSignerTurn(signer.Id);
         if (DocGenSignatureExpiry.isExpired(signer.Signature_Request__r.Expires_At__c, signer.CreatedDate)) {
             throw new AuraHandledException('This signature link has expired.');
         }
@@ -3211,6 +3293,8 @@ public without sharing class DocGenSignatureController {
         }
 
         DocGen_Signer__c signer = signers[0];
+        // Dura: on a Sequential request, refuse until every earlier signer has signed.
+        assertSignerTurn(signer.Id);
         if (String.isNotBlank(signer.Signature_Request__r.Original_Document_CV_Id__c) && !preparedPdfSave) {
             throw new AuraHandledException('Reopen this prepared PDF before completing your signature.');
         }

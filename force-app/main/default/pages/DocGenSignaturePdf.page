@@ -165,6 +165,12 @@
                     border-color: #ba0517;
                     box-shadow: 0 0 0 1px #ba0517;
                 }
+                /* Dura: Sequential signing, not this signer's turn yet */
+                .turn-notice {
+                    margin-top: 4px;
+                    font-size: 0.8125rem;
+                    color: #8c4b02;
+                }
                 /* Dura: "at least one of" hint and file-field upload status */
                 .form-group-hint {
                     font-size: 0.8125rem;
@@ -4244,6 +4250,20 @@
                             badge.textContent = data.badgeLabel;
                             badge.style.display = 'inline-block';
                         }
+                        // Dura: Sequential request and an earlier signer has not signed yet: the
+                        // document can be read, but signing waits (the server refuses it too).
+                        if (data.waitingFor) {
+                            var turnNotice = document.createElement('div');
+                            turnNotice.id = 'turn-notice';
+                            turnNotice.className = 'turn-notice';
+                            turnNotice.setAttribute('role', 'status');
+                            turnNotice.textContent =
+                                'Waiting for ' +
+                                data.waitingFor +
+                                ' to sign first. You can read the document now and sign once they have.';
+                            document.querySelector('#state-pdf .signer-context').appendChild(turnNotice);
+                            document.getElementById('btn-open-sign').style.display = 'none';
+                        }
                         if (isMultiSigner) {
                             var progressEl = document.getElementById('pdf-progress-info');
                             progressEl.textContent =
@@ -6942,6 +6962,7 @@
                     }
 
                     function openPlacementCapture(spot, forceModal, openNext) {
+                        if (notMyTurn()) return;
                         activeSpot = spot;
                         var type = spot.placement.type;
 
@@ -7571,7 +7592,16 @@
                         DrawPad.init();
                     }
 
+                    // Dura: true (and the notice is pointed out) while an earlier signer must sign first.
+                    function notMyTurn() {
+                        if (!(signerData && signerData.waitingFor)) return false;
+                        var n = document.getElementById('turn-notice');
+                        if (n) n.scrollIntoView({ block: 'nearest' });
+                        return true;
+                    }
+
                     function openSignModal() {
+                        if (notMyTurn()) return;
                         // Form fields first, then the single typed-name + consent modal.
                         if (hasPendingFormFields()) {
                             openFormFieldsStep(openSignModal);

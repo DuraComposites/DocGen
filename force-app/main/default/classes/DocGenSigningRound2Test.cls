@@ -319,4 +319,45 @@ private class DocGenSigningRound2Test {
             'No snapshot, nothing to refresh'
         );
     }
+
+    // ---------------------------------------------------------------- sequential order
+
+    @IsTest
+    static void sequential_laterSignerWaitsUntilEarlierOnesSign() {
+        Id reqId = buildRequest(PO_CONFIG, null);
+        update new DocGen_Signature_Request__c(Id = reqId, Signing_Order__c = 'Sequential');
+        DocGen_Signer__c dir = signer(DIRECTOR_TOKEN);
+        Test.startTest();
+        DocGenSignatureController.SignatureInitResponse early = DocGenSignatureController.validateToken(DIRECTOR_TOKEN);
+        Boolean refused = false;
+        try {
+            DocGenSignatureController.assertSignerTurn(dir.Id);
+        } catch (AuraHandledException e) {
+            refused = e.getMessage().contains('Casey Customer');
+        }
+        Map<String, Object> upload = DocGenSignatureController.uploadFormFieldFile(
+            DIRECTOR_TOKEN,
+            'PO_File',
+            'po.pdf',
+            EncodingUtil.base64Encode(Blob.valueOf('%PDF-1.4'))
+        );
+        DocGenSignatureController.SignatureInitResponse first = DocGenSignatureController.validateToken(CUSTOMER_TOKEN);
+        update new DocGen_Signer__c(Id = signer(CUSTOMER_TOKEN).Id, Status__c = 'Signed');
+        DocGenSignatureController.SignatureInitResponse later = DocGenSignatureController.validateToken(DIRECTOR_TOKEN);
+        DocGenSignatureController.assertSignerTurn(dir.Id); // no throw now
+        Test.stopTest();
+        Assert.areEqual('Casey Customer', early.waitingFor);
+        Assert.isTrue(refused, 'The server refuses an out-of-turn signature');
+        Assert.areEqual(false, upload.get('success'));
+        Assert.isNull(first.waitingFor, 'The first signer never waits');
+        Assert.isNull(later.waitingFor, 'Once earlier signers have signed, it is this signers turn');
+    }
+
+    @IsTest
+    static void parallel_neverWaits() {
+        buildRequest(PO_CONFIG, null);
+        Assert.isTrue(DocGenSignatureController.signersAhead(signer(DIRECTOR_TOKEN).Id).isEmpty());
+        Assert.isTrue(DocGenSignatureController.signersAhead(null).isEmpty());
+        Assert.isNull(DocGenSignatureController.validateToken(DIRECTOR_TOKEN).waitingFor);
+    }
 }
