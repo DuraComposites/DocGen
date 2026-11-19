@@ -4,7 +4,7 @@
 
 Make your first document, build a template, send it for signature, and keep your team moving. Pick the task you want to finish; you do not need to read this guide from beginning to end.
 
-**Current release:** 3.63.0.
+**Current release:** 1.1.0.
 
 ## Table of contents
 
@@ -2676,6 +2676,8 @@ To build one signer row per role from the template itself, add **DocGen: Get Tem
 | **Has Signatures Block** | True when the template has a `{#Signatures}` repeating block, so the document can take signers beyond its fixed roles                                                |
 
 A role used by several tags appears once, at its lowest order. Pass each **role** unchanged as the signer's role: it is what places the signature.
+
+Store **Signers** in an Apex-Defined collection variable of type **DocGenTemplateSigner**. To check the output, use Flow Builder's **Debug**. Calling the action through the REST actions endpoint (`/actions/custom/apex/…`) shows **Signers** as an empty list followed by "Type cannot be serialized", because that API can't return Apex-defined types; the action itself is working.
 
 #### 1. Prepare the signer resources
 
