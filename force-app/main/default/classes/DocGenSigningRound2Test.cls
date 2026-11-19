@@ -471,4 +471,39 @@ private class DocGenSigningRound2Test {
         Assert.areEqual('PO_Number,PO_File', perSigner[0].get('formFieldKeys'));
         Assert.areEqual('none', perSigner[1].get('formFieldKeys'), 'No keys = sign only');
     }
+
+    @IsTest
+    static void snapshotSend_fromTheWrongObject_saysSo() {
+        DocGen_Template__c tmpl = new DocGen_Template__c(
+            Name = 'Contact only ' + Crypto.getRandomInteger(),
+            Base_Object_API__c = 'Contact',
+            Query_Config__c = 'FirstName,LastName',
+            Type__c = 'HTML',
+            Output_Format__c = 'PDF'
+        );
+        insert tmpl;
+        Account acct = new Account(Name = 'Not a contact');
+        insert acct;
+        String message = '';
+        Test.startTest();
+        try {
+            DocGenSignatureSenderController.createTemplateSnapshotRequest(
+                tmpl.Id,
+                acct.Id,
+                '[{\"signerName\":\"A\",\"signerEmail\":\"a@example.com\",\"roleName\":\"Signer\"}]',
+                'Parallel',
+                null,
+                null,
+                null,
+                false,
+                false,
+                false,
+                null
+            );
+        } catch (AuraHandledException e) {
+            message = e.getMessage();
+        }
+        Test.stopTest();
+        Assert.isTrue(message.contains('This template is for Contact records'), message);
+    }
 }

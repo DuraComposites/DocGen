@@ -1169,6 +1169,25 @@ public with sharing class DocGenSignatureSenderController {
             tpl.Base_Object_API__c,
             tpl.Query_Config__c
         );
+        // Dura: a record of a different object (e.g. an Account for a quote template) loads no
+        // data; say so instead of failing later with a null error.
+        if (snapshot == null) {
+            String recordObject = '';
+            try {
+                recordObject = ((Id) relatedRecordId).getSObjectType().getDescribe().getLabel();
+            } catch (Exception e) {
+                recordObject = 'this record';
+            }
+            throw DocGenService.ahe(
+                'This template is for ' +
+                    tpl.Base_Object_API__c +
+                    ' records, so it cannot be sent from ' +
+                    (String.isBlank(recordObject) ? 'this record' : 'a ' + recordObject) +
+                    '. Open a ' +
+                    tpl.Base_Object_API__c +
+                    ' record, or choose a template for this object.'
+            );
+        }
         String snapshotJson = JSON.serialize(snapshot);
         if (snapshotJson.length() > 131072) {
             throw new AuraHandledException(
