@@ -2677,6 +2677,8 @@ To build one signer row per role from the template itself, add **DocGen: Get Tem
 
 A role used by several tags appears once, at its lowest order. Pass each **role** unchanged as the signer's role: it is what places the signature.
 
+Store **Signers** in an Apex-Defined collection variable of type **DocGenTemplateSigner**. To check the output, use Flow Builder's **Debug**. Calling the action through the REST actions endpoint (`/actions/custom/apex/…`) shows **Signers** as an empty list followed by "Type cannot be serialized", because that API can't return Apex-defined types; the action itself is working.
+
 #### 1. Prepare the signer resources
 
 Create a single **Apex-Defined** variable using the packaged **DocGenSigner** class and a collection variable of the same type.
