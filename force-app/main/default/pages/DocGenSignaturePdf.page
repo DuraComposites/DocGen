@@ -165,6 +165,42 @@
                     border-color: #ba0517;
                     box-shadow: 0 0 0 1px #ba0517;
                 }
+                /* Dura: "Your information" summary on the final step */
+                .fields-summary {
+                    border: 1px solid #dddbda;
+                    border-radius: 4px;
+                    padding: 8px 12px;
+                    margin: 0 0 12px;
+                    font-size: 0.8125rem;
+                }
+                .fields-summary-head {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-weight: 600;
+                    margin-bottom: 4px;
+                }
+                .fields-summary-change {
+                    background: none;
+                    border: none;
+                    color: var(--brand-color, #0176d3);
+                    cursor: pointer;
+                    font-size: 0.8125rem;
+                    text-decoration: underline;
+                    padding: 0;
+                }
+                .fields-summary-row {
+                    display: flex;
+                    gap: 8px;
+                    padding: 2px 0;
+                }
+                .fields-summary-label {
+                    color: #555;
+                    min-width: 40%;
+                }
+                .fields-summary-value {
+                    word-break: break-word;
+                }
                 /* Dura: Sequential signing, not this signer's turn yet */
                 .turn-notice {
                     margin-top: 4px;
@@ -2091,6 +2127,8 @@
                              during per-spot capture. Built + validated by renderFormFields /
                              validateFormFields. -->
                         <div id="modal-form-fields" style="display: none"></div>
+                        <!-- Dura: what the signer entered, shown on the final step with a Change link. -->
+                        <div id="modal-fields-summary" class="fields-summary" style="display: none"></div>
                         <div class="consent-row" style="margin: 0">
                             <input id="modal-consent-checkbox" type="checkbox" />
                             <label id="modal-consent-label" for="modal-consent-checkbox">
@@ -6963,6 +7001,7 @@
 
                     function openPlacementCapture(spot, forceModal, openNext) {
                         if (notMyTurn()) return;
+                        hideFieldsSummary();
                         activeSpot = spot;
                         var type = spot.placement.type;
 
@@ -7098,6 +7137,7 @@
                         document.getElementById('btn-sign-submit-next').style.display = 'none';
                         // Form fields were collected up front (before signing) — not here.
                         hideFormFields();
+                        showFieldsSummary(openFinalSubmit);
                         showModalMsg('', 'info');
                         updateSignSubmitState();
                         document.getElementById('sign-modal').style.display = '';
@@ -7471,6 +7511,50 @@
                         return raw == null ? '' : String(raw);
                     }
 
+                    // Dura: "Your information": the answers this signer gave, with a Change link that
+                    // reopens the fields (answers kept) and then comes back to this step. Shown on
+                    // the final step so the signer checks them before consenting.
+                    function showFieldsSummary(returnTo) {
+                        var box = document.getElementById('modal-fields-summary');
+                        if (!box) return;
+                        var defs = signerData && signerData.formFields ? signerData.formFields : [];
+                        if (!formFieldsCollected || !defs.length) {
+                            box.style.display = 'none';
+                            box.innerHTML = '';
+                            return;
+                        }
+                        var vals = {};
+                        try {
+                            vals = JSON.parse(collectedFormFieldJson || '{}') || {};
+                        } catch (e) {
+                            vals = {};
+                        }
+                        var rows = '';
+                        for (var i = 0; i < defs.length; i++) {
+                            var shown = formFieldDisplay(defs[i], vals[defs[i].key]);
+                            rows +=
+                                '<div class="fields-summary-row"><span class="fields-summary-label">' +
+                                escapeHtml(defs[i].label || defs[i].key) +
+                                '</span><span class="fields-summary-value">' +
+                                escapeHtml(shown || 'Not given') +
+                                '</span></div>';
+                        }
+                        box.innerHTML =
+                            '<div class="fields-summary-head"><span>Your information</span>' +
+                            '<button type="button" class="fields-summary-change" id="fields-summary-change">Change</button></div>' +
+                            rows;
+                        box.style.display = '';
+                        document.getElementById('fields-summary-change').addEventListener('click', function () {
+                            formFieldsCollected = false;
+                            openFormFieldsStep(returnTo);
+                        });
+                    }
+
+                    function hideFieldsSummary() {
+                        var box = document.getElementById('modal-fields-summary');
+                        if (box) box.style.display = 'none';
+                    }
+
                     function showFormFields() {
                         renderFormFields(
                             document.getElementById('modal-form-fields'),
@@ -7505,6 +7589,7 @@
                     }
 
                     function openFormFieldsStep(onContinue) {
+                        hideFieldsSummary();
                         modalMode = 'fields';
                         afterFieldsAction = onContinue || null;
                         document.getElementById('modal-draw-group').style.display = 'none';
@@ -7628,6 +7713,7 @@
                         document.getElementById('modal-consent-checkbox').checked = false;
                         // Form fields were collected up front — don't ask again here.
                         hideFormFields();
+                        showFieldsSummary(openSignModal);
                         showModalMsg('', 'info');
                         updateSignSubmitState();
                         document.getElementById('sign-modal').style.display = '';
