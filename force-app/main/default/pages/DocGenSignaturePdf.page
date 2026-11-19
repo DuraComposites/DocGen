@@ -7819,12 +7819,9 @@
                         var consentGiven = document.getElementById('modal-consent-checkbox').checked;
                         if (!consentGiven) return;
                         if (!typedName && DrawPad.hasInk()) {
-                            // This legacy 'pdf' flow has no image-compositing path (unlike the
-                            // guided/spot flow's compositeAndFinalize) -- savePdfSignature only
-                            // ever accepts a typed name. A drawn mark is visual confirmation on
-                            // screen; the already-verified signer name on record (same source
-                            // handleFinalSubmit falls back to) is what is actually submitted as
-                            // the signature of record, so drawing-only no longer dead-ends here.
+                            // Drawing only: the verified signer name is the signature of record
+                            // (as in handleFinalSubmit); the drawing itself is sent alongside
+                            // (savePdfSignatureDrawn) for templates whose block shows it.
                             typedName = signerData && signerData.signerName ? signerData.signerName : '';
                         }
                         if (!typedName) {
@@ -7839,14 +7836,21 @@
                         // Capture IP (browser fetch above; server resolveClientIp falls back).
                         var userAgent = navigator.userAgent || 'Unknown';
 
+                        // Dura: send the drawing too, so a {#Signatures} block can show it.
+                        var drawnPng = '';
+                        if (DrawPad.hasInk()) {
+                            var dataUrl = DrawPad.toPng() || '';
+                            drawnPng = dataUrl.indexOf(',') >= 0 ? dataUrl.substring(dataUrl.indexOf(',') + 1) : '';
+                        }
                         Visualforce.remoting.Manager.invokeAction(
-                            '{!$RemoteAction.DocGenSignatureController.savePdfSignature}',
+                            '{!$RemoteAction.DocGenSignatureController.savePdfSignatureDrawn}',
                             token,
                             typedName,
                             consentGiven,
                             capturedIp,
                             userAgent,
                             collectedFormFieldJson,
+                            drawnPng,
                             function (result, event) {
                                 btn.disabled = false;
                                 btn.textContent = 'Sign';

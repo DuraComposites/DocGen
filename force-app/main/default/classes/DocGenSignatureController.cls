@@ -2975,6 +2975,108 @@ public without sharing class DocGenSignatureController {
      *
      * Returns { success, isComplete, remaining }.
      */
+    // Dura: largest drawn signature accepted (base64 PNG characters, about 500 KB of image).
+    private static final Integer MAX_SIGNATURE_PNG_BASE64 = 700000;
+
+    /**
+     * Dura: savePdfSignature plus the signature the signer DREW. Used by the page on the
+     * no-signature-box path (documents that sign through a {#Signatures} block): there the
+     * final PDF is rendered on the server, so the drawing is kept as a PNG file on the request
+     * and its Id stored on the signer (Signature_Image_CV_Id__c). The block shows it through
+     * the SignatureImageUrl row field. The typed name is still the signature of record; a
+     * missing or invalid drawing never blocks signing.
+     */
+    @RemoteAction
+    public static SavePdfSignatureResult savePdfSignatureDrawn(
+        String token,
+        String typedName,
+        Boolean consentGiven,
+        String ipAddress,
+        String userAgent,
+        String formFieldJson,
+        String signaturePngBase64
+    ) {
+        SavePdfSignatureResult result = savePdfSignature(
+            token,
+            typedName,
+            consentGiven,
+            ipAddress,
+            userAgent,
+            formFieldJson
+        );
+        if (result != null && result.success == true && String.isNotBlank(signaturePngBase64)) {
+            storeDrawnSignature(token, signaturePngBase64);
+        }
+        return result;
+    }
+
+    /** Dura: saves a drawn signature PNG on the request and records it on the signer. Never throws. */
+    @TestVisible
+    private static void storeDrawnSignature(String token, String pngBase64) {
+        try {
+            if (
+                !DocGenSignatureGuestSecurity.isValidTokenShape(token) ||
+                pngBase64.length() > MAX_SIGNATURE_PNG_BASE64 ||
+                !pngBase64.startsWith('iVBORw0KGgo')
+            ) {
+                return;
+            }
+            DocGenFlsGuard.guestAssertAccessible(
+                DocGen_Signer__c.sObjectType,
+                new Set<String>{ 'Signature_Request__c', 'Signer_Name__c', 'Status__c' }
+            );
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            List<DocGen_Signer__c> rows = [
+                SELECT Id, Signature_Request__c, Signer_Name__c, Status__c
+                FROM DocGen_Signer__c
+                WHERE Secure_Token__c = :token
+                WITH SYSTEM_MODE
+                LIMIT 1
+            ];
+            if (rows.isEmpty() || rows[0].Status__c != 'Signed') {
+                return;
+            }
+            DocGen_Signer__c signer = rows[0];
+            String who = String.isNotBlank(signer.Signer_Name__c) ? signer.Signer_Name__c : 'Signer';
+            ContentVersion cv = new ContentVersion(
+                Title = ('Signature - ' + who).left(255),
+                PathOnClient = 'signature.png',
+                VersionData = EncodingUtil.base64Decode(pngBase64)
+            );
+            DocGenFlsGuard.guestAssertCreateable(cv, new Set<String>{ 'Title', 'PathOnClient', 'VersionData' });
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            Database.insert(cv, AccessLevel.SYSTEM_MODE);
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            Id docId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id WITH SYSTEM_MODE]
+            .ContentDocumentId;
+            // Shared through the request like the viewing copies, so the finalizer (Automated
+            // Process) and the live view can draw it.
+            ContentDocumentLink link = new ContentDocumentLink(
+                ContentDocumentId = docId,
+                LinkedEntityId = signer.Signature_Request__c,
+                ShareType = 'V',
+                Visibility = 'AllUsers'
+            );
+            DocGenFlsGuard.guestAssertCreateable(
+                link,
+                new Set<String>{ 'ContentDocumentId', 'LinkedEntityId', 'ShareType', 'Visibility' }
+            );
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            Database.insert(link, AccessLevel.SYSTEM_MODE);
+            DocGen_Signer__c upd = new DocGen_Signer__c(Id = signer.Id, Signature_Image_CV_Id__c = cv.Id);
+            DocGenFlsGuard.guestAssertUpdateable(upd, new Set<String>{ 'Signature_Image_CV_Id__c' });
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            Database.update(upd, false, AccessLevel.SYSTEM_MODE);
+        } catch (Exception e) {
+            DocGenErrorLogger.warn(
+                'DocGenSignatureController',
+                'Save drawn signature',
+                'The drawn signature could not be kept; the typed name stands: ' + e.getMessage()
+            );
+            DocGenErrorLogger.flush();
+        }
+    }
+
     @AuraEnabled
     @RemoteAction
     public static SavePdfSignatureResult savePdfSignature(

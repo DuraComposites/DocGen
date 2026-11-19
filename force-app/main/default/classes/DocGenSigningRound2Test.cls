@@ -360,4 +360,82 @@ private class DocGenSigningRound2Test {
         Assert.isTrue(DocGenSignatureController.signersAhead(null).isEmpty());
         Assert.isNull(DocGenSignatureController.validateToken(DIRECTOR_TOKEN).waitingFor);
     }
+
+    // ---------------------------------------------------------------- drawn signature in the block
+
+    private static final String PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
+    @IsTest
+    static void drawnSignature_isKeptAndShownInTheBlockRow() {
+        Id reqId = buildRequest('{\"formFields\":[]}', null);
+        update new DocGen_Signer__c(Id = signer(CUSTOMER_TOKEN).Id, PIN_Verified_At__c = System.now());
+        Test.startTest();
+        DocGenSignatureController.SavePdfSignatureResult res = DocGenSignatureController.savePdfSignatureDrawn(
+            CUSTOMER_TOKEN,
+            'Casey Customer',
+            true,
+            '203.0.113.7',
+            'JUnit',
+            '{}',
+            PNG_B64
+        );
+        Test.stopTest();
+        Assert.isTrue(res.success, String.valueOf(res));
+        DocGen_Signer__c s = [
+            SELECT Signature_Image_CV_Id__c, Signature_Data__c
+            FROM DocGen_Signer__c
+            WHERE Secure_Token__c = :CUSTOMER_TOKEN
+        ];
+        Assert.isNotNull(s.Signature_Image_CV_Id__c, 'The drawing is kept');
+        Assert.areEqual('Casey Customer', s.Signature_Data__c, 'The typed name is still the signature of record');
+        ContentVersion cv = [
+            SELECT ContentDocumentId, PathOnClient
+            FROM ContentVersion
+            WHERE Id = :s.Signature_Image_CV_Id__c
+        ];
+        Assert.areEqual('signature.png', cv.PathOnClient);
+        Assert.areEqual(
+            1,
+            [
+                SELECT COUNT()
+                FROM ContentDocumentLink
+                WHERE ContentDocumentId = :cv.ContentDocumentId AND LinkedEntityId = :reqId
+            ],
+            'Shared through the request'
+        );
+        List<Map<String, Object>> rows = DocGenSignatureService.buildSignerLoopData(reqId);
+        Assert.areEqual(
+            '/sfc/servlet.shepherd/version/download/' + s.Signature_Image_CV_Id__c,
+            rows[0].get('SignatureImageUrl')
+        );
+        Assert.areEqual('', rows[1].get('SignatureImageUrl'), 'Not signed yet: no image');
+    }
+
+    @IsTest
+    static void drawnSignature_invalidOrTypedOnly_keepsNoImage() {
+        buildRequest('{\"formFields\":[]}', null);
+        update new DocGen_Signer__c(Id = signer(CUSTOMER_TOKEN).Id, PIN_Verified_At__c = System.now());
+        Test.startTest();
+        DocGenSignatureController.SavePdfSignatureResult res = DocGenSignatureController.savePdfSignatureDrawn(
+            CUSTOMER_TOKEN,
+            'Casey Customer',
+            true,
+            '203.0.113.7',
+            'JUnit',
+            '{}',
+            'bm90IGEgcG5n'
+        );
+        DocGenSignatureController.storeDrawnSignature('not-a-token', PNG_B64);
+        DocGenSignatureController.storeDrawnSignature(DIRECTOR_TOKEN, PNG_B64); // not signed yet
+        Test.stopTest();
+        Assert.isTrue(res.success, 'A bad drawing never blocks signing');
+        Assert.isNull(
+            [SELECT Signature_Image_CV_Id__c FROM DocGen_Signer__c WHERE Secure_Token__c = :CUSTOMER_TOKEN]
+            .Signature_Image_CV_Id__c
+        );
+        Assert.isNull(
+            [SELECT Signature_Image_CV_Id__c FROM DocGen_Signer__c WHERE Secure_Token__c = :DIRECTOR_TOKEN]
+            .Signature_Image_CV_Id__c
+        );
+    }
 }

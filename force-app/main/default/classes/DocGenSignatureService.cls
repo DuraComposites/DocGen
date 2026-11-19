@@ -898,12 +898,20 @@ public without sharing class DocGenSignatureService {
                 'Role_Name__c',
                 'Status__c',
                 'Signature_Request__c',
-                'Sort_Order__c'
+                'Sort_Order__c',
+                'Signature_Image_CV_Id__c'
             }
         );
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
         List<DocGen_Signer__c> signers = [
-            SELECT Id, Signer_Name__c, Signature_Data__c, Signer_Email__c, Role_Name__c, Status__c
+            SELECT
+                Id,
+                Signer_Name__c,
+                Signature_Data__c,
+                Signer_Email__c,
+                Role_Name__c,
+                Status__c,
+                Signature_Image_CV_Id__c
             FROM DocGen_Signer__c
             WHERE Signature_Request__c = :requestId
             WITH SYSTEM_MODE
@@ -944,16 +952,23 @@ public without sharing class DocGenSignatureService {
             String typed = String.isNotBlank(s.Signature_Data__c)
                 ? s.Signature_Data__c
                 : (s.Status__c == 'Signed' ? s.Signer_Name__c : '');
-            rows.add(
-                buildSignerLoopRow(
-                    typed,
-                    s.Signer_Name__c,
-                    s.Role_Name__c,
-                    s.Signer_Email__c,
-                    signedDates.get(s.Id),
-                    s.Status__c
-                )
+            Map<String, Object> row = buildSignerLoopRow(
+                typed,
+                s.Signer_Name__c,
+                s.Role_Name__c,
+                s.Signer_Email__c,
+                signedDates.get(s.Id),
+                s.Status__c
             );
+            // Dura: the drawn signature, for templates that show it ({SignatureImageUrl}).
+            // Relative /sfc/ URL: the only form Blob.toPdf draws (no data: URIs).
+            row.put(
+                'SignatureImageUrl',
+                s.Status__c == 'Signed' && String.isNotBlank(s.Signature_Image_CV_Id__c)
+                    ? '/sfc/servlet.shepherd/version/download/' + s.Signature_Image_CV_Id__c
+                    : ''
+            );
+            rows.add(row);
         }
         return rows;
     }
@@ -998,6 +1013,7 @@ public without sharing class DocGenSignatureService {
         String status
     ) {
         return new Map<String, Object>{
+            'SignatureImageUrl' => '',
             'Name' => String.isNotBlank(name) ? name : '',
             'RegisteredName' => String.isNotBlank(registeredName) ? registeredName : '',
             'Role' => String.isNotBlank(role) ? role : 'Signer',

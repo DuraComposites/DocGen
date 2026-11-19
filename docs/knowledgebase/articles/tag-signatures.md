@@ -42,14 +42,15 @@ The `{#Signatures}` loop block solves this: author **one** signature layout and 
 
 Per-row fields available inside the block:
 
-| Field              | Value                                                                                           |
-| ------------------ | ----------------------------------------------------------------------------------------------- |
-| `{Name}`           | The name the signer typed at signing (their e-signature); the invited name if none was captured |
-| `{RegisteredName}` | The name the signer was invited under                                                           |
-| `{Role}`           | The signer's role (defaults to `Signer`)                                                        |
-| `{Email}`          | The signer's email                                                                              |
-| `{SignedDate}`     | The date they signed (blank before signing)                                                     |
-| `{Status}`         | `Pending` before signing, `Signed` after                                                        |
+| Field                 | Value                                                                                           |
+| --------------------- | ----------------------------------------------------------------------------------------------- |
+| `{Name}`              | The name the signer typed at signing (their e-signature); the invited name if none was captured |
+| `{RegisteredName}`    | The name the signer was invited under                                                           |
+| `{Role}`              | The signer's role (defaults to `Signer`)                                                        |
+| `{Email}`             | The signer's email                                                                              |
+| `{SignedDate}`        | The date they signed (blank before signing)                                                     |
+| `{Status}`            | `Pending` before signing, `Signed` after                                                        |
+| `{SignatureImageUrl}` | The signature the signer drew, as an image link; blank if they typed or have not signed yet     |
 
 **Styling is yours.** The block is plain template content, so style `{Name}` however you like — a cursive web font for a handwritten look, a bordered box, a two-column table of signers, etc. (HTML templates have full CSS control within the Flying Saucer CSS 2.1 subset; Word templates can style the line too.)
 
@@ -58,4 +59,4 @@ Notes:
 - **Backwards-compatible and additive.** Role tags (`{@Signature_Role}`) are unchanged and continue to work exactly as before — use them when you want signatures in fixed, scattered positions. A template **without** a `{#Signatures}` block renders identically to previous releases. You can even combine both in one template.
 - **Where it applies.** The loop is populated by the snapshot/PDF-viewer signing flow (the flow that re-renders the document from a send-time data snapshot and attaches the completed PDF + certificate to the record). Before signing, the block previews the invited signers with a `Pending` status. After each signature, the copy the remaining signers open is re-rendered from the same frozen data, so it shows who has signed (typed signature and date) and who is still Pending. On completion it shows every signer's typed signature and signed date.
 - **No signers (plain Generate).** The block prints nothing. To keep wet-signature lines on a printed copy, add an inverse section after it: `{^Signatures}Signed: ____ Date: ____{/Signatures}`.
-- **Typed-name signatures** today (drawn-signature images are a planned future enhancement; the loop already supports per-row image fields for when that lands).
+- **Drawn or typed.** A signer who draws gets their drawing in `{SignatureImageUrl}`; `{Name}` is always the typed name. Show the drawing when there is one: `{#IF SignatureImageUrl}<img src="{SignatureImageUrl}" style="height:40px"/>{:else}{Name}{/IF}`.
