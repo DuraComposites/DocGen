@@ -4,7 +4,7 @@
 
 Make your first document, build a template, send it for signature, and keep your team moving. Pick the task you want to finish; you do not need to read this guide from beginning to end.
 
-**Current release:** 3.63.0.
+**Current release:** 1.1.0.
 
 ## Table of contents
 

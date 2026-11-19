@@ -2,9 +2,9 @@
     "schemaVersion": 1,
     "product": {
         "name": "DocGen",
-        "version": "3.63.0",
-        "packageId": "04tVx000001CfejIAC",
-        "packageAlias": "Portwood@3.63.0-1"
+        "version": "1.1.0",
+        "packageId": "04tQ500000CZTEkIAP",
+        "packageAlias": "DocGen@1.1.0-1"
     },
     "home": {
         "image": "docs/images/userguide/v3.60/first-document-result.png",
