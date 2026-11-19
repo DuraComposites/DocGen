@@ -2087,7 +2087,7 @@
                         <div id="modal-form-fields" style="display: none"></div>
                         <div class="consent-row" style="margin: 0">
                             <input id="modal-consent-checkbox" type="checkbox" />
-                            <label for="modal-consent-checkbox">
+                            <label id="modal-consent-label" for="modal-consent-checkbox">
                                 I agree to sign this document electronically. I understand that my typed name
                                 constitutes my legal electronic signature, and I consent to conducting this transaction
                                 electronically.
@@ -4298,6 +4298,10 @@
                     }
 
                     function applyBrand(data) {
+                        // Dura: the consent wording is set per template (Signing_Consent_Text__c).
+                        // The server records the same text on the signer's audit.
+                        var consentLabel = document.getElementById('modal-consent-label');
+                        if (consentLabel && data && data.consentText) consentLabel.textContent = data.consentText;
                         var color = data && data.brandColor ? data.brandColor : '#0176d3';
                         document.documentElement.style.setProperty('--brand-color', color);
                         if (document.body) document.body.style.setProperty('--brand-color', color);
@@ -6338,6 +6342,22 @@
                                 if (ua.length > 95) ua = ua.substring(0, 95) + '…';
                                 page.drawText('Device: ' + ua, { x: 60, y: y, size: 7.5, font: helv, color: gray });
                             }
+                            // Dura: the exact consent statement agreed to (this signer's comes from
+                            // the page, which shows what validateToken returned; others from audit).
+                            var agreed = s.consentText || (s.isMe && signerData ? signerData.consentText : '');
+                            if (agreed) {
+                                y -= 11;
+                                y = drawWrappedText(page, winAnsi('Agreed: "' + agreed + '"'), {
+                                    x: 60,
+                                    y: y,
+                                    size: 7.5,
+                                    font: helv,
+                                    color: gray,
+                                    maxWidth: 612 - 60 - 54,
+                                    lineHeight: 10
+                                });
+                                y += 10;
+                            }
                             y -= 22;
                         });
                         // Form Field Responses — list configured fields flagged
@@ -7563,13 +7583,14 @@
                         // Respect the input restriction in the no-placement flow too.
                         document.getElementById('modal-draw-group').style.display = isTypeOnly() ? 'none' : '';
                         document.getElementById('modal-typed-name').parentNode.style.display = '';
-                        document.getElementById('modal-consent-checkbox').parentNode.style.display = 'none';
+                        // Dura: consent sits under the signature on this one step (no confirm modal).
+                        document.getElementById('modal-consent-checkbox').parentNode.style.display = '';
                         showAttachmentsReviewed(false);
                         document.querySelector('#sign-modal .modal-header h2').textContent = 'Sign Document';
                         document.querySelector('#sign-modal .modal-subtitle').textContent = isTypeOnly()
                             ? 'Type your full name to sign this document.'
                             : 'Choose how you want to sign this document.';
-                        document.getElementById('btn-sign-submit').textContent = 'Save & Next';
+                        document.getElementById('btn-sign-submit').textContent = 'Finish & Submit';
                         // Prefill the confirmed name from validateToken.signerName.
                         var nameInput = document.getElementById('modal-typed-name');
                         // Show the verified signer name without claiming the typed method.
@@ -7630,7 +7651,8 @@
                         } else {
                             // 'pdf' legacy flow has separate signature-entry and consent steps.
                             var signatureReady = !!(nameVal || DrawPad.hasInk());
-                            btn.disabled = legacyConsentStep ? !consentVal : !signatureReady;
+                            // Dura: one step: a signature AND the consent tick enable Finish & Submit.
+                            btn.disabled = !signatureReady || !consentVal;
                         }
                     }
 
@@ -7674,24 +7696,8 @@
                             return;
                         }
 
-                        if (modalMode === 'pdf' && !legacyConsentStep) {
-                            var signatureReady = !!(
-                                document.getElementById('modal-typed-name').value.trim() || DrawPad.hasInk()
-                            );
-                            if (!signatureReady) return;
-                            legacyConsentStep = true;
-                            document.getElementById('modal-draw-group').style.display = 'none';
-                            document.getElementById('modal-name-group').style.display = 'none';
-                            document.getElementById('modal-consent-checkbox').parentNode.style.display = '';
-                            document.querySelector('#sign-modal .modal-header h2').textContent =
-                                'Confirm your signature';
-                            document.querySelector('#sign-modal .modal-subtitle').textContent =
-                                'Review your signature and confirm your consent to finish.';
-                            document.getElementById('btn-sign-submit').textContent = 'Finish & Submit';
-                            document.getElementById('modal-consent-checkbox').checked = false;
-                            updateSignSubmitState();
-                            return;
-                        }
+                        // Dura: no separate "Confirm your signature" step: consent is ticked on the
+                        // signature step, and Finish & Submit there signs straight away.
 
                         var typedName = document.getElementById('modal-typed-name').value.trim();
                         var consentGiven = document.getElementById('modal-consent-checkbox').checked;

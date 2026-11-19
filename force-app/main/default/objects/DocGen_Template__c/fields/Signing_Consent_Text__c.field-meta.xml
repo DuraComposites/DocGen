@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Signing_Consent_Text__c</fullName>
+    <description
+    >The consent statement signers tick before they sign documents from this template. Blank uses the standard wording. The exact text each signer saw is kept on their signature audit and printed on the certificate.</description>
+    <externalId>false</externalId>
+    <inlineHelpText
+    >What signers agree to when they tick the consent box. Leave blank for the standard electronic signature wording.</inlineHelpText>
+    <label>Signing Consent Text</label>
+    <length>1000</length>
+    <type>LongTextArea</type>
+    <visibleLines>4</visibleLines>
+</CustomField>

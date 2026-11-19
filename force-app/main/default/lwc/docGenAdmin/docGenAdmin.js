@@ -142,6 +142,7 @@ import SIGNER_VERIFICATION_FIELD from '@salesforce/schema/DocGen_Template__c.Sig
 import PREFILL_SIGNER_EMAIL_FIELD from '@salesforce/schema/DocGen_Template__c.Prefill_Signer_Email__c';
 // #367
 import HIDE_SIGNER_DECLINE_FIELD from '@salesforce/schema/DocGen_Template__c.Hide_Signer_Decline__c';
+import SIGNING_CONSENT_TEXT_FIELD from '@salesforce/schema/DocGen_Template__c.Signing_Consent_Text__c';
 import ATTACHED_DOCUMENTS_FIELD from '@salesforce/schema/DocGen_Template__c.Attached_Documents__c';
 import ATTACHED_DOCUMENT_MARKUP_FIELD from '@salesforce/schema/DocGen_Template__c.Attached_Document_Markup__c';
 import SIGNATURE_TYPE_ONLY_FIELD from '@salesforce/schema/DocGen_Template__c.Signature_Type_Only__c';
@@ -285,6 +286,7 @@ const F = {
     SignerVerification: SIGNER_VERIFICATION_FIELD.fieldApiName,
     PrefillSignerEmail: PREFILL_SIGNER_EMAIL_FIELD.fieldApiName,
     HideSignerDecline: HIDE_SIGNER_DECLINE_FIELD.fieldApiName,
+    SigningConsentText: SIGNING_CONSENT_TEXT_FIELD.fieldApiName,
     AttachedDocuments: ATTACHED_DOCUMENTS_FIELD.fieldApiName,
     AttachedDocumentMarkup: ATTACHED_DOCUMENT_MARKUP_FIELD.fieldApiName,
     SignatureTypeOnly: SIGNATURE_TYPE_ONLY_FIELD.fieldApiName,
@@ -528,6 +530,8 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
     @track editTemplatePrefillSignerEmail = 'Inherit';
     // #367 — "Hide Decline Button" for this template; unchecked by default (Decline shown).
     @track editTemplateHideDecline = false;
+    // Dura: per-template signing consent wording (blank = standard wording)
+    @track editTemplateConsentText = '';
     @track editTemplateAttachedDocuments = 'Off'; // #412
     @track editTemplateAttachedDocumentMarkup = 'Off'; // #412 M2
     @track editTemplateTypeOnly = false;
@@ -4127,6 +4131,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             writeback: !!row.writeback,
             listOnCertificate: !!row.listOnCertificate,
             atLeastOneGroup: row.atLeastOneGroup || '',
+            forRolesText: Array.isArray(row.forRoles) ? row.forRoles.join(', ') : row.forRoles || '',
             mergeTag: row.mergeTag || this._buildSignerMergeTag(row.key),
             choicesText: Array.isArray(row.choices) ? row.choices.join(', ') : row.choices || '',
             isPicklist: (row.type || 'text') === 'picklist',
@@ -4185,7 +4190,8 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
                         choices: Array.isArray(f.choices) ? f.choices : [],
                         listOnCertificate: !!f.listOnCertificate,
                         atLeastOneGroup: f.atLeastOneGroup || '',
-                        accept: f.accept
+                        accept: f.accept,
+                        forRoles: Array.isArray(f.forRoles) ? f.forRoles : []
                     }));
                 }
             } catch (e) {
@@ -4211,7 +4217,9 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             listOnCertificate: !!f.listOnCertificate,
             // Dura: "at least one of" group and, for file fields, accepted extensions.
             ...(f.atLeastOneGroup ? { atLeastOneGroup: f.atLeastOneGroup } : {}),
-            ...(f.accept ? { accept: f.accept } : {})
+            ...(f.accept ? { accept: f.accept } : {}),
+            // Dura: only asked of these signer roles; omitted = every signer.
+            ...(Array.isArray(f.forRoles) && f.forRoles.length ? { forRoles: f.forRoles } : {})
         }));
         this.editFormFieldsConfig = JSON.stringify({ formFields: serialized });
     }
@@ -4315,6 +4323,15 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
         this._updateSignerFieldRow(Number(event.currentTarget.dataset.index), {
             atLeastOneGroup: String(raw || '').trim()
         });
+    }
+
+    handleSignerFieldRolesChange(event) {
+        const raw = event.detail ? event.detail.value : event.target.value;
+        const forRoles = String(raw || '')
+            .split(',')
+            .map((r) => r.trim())
+            .filter((r) => r.length > 0);
+        this._updateSignerFieldRow(Number(event.currentTarget.dataset.index), { forRoles });
     }
 
     handleSignerFieldCertificateChange(event) {
@@ -4604,6 +4621,11 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
 
     handleTypeOnlyChange(event) {
         this.editTemplateTypeOnly = event.target.checked;
+    }
+
+    // Dura
+    handleConsentTextChange(event) {
+        this.editTemplateConsentText = event.target.value;
     }
 
     // #367
@@ -5511,6 +5533,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             this.editTemplateSignerVerification = row[F.SignerVerification] || 'Inherit';
             this.editTemplatePrefillSignerEmail = row[F.PrefillSignerEmail] || 'Inherit';
             this.editTemplateHideDecline = row[F.HideSignerDecline] === true;
+            this.editTemplateConsentText = row[F.SigningConsentText] || '';
             this.editTemplateAttachedDocuments = row[F.AttachedDocuments] || 'Off';
             this.editTemplateAttachedDocumentMarkup = row[F.AttachedDocumentMarkup] || 'Off';
             this.editTemplateTypeOnly = row[F.SignatureTypeOnly] === true;
@@ -5645,6 +5668,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             this.editTemplateSignerVerification,
             this.editTemplatePrefillSignerEmail,
             this.editTemplateHideDecline,
+            this.editTemplateConsentText,
             this.editTemplateAttachedDocuments,
             this.editTemplateAttachedDocumentMarkup,
             this.editTemplateTypeOnly,
@@ -6245,6 +6269,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             Signer_Verification__c: this.editTemplateSignerVerification,
             Prefill_Signer_Email__c: this.editTemplatePrefillSignerEmail,
             Hide_Signer_Decline__c: this.editTemplateHideDecline,
+            Signing_Consent_Text__c: this.editTemplateConsentText ? this.editTemplateConsentText.trim() : null,
             Attached_Documents__c: this.editTemplateAttachedDocuments,
             Attached_Document_Markup__c: this.editTemplateAttachedDocumentMarkup,
             Signature_Type_Only__c: this.editTemplateTypeOnly,
@@ -6348,6 +6373,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             Signer_Verification__c: this.editTemplateSignerVerification,
             Prefill_Signer_Email__c: this.editTemplatePrefillSignerEmail,
             Hide_Signer_Decline__c: this.editTemplateHideDecline,
+            Signing_Consent_Text__c: this.editTemplateConsentText ? this.editTemplateConsentText.trim() : null,
             Attached_Documents__c: this.editTemplateAttachedDocuments,
             Attached_Document_Markup__c: this.editTemplateAttachedDocumentMarkup,
             Signature_Type_Only__c: this.editTemplateTypeOnly,

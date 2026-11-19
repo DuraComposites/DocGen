@@ -22,6 +22,9 @@ The list of what this fork changes. Every pull request that changes behaviour ad
 | Signer inputs: a file upload type (saved on the request, linked to the record on completion) and "at least one of" groups, checked on the page and the server                                       | [#14](https://github.com/DuraComposites/DocGen/pull/14) |
 | Flow action "DocGen: Get Template Signers": a template's signer roles in signing order and whether it has a `{#Signatures}` block                                                                   | [#14](https://github.com/DuraComposites/DocGen/pull/14) |
 | Signing page badge shows the brand's badge label or company name instead of the signer's role; App Builder labels "DocGen Signature Status" and "DocGen Signature Sender"                           | [#14](https://github.com/DuraComposites/DocGen/pull/14) |
+| Signer inputs can be limited to signer roles (`forRoles`); required and at-least-one rules apply only to those signers, and signers with no inputs skip the Your Information step                   | [#16](https://github.com/DuraComposites/DocGen/pull/16) |
+| `{#Signatures}` block: after each signature the remaining signers' viewing copy is re-rendered from the frozen data with live rows (signed name and date, or Pending)                               | [#16](https://github.com/DuraComposites/DocGen/pull/16) |
+| Signing consent: ticked on the signature step (no separate confirm box); wording set per template (Signing Consent Text), recorded on each signer's audit and printed on both certificates          | [#16](https://github.com/DuraComposites/DocGen/pull/16) |
 
 ## Install
 

@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 /**
  * Platform Event trigger for signature PDF generation and notifications.
  * Runs as Automated Process user (system context), bypassing guest user
@@ -124,6 +125,18 @@ trigger DocGenSignaturePdfTrigger on DocGen_Signature_PDF__e(after insert) {
                     System.enqueueJob(new DocGenSignatureService.SignaturePdfQueueable(requestId));
                 }
             } else if (remaining > 0) {
+                // Dura: snapshot (PDF-viewer) request: refresh the viewing copy so the
+                // remaining signers see who has already signed in the {#Signatures} rows.
+                if (req.Render_Data_Snapshot__c != null && req.Template__c != null && !Test.isRunningTest()) {
+                    try {
+                        System.enqueueJob(new DocGenSignatureService.TemplateSignaturePdfQueueable(requestId, true));
+                    } catch (Exception refreshEx) {
+                        System.debug(
+                            LoggingLevel.WARN,
+                            'DocGen: live view refresh not queued: ' + refreshEx.getMessage()
+                        );
+                    }
+                }
                 // Not all done — send "signer completed" notification
                 // Use the signer carried by the event. Parallel signers can finish
                 // out of order, so Sort_Order__c cannot identify who just signed.

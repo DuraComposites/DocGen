@@ -3827,6 +3827,15 @@
                                                 class="slds-var-m-top_medium"
                                             ></lightning-input>
                                         </template>
+                                        <lightning-textarea
+                                            label="Signing consent text"
+                                            value={editTemplateConsentText}
+                                            onchange={handleConsentTextChange}
+                                            max-length="1000"
+                                            placeholder="Blank uses the standard wording: I agree to sign this document electronically..."
+                                            field-level-help="What signers agree to when they tick the consent box. The exact text each signer saw is kept on their signature audit and printed on the certificate."
+                                            class="slds-var-m-top_medium"
+                                        ></lightning-textarea>
                                         <!-- #412 — existing record PDFs (e.g. drawings) attached to signature requests -->
                                         <lightning-combobox
                                             label="Attached Documents (e-sign)"
@@ -4833,6 +4842,16 @@
                                                                     placeholder="At-least-one group (optional)"
                                                                     title="Fields with the same group name: the signer must fill at least one of them"
                                                                     onchange={handleSignerFieldGroupChange}
+                                                                ></lightning-input>
+                                                                <lightning-input
+                                                                    class="slds-var-m-top_xx-small"
+                                                                    type="text"
+                                                                    variant="label-hidden"
+                                                                    value={row.forRolesText}
+                                                                    data-index={row.index}
+                                                                    placeholder="For roles (blank = every signer)"
+                                                                    title="Ask only signers with these roles, comma-separated, for example Customer"
+                                                                    onchange={handleSignerFieldRolesChange}
                                                                 ></lightning-input>
                                                             </td>
                                                             <td>

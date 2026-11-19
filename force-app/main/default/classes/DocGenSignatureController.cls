@@ -163,6 +163,11 @@ public without sharing class DocGenSignatureController {
         // the role is the template tag name (it places the signature), not a label for people.
         @AuraEnabled
         public String badgeLabel;
+        // Dura: the consent statement shown next to the tick box (the template's
+        // Signing_Consent_Text__c, else the standard wording). The server records the
+        // same text on the signer's audit, so the page never decides what was agreed.
+        @AuraEnabled
+        public String consentText;
         @AuraEnabled
         public String brandColor;
         @AuraEnabled
@@ -277,8 +282,20 @@ public without sharing class DocGenSignatureController {
             return; // No template / capture-only flat-PDF flow — nothing to capture.
         }
 
-        List<DocGenFieldWritebackService.FormFieldDef> defs = DocGenFieldWritebackService.parseConfig(
-            reqs[0].Template__r.Form_Fields_Config__c
+        // Dura: only the fields asked of this signer's role are validated and saved, so
+        // required and at-least-one rules apply only to the signers a field is for.
+        DocGenFlsGuard.guestAssertAccessible(DocGen_Signer__c.sObjectType, new Set<String>{ 'Role_Name__c' });
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        List<DocGen_Signer__c> roleRows = [
+            SELECT Role_Name__c
+            FROM DocGen_Signer__c
+            WHERE Id = :signerId
+            WITH SYSTEM_MODE
+            LIMIT 1
+        ];
+        List<DocGenFieldWritebackService.FormFieldDef> defs = DocGenFieldWritebackService.forSigner(
+            DocGenFieldWritebackService.parseConfig(reqs[0].Template__r.Form_Fields_Config__c),
+            roleRows.isEmpty() ? null : roleRows[0].Role_Name__c
         );
         // validateAndClean enforces required + coerces + drops unknown keys, and
         // returns null when there are no configured form fields.
@@ -900,7 +917,11 @@ public without sharing class DocGenSignatureController {
         // only). The writeback flags + base-field API names from the config never
         // leave the server; the writeback allowlist is re-derived at completion.
         if (parentReq.Template__c != null && parentReq.Template__r != null) {
-            res.formFields = DocGenFieldWritebackService.publicFormFields(parentReq.Template__r.Form_Fields_Config__c);
+            // Dura: only the fields asked of this signer's role ("forRoles" in the config).
+            res.formFields = DocGenFieldWritebackService.publicFormFields(
+                parentReq.Template__r.Form_Fields_Config__c,
+                signer.Role_Name__c
+            );
         }
 
         res.attachmentCount = DocGenSignatureAttachments.attachmentCount(parentReq.Id);
@@ -1058,8 +1079,61 @@ public without sharing class DocGenSignatureController {
         return res;
     }
 
+    /** Dura: the standard consent wording, used when a template sets none. No dashes. */
+    @TestVisible
+    private static final String DEFAULT_CONSENT_TEXT =
+        'I agree to sign this document electronically. I understand that my typed name constitutes my legal ' +
+        'electronic signature, and I consent to conducting this transaction electronically.';
+
+    private static Map<Id, String> consentTextCache = new Map<Id, String>();
+
+    /**
+     * Dura: the consent statement for a request: its template's Signing_Consent_Text__c,
+     * else the standard wording. Read in SYSTEM_MODE (the guest has no template access).
+     */
+    @TestVisible
+    private static String consentTextFor(Id requestId) {
+        if (requestId == null) {
+            return DEFAULT_CONSENT_TEXT;
+        }
+        if (consentTextCache.containsKey(requestId)) {
+            return consentTextCache.get(requestId);
+        }
+        String text = DEFAULT_CONSENT_TEXT;
+        try {
+            DocGenFlsGuard.guestAssertAccessible(
+                DocGen_Signature_Request__c.sObjectType,
+                new Set<String>{ 'Template__c' }
+            );
+            DocGenFlsGuard.guestAssertAccessible(
+                DocGen_Template__c.sObjectType,
+                new Set<String>{ 'Signing_Consent_Text__c' }
+            );
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            List<DocGen_Signature_Request__c> reqs = [
+                SELECT Template__r.Signing_Consent_Text__c
+                FROM DocGen_Signature_Request__c
+                WHERE Id = :requestId
+                WITH SYSTEM_MODE
+                LIMIT 1
+            ];
+            if (
+                !reqs.isEmpty() &&
+                reqs[0].Template__r != null &&
+                String.isNotBlank(reqs[0].Template__r.Signing_Consent_Text__c)
+            ) {
+                text = reqs[0].Template__r.Signing_Consent_Text__c.trim();
+            }
+        } catch (Exception e) {
+            text = DEFAULT_CONSENT_TEXT;
+        }
+        consentTextCache.put(requestId, text);
+        return text;
+    }
+
     /** One resolved brand payload is shared by every public signer state. */
     private static void applySigningBrand(SignatureInitResponse res, Id requestId) {
+        res.consentText = consentTextFor(requestId);
         DocGen_Settings__c settings = DocGen_Settings__c.getOrgDefaults();
         DocGen_Brand__c brand = DocGenBrandResolver.getBrand(DocGenBrandResolver.resolveBrandForRequest(requestId));
         res.brandName = brand != null && String.isNotBlank(brand.Company_Name__c)
@@ -1518,6 +1592,8 @@ public without sharing class DocGenSignatureController {
         audit.IP_Address__c = resolveClientIp(ipAddress);
         audit.User_Agent__c = String.isNotBlank(userAgent) ? userAgent.left(255) : 'Unknown';
         audit.Consent_Captured__c = true;
+        // Dura: the exact consent wording this signer agreed to.
+        audit.Consent_Text__c = consentTextFor(signer.Signature_Request__c);
         audit.PIN_Verified_At__c = signer.PIN_Verified_At__c;
         // #verification — record how identity was checked, even when the PIN was skipped.
         audit.Verification_Method__c = signer.PIN_Verified_At__c != null ? 'Email PIN' : 'None';
@@ -1536,6 +1612,7 @@ public without sharing class DocGenSignatureController {
                 'IP_Address__c',
                 'User_Agent__c',
                 'Consent_Captured__c',
+                'Consent_Text__c',
                 'PIN_Verified_At__c'
             }
         );
@@ -2945,6 +3022,8 @@ public without sharing class DocGenSignatureController {
         audit.IP_Address__c = resolveClientIp(ipAddress);
         audit.User_Agent__c = String.isNotBlank(userAgent) ? userAgent.left(255) : 'Unknown';
         audit.Consent_Captured__c = true;
+        // Dura: the exact consent wording this signer agreed to.
+        audit.Consent_Text__c = consentTextFor(signer.Signature_Request__c);
         audit.PIN_Verified_At__c = signer.PIN_Verified_At__c;
         // #verification — record how identity was checked, even when the PIN was skipped.
         audit.Verification_Method__c = signer.PIN_Verified_At__c != null ? 'Email PIN' : 'None';
@@ -2963,6 +3042,7 @@ public without sharing class DocGenSignatureController {
                 'IP_Address__c',
                 'User_Agent__c',
                 'Consent_Captured__c',
+                'Consent_Text__c',
                 'PIN_Verified_At__c'
             }
         );
@@ -3188,6 +3268,8 @@ public without sharing class DocGenSignatureController {
         audit.IP_Address__c = resolveClientIp(ipAddress);
         audit.User_Agent__c = String.isNotBlank(userAgent) ? userAgent.left(255) : 'Unknown';
         audit.Consent_Captured__c = true;
+        // Dura: the exact consent wording this signer agreed to.
+        audit.Consent_Text__c = consentTextFor(signer.Signature_Request__c);
         audit.PIN_Verified_At__c = signer.PIN_Verified_At__c;
         // #verification — record how identity was checked, even when the PIN was skipped.
         audit.Verification_Method__c = signer.PIN_Verified_At__c != null ? 'Email PIN' : 'None';
@@ -3212,6 +3294,7 @@ public without sharing class DocGenSignatureController {
                 'IP_Address__c',
                 'User_Agent__c',
                 'Consent_Captured__c',
+                'Consent_Text__c',
                 'PIN_Verified_At__c',
                 'Document_Hash_SHA256__c'
             }
@@ -3623,13 +3706,14 @@ public without sharing class DocGenSignatureController {
                 'Signed_Date__c',
                 'IP_Address__c',
                 'Consent_Captured__c',
+                'Consent_Text__c',
                 'User_Agent__c',
                 'Signature_Request__c'
             }
         );
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
         List<DocGen_Signature_Audit__c> audits = [
-            SELECT Signer__c, Signed_Date__c, IP_Address__c, Consent_Captured__c, User_Agent__c
+            SELECT Signer__c, Signed_Date__c, IP_Address__c, Consent_Captured__c, Consent_Text__c, User_Agent__c
             FROM DocGen_Signature_Audit__c
             WHERE Signature_Request__c = :reqId
             WITH SYSTEM_MODE
@@ -3660,6 +3744,8 @@ public without sharing class DocGenSignatureController {
                         : null,
                     'ip' => a != null ? a.IP_Address__c : null,
                     'consent' => a != null ? a.Consent_Captured__c == true : false,
+                    // Dura: the wording this signer agreed to (blank on audits from before 1.2).
+                    'consentText' => a != null ? a.Consent_Text__c : null,
                     'userAgent' => a != null ? a.User_Agent__c : null,
                     'verified' => s.PIN_Verified_At__c != null,
                     'isMe' => s.Id == myId

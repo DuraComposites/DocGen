@@ -34,6 +34,15 @@ Give two or more inputs the same **At-least-one group** name (under the label in
 
 Leave **Required** off on grouped inputs. The signing page and the server both check the rule. A ticked checkbox counts as filled; an unticked one does not.
 
+#### Ask only some signers
+
+By default every signer is asked every input. To ask only certain signers, type their roles in the input's **For roles** box (under the label in the editor), separated by commas, for example `Customer`. In the configuration this is `"forRoles": ["Customer"]`.
+
+- Roles match the signer's role, ignoring case and surrounding spaces. This works for `{@Signature_Role}` tags and for signers in a `{#Signatures}` block, whose role is whatever the send passed.
+- **Required** and **At-least-one group** apply only to the signers an input is for.
+- A signer with no inputs left goes straight to signing, without the **Your Information** step.
+- The certificate lists each signer's own answers.
+
 #### Place the answer
 
 ```text

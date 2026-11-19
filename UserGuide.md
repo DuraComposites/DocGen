@@ -1897,7 +1897,9 @@ If email verification is required, request the code, check the intended inbox, a
 3. At a signature or initials field, draw with your mouse/finger or type the value.
 4. Choose **Save** to return to the document or **Save & Next** to continue to the next field when offered.
 5. Complete any requested date fields.
-6. Review the final confirmation, give electronic-signature consent, and submit.
+6. Tick the consent box and choose **Finish & Submit**. On a document without signing fields, the consent box sits under the signature, so you sign and submit in one step.
+
+The consent wording can differ by document: each template can set its own **Signing consent text**. The exact words you agreed to are kept with your signature and printed on the certificate.
 
 Drawing and typing are alternative ways to fill a signature. Clear the current value before switching methods.
 
@@ -1907,7 +1909,7 @@ Drawing and typing are alternative ways to fill a signature. Clear the current v
 
 #### After signing
 
-If other people still need to sign, you may see a waiting confirmation. When everyone finishes, DocGen creates the completed file on the related Salesforce record. Depending on the request's delivery settings, completion emails can also carry the finished file.
+If other people still need to sign, you may see a waiting confirmation. On a document with a `{#Signatures}` block, people who open their link after you see your signature and date in the block; the others still show as Pending. When everyone finishes, DocGen creates the completed file on the related Salesforce record. Depending on the request's delivery settings, completion emails can also carry the finished file.
 
 Active verification and signing screens can use the selected company's branding. The final success and waiting-for-other-signers cards are intentionally plain.
 
@@ -2496,6 +2498,15 @@ Give two or more inputs the same **At-least-one group** name (under the label in
 ```
 
 Leave **Required** off on grouped inputs. The signing page and the server both check the rule. A ticked checkbox counts as filled; an unticked one does not.
+
+#### Ask only some signers
+
+By default every signer is asked every input. To ask only certain signers, type their roles in the input's **For roles** box (under the label in the editor), separated by commas, for example `Customer`. In the configuration this is `"forRoles": ["Customer"]`.
+
+- Roles match the signer's role, ignoring case and surrounding spaces. This works for `{@Signature_Role}` tags and for signers in a `{#Signatures}` block, whose role is whatever the send passed.
+- **Required** and **At-least-one group** apply only to the signers an input is for.
+- A signer with no inputs left goes straight to signing, without the **Your Information** step.
+- The certificate lists each signer's own answers.
 
 #### Place the answer
 
@@ -4417,7 +4428,8 @@ Per-row fields available inside the block:
 Notes:
 
 - **Backwards-compatible and additive.** Role tags (`{@Signature_Role}`) are unchanged and continue to work exactly as before — use them when you want signatures in fixed, scattered positions. A template **without** a `{#Signatures}` block renders identically to previous releases. You can even combine both in one template.
-- **Where it applies.** The loop is populated by the snapshot/PDF-viewer signing flow (the flow that re-renders the document from a send-time data snapshot and attaches the completed PDF + certificate to the record). Before signing, the block previews the invited signers with a `Pending` status; on completion it shows each signer's typed signature and signed date.
+- **Where it applies.** The loop is populated by the snapshot/PDF-viewer signing flow (the flow that re-renders the document from a send-time data snapshot and attaches the completed PDF + certificate to the record). Before signing, the block previews the invited signers with a `Pending` status. After each signature, the copy the remaining signers open is re-rendered from the same frozen data, so it shows who has signed (typed signature and date) and who is still Pending. On completion it shows every signer's typed signature and signed date.
+- **No signers (plain Generate).** The block prints nothing. To keep wet-signature lines on a printed copy, add an inverse section after it: `{^Signatures}Signed: ____ Date: ____{/Signatures}`.
 - **Typed-name signatures** today (drawn-signature images are a planned future enhancement; the loop already supports per-row image fields for when that lands).
 
 _Template builders · 8 min read · Reviewed for 3.60.0_
