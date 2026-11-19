@@ -89,31 +89,53 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
         public String atLeastOneGroup;
         // Dura: for type 'file', the accepted extensions (lower case, no dot). Default pdf.
         public List<String> accept = new List<String>();
-        // Dura: the signer roles this field is asked of (trimmed, lower case). Empty =
-        // every signer. Matched against DocGen_Signer__c.Role_Name__c.
-        public List<String> forRoles = new List<String>();
-
-        /** True when this field is asked of a signer with the given role. */
-        public Boolean appliesTo(String role) {
-            if (forRoles.isEmpty()) {
-                return true;
-            }
-            return role != null && forRoles.contains(role.trim().toLowerCase());
-        }
     }
 
+    /** Dura: Form_Field_Keys__c value meaning the signer was asked no inputs (sign only). */
+    public static final String NO_FIELDS = 'none';
+
     /**
-     * Dura: the fields asked of one signer, by role ("forRoles" in the config). Fields
-     * with no forRoles apply to everyone, so templates without the key are unchanged.
+     * Dura: the inputs one signer is asked, from the keys chosen for them at send time
+     * (DocGen_Signer__c.Form_Field_Keys__c). Blank = every input (a request sent without a
+     * per-signer choice, as before); "none" = sign only; otherwise the comma-separated keys,
+     * kept in template order. Unknown keys are ignored.
      */
-    public static List<FormFieldDef> forSigner(List<FormFieldDef> defs, String role) {
+    public static List<FormFieldDef> forSigner(List<FormFieldDef> defs, String assignedKeys) {
+        if (String.isBlank(assignedKeys)) {
+            return defs;
+        }
         List<FormFieldDef> out = new List<FormFieldDef>();
+        if (assignedKeys.trim().equalsIgnoreCase(NO_FIELDS)) {
+            return out;
+        }
+        Set<String> keys = new Set<String>();
+        for (String k : assignedKeys.split(',')) {
+            if (String.isNotBlank(k)) {
+                keys.add(k.trim());
+            }
+        }
         for (FormFieldDef def : defs) {
-            if (def.appliesTo(role)) {
+            if (keys.contains(def.key)) {
                 out.add(def);
             }
         }
         return out;
+    }
+
+    /**
+     * Dura: the value to store on the signer for a send-time choice: the keys as given
+     * (trimmed, comma-joined), or "none" when the list is blank.
+     */
+    public static String normaliseAssignedKeys(String keys) {
+        List<String> clean = new List<String>();
+        if (String.isNotBlank(keys)) {
+            for (String k : keys.split(',')) {
+                if (String.isNotBlank(k) && !clean.contains(k.trim())) {
+                    clean.add(k.trim());
+                }
+            }
+        }
+        return clean.isEmpty() ? NO_FIELDS : String.join(clean, ',');
     }
 
     /**
@@ -184,7 +206,6 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
             if (def.type == 'file') {
                 def.accept = parseAccept(row.get('accept'));
             }
-            def.forRoles = parseRoles(row.get('forRoles'));
             Object choicesRaw = row.get('choices');
             if (choicesRaw instanceof List<Object>) {
                 for (Object c : (List<Object>) choicesRaw) {
@@ -210,9 +231,9 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
         return publicFormFields(parseConfig(queryConfigJson));
     }
 
-    /** Dura: the public projection of only the fields asked of a signer with this role. */
-    public static List<Object> publicFormFields(String queryConfigJson, String signerRole) {
-        return publicFormFields(forSigner(parseConfig(queryConfigJson), signerRole));
+    /** Dura: the public projection of only the inputs this signer was asked (Form_Field_Keys__c). */
+    public static List<Object> publicFormFields(String queryConfigJson, String assignedKeys) {
+        return publicFormFields(forSigner(parseConfig(queryConfigJson), assignedKeys));
     }
 
     private static List<Object> publicFormFields(List<FormFieldDef> defs) {
@@ -539,29 +560,6 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
 
     private static Map<String, Object> uploadFail(String message) {
         return new Map<String, Object>{ 'success' => false, 'message' => message };
-    }
-
-    /** Dura: "forRoles" as a list or a comma string, trimmed and lower-cased; blanks dropped. */
-    @TestVisible
-    private static List<String> parseRoles(Object raw) {
-        List<String> parts = new List<String>();
-        if (raw instanceof List<Object>) {
-            for (Object o : (List<Object>) raw) {
-                if (o != null) {
-                    parts.add(String.valueOf(o));
-                }
-            }
-        } else if (raw != null) {
-            parts.addAll(String.valueOf(raw).split(','));
-        }
-        List<String> roles = new List<String>();
-        for (String part : parts) {
-            String r = part.trim().toLowerCase();
-            if (String.isNotBlank(r) && !roles.contains(r)) {
-                roles.add(r);
-            }
-        }
-        return roles;
     }
 
     /** Accepted extensions for a file field: config list or comma string, narrowed to the safe set. */

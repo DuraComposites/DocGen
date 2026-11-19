@@ -34,13 +34,13 @@ Give two or more inputs the same **At-least-one group** name (under the label in
 
 Leave **Required** off on grouped inputs. The signing page and the server both check the rule. A ticked checkbox counts as filled; an unticked one does not.
 
-#### Ask only some signers
+#### Choose who fills which inputs
 
-By default every signer is asked every input. To ask only certain signers, type their roles in the input's **For roles** box (under the label in the editor), separated by commas, for example `Customer`. In the configuration this is `"forRoles": ["Customer"]`.
+The template defines the inputs and which are **Required**. Who is asked what is chosen when the request is sent, so the same template can ask the buyer for a PO and ask a director only to sign.
 
-- Roles match the signer's role, ignoring case and surrounding spaces. This works for `{@Signature_Role}` tags and for signers in a `{#Signatures}` block, whose role is whatever the send passed.
-- **Required** and **At-least-one group** apply only to the signers an input is for.
-- A signer with no inputs left goes straight to signing, without the **Your Information** step.
+- From Flow, set **Assign Inputs Per Signer** on **DocGen: Create Signature Request**, and give each signer the input keys they fill in their **Form Field Keys** (for example `PO_Number,PO_File`). A signer with no keys only signs. **DocGen: Get Template Signers** returns the template's inputs (**Form Fields**: key, label, required) for a send screen to offer as checkboxes.
+- Without that option, every signer is asked every input, as before.
+- **Required** and **At-least-one group** apply only to the inputs a signer was given. A signer with none goes straight to signing, without the **Your Information** step.
 - The certificate lists each signer's own answers.
 
 #### Place the answer

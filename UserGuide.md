@@ -2499,13 +2499,13 @@ Give two or more inputs the same **At-least-one group** name (under the label in
 
 Leave **Required** off on grouped inputs. The signing page and the server both check the rule. A ticked checkbox counts as filled; an unticked one does not.
 
-#### Ask only some signers
+#### Choose who fills which inputs
 
-By default every signer is asked every input. To ask only certain signers, type their roles in the input's **For roles** box (under the label in the editor), separated by commas, for example `Customer`. In the configuration this is `"forRoles": ["Customer"]`.
+The template defines the inputs and which are **Required**. Who is asked what is chosen when the request is sent, so the same template can ask the buyer for a PO and ask a director only to sign.
 
-- Roles match the signer's role, ignoring case and surrounding spaces. This works for `{@Signature_Role}` tags and for signers in a `{#Signatures}` block, whose role is whatever the send passed.
-- **Required** and **At-least-one group** apply only to the signers an input is for.
-- A signer with no inputs left goes straight to signing, without the **Your Information** step.
+- From Flow, set **Assign Inputs Per Signer** on **DocGen: Create Signature Request**, and give each signer the input keys they fill in their **Form Field Keys** (for example `PO_Number,PO_File`). A signer with no keys only signs. **DocGen: Get Template Signers** returns the template's inputs (**Form Fields**: key, label, required) for a send screen to offer as checkboxes.
+- Without that option, every signer is asked every input, as before.
+- **Required** and **At-least-one group** apply only to the inputs a signer was given. A signer with none goes straight to signing, without the **Your Information** step.
 - The certificate lists each signer's own answers.
 
 #### Place the answer
@@ -2681,10 +2681,11 @@ To build one signer row per role from the template itself, add **DocGen: Get Tem
 | ---------------------------------------- | -------------------------- |
 | **Template API Name** or **Template Id** | The template you will send |
 
-| Output                   | What it holds                                                                                                                                                        |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Signers**              | A collection of **DocGenTemplateSigner**: **role** (from `{@Signature_Role:Order:Type}`, underscores as spaces) and **signingOrder**, one per role, in signing order |
-| **Has Signatures Block** | True when the template has a `{#Signatures}` repeating block, so the document can take signers beyond its fixed roles                                                |
+| Output                   | What it holds                                                                                                                                                                 |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Signers**              | A collection of **DocGenTemplateSigner**: **role** (from `{@Signature_Role:Order:Type}`, underscores as spaces) and **signingOrder**, one per role, in signing order          |
+| **Has Signatures Block** | True when the template has a `{#Signatures}` repeating block, so the document can take signers beyond its fixed roles                                                         |
+| **Form Fields**          | The template's signer inputs, as **DocGenTemplateField**: **key**, **label**, **required**. Offer them per signer and pass the chosen keys in each signer's **formFieldKeys** |
 
 A role used by several tags appears once, at its lowest order. Pass each **role** unchanged as the signer's role: it is what places the signature.
 
@@ -2696,12 +2697,13 @@ Create a single **Apex-Defined** variable using the packaged **DocGenSigner** cl
 
 Assign the single signer's fields:
 
-| Field         | Example                                             |
-| ------------- | --------------------------------------------------- |
-| **name**      | Your Contact's full name                            |
-| **email**     | Your Contact's email                                |
-| **role**      | `Customer`, matching `{@Signature_Customer:1:Full}` |
-| **contactId** | The Contact ID, when available                      |
+| Field             | Example                                                                                |
+| ----------------- | -------------------------------------------------------------------------------------- |
+| **name**          | Your Contact's full name                                                               |
+| **email**         | Your Contact's email                                                                   |
+| **role**          | `Customer`, matching `{@Signature_Customer:1:Full}`                                    |
+| **contactId**     | The Contact ID, when available                                                         |
+| **formFieldKeys** | The input keys this person fills, comma-separated (used with Assign Inputs Per Signer) |
 
 Add the populated signer to the collection. Repeat for additional people.
 
@@ -5284,6 +5286,7 @@ global class Result
 global Result()
 global List<DocGenTemplateSigner> signers
 global Boolean hasSignaturesBlock
+global List<DocGenTemplateField> formFields
 global static List<Result> getSigners(List<Request> requests)
 ```
 
@@ -5404,6 +5407,7 @@ global Integer reminderEveryDays
 global Integer reminderForDays
 global List<String> attachedDocumentIds
 global String attachedDocumentPosition
+global Boolean assignFieldsPerSigner
 global class Result
 global Id signatureRequestId
 global List<String> signerUrls
@@ -5498,6 +5502,19 @@ global String name
 global String email
 global String role
 global Id contactId
+global String formFieldKeys
+```
+
+#### DocGenTemplateField
+
+Core · [Source](https://github.com/DuraComposites/DocGen/blob/main/force-app/main/default/classes/DocGenTemplateField.cls)
+
+```apex
+global class DocGenTemplateField
+global DocGenTemplateField()
+global String key
+global String label
+global Boolean required
 ```
 
 #### DocGenTemplateSigner

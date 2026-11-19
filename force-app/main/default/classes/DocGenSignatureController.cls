@@ -287,12 +287,12 @@ public without sharing class DocGenSignatureController {
             return; // No template / capture-only flat-PDF flow — nothing to capture.
         }
 
-        // Dura: only the fields asked of this signer's role are validated and saved, so
-        // required and at-least-one rules apply only to the signers a field is for.
-        DocGenFlsGuard.guestAssertAccessible(DocGen_Signer__c.sObjectType, new Set<String>{ 'Role_Name__c' });
+        // Dura: only the inputs this signer was asked are validated and saved, so required
+        // and at-least-one rules apply only to the signers an input was given to.
+        DocGenFlsGuard.guestAssertAccessible(DocGen_Signer__c.sObjectType, new Set<String>{ 'Form_Field_Keys__c' });
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
-        List<DocGen_Signer__c> roleRows = [
-            SELECT Role_Name__c
+        List<DocGen_Signer__c> keyRows = [
+            SELECT Form_Field_Keys__c
             FROM DocGen_Signer__c
             WHERE Id = :signerId
             WITH SYSTEM_MODE
@@ -300,7 +300,7 @@ public without sharing class DocGenSignatureController {
         ];
         List<DocGenFieldWritebackService.FormFieldDef> defs = DocGenFieldWritebackService.forSigner(
             DocGenFieldWritebackService.parseConfig(reqs[0].Template__r.Form_Fields_Config__c),
-            roleRows.isEmpty() ? null : roleRows[0].Role_Name__c
+            keyRows.isEmpty() ? null : keyRows[0].Form_Field_Keys__c
         );
         // validateAndClean enforces required + coerces + drops unknown keys, and
         // returns null when there are no configured form fields.
@@ -410,7 +410,8 @@ public without sharing class DocGenSignatureController {
                 'CreatedDate',
                 'PIN_Verified_At__c',
                 'Signature_Request__c',
-                'Secure_Token__c'
+                'Secure_Token__c',
+                'Form_Field_Keys__c'
             }
         );
         // Form_Fields_Config__c carries the signer form-field config rendered on the page.
@@ -430,6 +431,7 @@ public without sharing class DocGenSignatureController {
                 Sort_Order__c,
                 CreatedDate,
                 PIN_Verified_At__c,
+                Form_Field_Keys__c,
                 Signature_Request__r.Id,
                 Signature_Request__r.Status__c,
                 Signature_Request__r.Require_Email_Verification__c,
@@ -924,10 +926,10 @@ public without sharing class DocGenSignatureController {
         // only). The writeback flags + base-field API names from the config never
         // leave the server; the writeback allowlist is re-derived at completion.
         if (parentReq.Template__c != null && parentReq.Template__r != null) {
-            // Dura: only the fields asked of this signer's role ("forRoles" in the config).
+            // Dura: only the inputs this signer was asked at send time (Form_Field_Keys__c).
             res.formFields = DocGenFieldWritebackService.publicFormFields(
                 parentReq.Template__r.Form_Fields_Config__c,
-                signer.Role_Name__c
+                signer.Form_Field_Keys__c
             );
         }
 

@@ -45,6 +45,12 @@ global with sharing class DocGenGetTemplateSignersAction { // NOPMD AvoidGlobalM
             description='True when the template has a {#Signatures} repeating block, so the document can take more signers than its fixed roles.'
         )
         global Boolean hasSignaturesBlock;
+
+        @InvocableVariable(
+            label='Form Fields'
+            description='The signer inputs the template defines, in order: Key, Label and Required. Pass the keys a person should fill as their DocGenSigner Form Field Keys.'
+        )
+        global List<DocGenTemplateField> formFields;
     }
 
     @InvocableMethod(
@@ -74,7 +80,38 @@ global with sharing class DocGenGetTemplateSignersAction { // NOPMD AvoidGlobalM
         Result res = new Result();
         res.hasSignaturesBlock = summary.hasSignaturesBlock;
         res.signers = toSigners(summary.placements);
+        res.formFields = templateFields(templateId);
         return res;
+    }
+
+    /** The template's signer inputs (Form_Fields_Config__c), in order. */
+    @TestVisible
+    private static List<DocGenTemplateField> templateFields(Id templateId) {
+        List<DocGenTemplateField> out = new List<DocGenTemplateField>();
+        DocGenFlsGuard.assertAccessible(DocGen_Template__c.sObjectType, new Set<String>{ 'Form_Fields_Config__c' });
+        /* code-analyzer-suppress ApexFlsViolation */
+        List<DocGen_Template__c> rows = [
+            SELECT Form_Fields_Config__c
+            FROM DocGen_Template__c
+            WHERE Id = :templateId
+            WITH SYSTEM_MODE
+            LIMIT 1
+        ];
+        if (rows.isEmpty()) {
+            return out;
+        }
+        for (
+            DocGenFieldWritebackService.FormFieldDef def : DocGenFieldWritebackService.parseConfig(
+                rows[0].Form_Fields_Config__c
+            )
+        ) {
+            DocGenTemplateField f = new DocGenTemplateField();
+            f.key = def.key;
+            f.label = String.isNotBlank(def.label) ? def.label : def.key;
+            f.required = def.required == true;
+            out.add(f);
+        }
+        return out;
     }
 
     /**

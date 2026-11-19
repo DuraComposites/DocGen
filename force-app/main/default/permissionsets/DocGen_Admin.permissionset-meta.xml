@@ -893,6 +893,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>DocGen_Signer__c.Form_Field_Keys__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>DocGen_Signer__c.First_Visited_At__c</field>
         <readable>true</readable>

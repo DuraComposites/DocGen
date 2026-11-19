@@ -145,6 +145,7 @@
             "global Result()",
             "global List<DocGenTemplateSigner> signers",
             "global Boolean hasSignaturesBlock",
+            "global List<DocGenTemplateField> formFields",
             "global static List<Result> getSigners(List<Request> requests)"
         ]
     },
@@ -265,6 +266,7 @@
             "global Integer reminderForDays",
             "global List<String> attachedDocumentIds",
             "global String attachedDocumentPosition",
+            "global Boolean assignFieldsPerSigner",
             "global class Result",
             "global Id signatureRequestId",
             "global List<String> signerUrls",
@@ -358,7 +360,20 @@
             "global String name",
             "global String email",
             "global String role",
-            "global Id contactId"
+            "global Id contactId",
+            "global String formFieldKeys"
+        ]
+    },
+    {
+        "name": "DocGenTemplateField",
+        "package": "Core",
+        "file": "force-app/main/default/classes/DocGenTemplateField.cls",
+        "declarations": [
+            "global class DocGenTemplateField",
+            "global DocGenTemplateField()",
+            "global String key",
+            "global String label",
+            "global Boolean required"
         ]
     },
     {

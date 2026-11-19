@@ -4131,7 +4131,6 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             writeback: !!row.writeback,
             listOnCertificate: !!row.listOnCertificate,
             atLeastOneGroup: row.atLeastOneGroup || '',
-            forRolesText: Array.isArray(row.forRoles) ? row.forRoles.join(', ') : row.forRoles || '',
             mergeTag: row.mergeTag || this._buildSignerMergeTag(row.key),
             choicesText: Array.isArray(row.choices) ? row.choices.join(', ') : row.choices || '',
             isPicklist: (row.type || 'text') === 'picklist',
@@ -4190,8 +4189,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
                         choices: Array.isArray(f.choices) ? f.choices : [],
                         listOnCertificate: !!f.listOnCertificate,
                         atLeastOneGroup: f.atLeastOneGroup || '',
-                        accept: f.accept,
-                        forRoles: Array.isArray(f.forRoles) ? f.forRoles : []
+                        accept: f.accept
                     }));
                 }
             } catch (e) {
@@ -4217,9 +4215,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             listOnCertificate: !!f.listOnCertificate,
             // Dura: "at least one of" group and, for file fields, accepted extensions.
             ...(f.atLeastOneGroup ? { atLeastOneGroup: f.atLeastOneGroup } : {}),
-            ...(f.accept ? { accept: f.accept } : {}),
-            // Dura: only asked of these signer roles; omitted = every signer.
-            ...(Array.isArray(f.forRoles) && f.forRoles.length ? { forRoles: f.forRoles } : {})
+            ...(f.accept ? { accept: f.accept } : {})
         }));
         this.editFormFieldsConfig = JSON.stringify({ formFields: serialized });
     }
@@ -4323,15 +4319,6 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
         this._updateSignerFieldRow(Number(event.currentTarget.dataset.index), {
             atLeastOneGroup: String(raw || '').trim()
         });
-    }
-
-    handleSignerFieldRolesChange(event) {
-        const raw = event.detail ? event.detail.value : event.target.value;
-        const forRoles = String(raw || '')
-            .split(',')
-            .map((r) => r.trim())
-            .filter((r) => r.length > 0);
-        this._updateSignerFieldRow(Number(event.currentTarget.dataset.index), { forRoles });
     }
 
     handleSignerFieldCertificateChange(event) {

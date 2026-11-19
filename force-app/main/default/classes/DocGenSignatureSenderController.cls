@@ -3005,6 +3005,11 @@ public with sharing class DocGenSignatureSenderController {
             if (String.isNotBlank(contactId)) {
                 signer.Contact__c = contactId;
             }
+            // Dura: the inputs chosen for this signer at send time (blank = every input).
+            String fieldKeys = (String) input.get('formFieldKeys');
+            if (String.isNotBlank(fieldKeys)) {
+                signer.Form_Field_Keys__c = fieldKeys;
+            }
             signerRecords.add(signer);
 
             SignerResult sr = new SignerResult();
@@ -3027,7 +3032,8 @@ public with sharing class DocGenSignatureSenderController {
                 'Secure_Token__c',
                 'Status__c',
                 'Sort_Order__c',
-                'Contact__c'
+                'Contact__c',
+                'Form_Field_Keys__c'
             }
         );
         /* code-analyzer-suppress ApexFlsViolation */

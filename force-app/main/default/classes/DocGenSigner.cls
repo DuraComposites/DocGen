@@ -30,4 +30,12 @@ global class DocGenSigner {
 
     @AuraEnabled
     global Id contactId;
+
+    /**
+     * Dura: which of the template's signer inputs this person fills, as comma-separated input
+     * keys (DocGenTemplateField.key), e.g. "PO_Number,PO_File". Used only when the request sets
+     * assignFieldsPerSigner; blank then means sign only.
+     */
+    @AuraEnabled
+    global String formFieldKeys;
 }

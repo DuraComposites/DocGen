@@ -200,6 +200,12 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
             description='Optional (#412). Before (default) shows the attached documents ahead of the template; After shows them after it.'
         )
         global String attachedDocumentPosition;
+
+        @InvocableVariable(
+            label='Assign Inputs Per Signer'
+            description='Optional. True: each signer is asked only the template inputs listed in their Form Field Keys (blank = sign only). False or blank: every signer is asked every input, as before.'
+        )
+        global Boolean assignFieldsPerSigner;
     }
 
     global class Result {
@@ -439,6 +445,7 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
      * Builds signer input maps from either the new Signer collection or legacy parallel lists.
      * New Signer collection takes priority.
      */
+    @TestVisible
     private static List<Map<String, Object>> buildSignerInputs(Request req) {
         List<Map<String, Object>> inputs = new List<Map<String, Object>>();
 
@@ -454,14 +461,17 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
                         'Each signer must have an Email. Signer "' + s.name + '" is missing an email.'
                     );
                 }
-                inputs.add(
-                    new Map<String, Object>{
-                        'signerName' => s.name,
-                        'signerEmail' => s.email,
-                        'roleName' => String.isNotBlank(s.role) ? s.role : 'Signer',
-                        'contactId' => s.contactId
-                    }
-                );
+                Map<String, Object> input = new Map<String, Object>{
+                    'signerName' => s.name,
+                    'signerEmail' => s.email,
+                    'roleName' => String.isNotBlank(s.role) ? s.role : 'Signer',
+                    'contactId' => s.contactId
+                };
+                // Dura: per-signer inputs, only when the request asks for it.
+                if (req.assignFieldsPerSigner == true) {
+                    input.put('formFieldKeys', DocGenFieldWritebackService.normaliseAssignedKeys(s.formFieldKeys));
+                }
+                inputs.add(input);
             }
             return inputs;
         }

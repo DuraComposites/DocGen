@@ -1,7 +1,7 @@
 // Dura Composites Ltd.
 // CxSAST: Test class — SOQL/DML findings are test data operations, not production code paths
 /**
- * Quote e-sign round 2 (all generic): signer inputs per role ("forRoles"), the live
+ * Quote e-sign round 2 (all generic): signer inputs chosen per signer at send time, the live
  * {#Signatures} viewing copy for parallel signers, and per-template consent wording
  * recorded on the audit and printed on the certificate.
  */
@@ -11,8 +11,8 @@ private class DocGenSigningRound2Test {
     private static final String DIRECTOR_TOKEN = 'd1d2d3d4d5d6d1d2d3d4d5d6d1d2d3d4d5d6d1d2d3d4d5d6d1d2d3d4d5d6d1d2';
     private static final String PO_CONFIG =
         '{"formFields":[' +
-        '{"key":"PO_Number","label":"PO number","type":"text","atLeastOneGroup":"po","forRoles":["Customer"],"listOnCertificate":true},' +
-        '{"key":"PO_File","label":"PO file","type":"file","atLeastOneGroup":"po","forRoles":"customer, ","listOnCertificate":true},' +
+        '{"key":"PO_Number","label":"PO number","type":"text","atLeastOneGroup":"po","listOnCertificate":true},' +
+        '{"key":"PO_File","label":"PO file","type":"file","atLeastOneGroup":"po","listOnCertificate":true},' +
         '{"key":"Notes","label":"Notes","type":"text","listOnCertificate":true}' +
         ']}';
 
@@ -50,6 +50,7 @@ private class DocGenSigningRound2Test {
                 Signer_Name__c = 'Dana Director',
                 Signer_Email__c = 'dana@example.com',
                 Role_Name__c = 'Managing Director',
+                Form_Field_Keys__c = 'Notes',
                 Secure_Token__c = DIRECTOR_TOKEN,
                 Status__c = 'Pending',
                 Sort_Order__c = 2
@@ -66,24 +67,22 @@ private class DocGenSigningRound2Test {
         ];
     }
 
-    // ---------------------------------------------------------------- forRoles
+    // ---------------------------------------------------------------- inputs per signer
 
     @IsTest
-    static void forRoles_parsesListOrCommaString_andMatchesCaseInsensitively() {
+    static void forSigner_blankAllNoneOrListedKeys() {
         List<DocGenFieldWritebackService.FormFieldDef> defs = DocGenFieldWritebackService.parseConfig(PO_CONFIG);
-        Assert.areEqual(new List<String>{ 'customer' }, defs[0].forRoles);
-        Assert.areEqual(new List<String>{ 'customer' }, defs[1].forRoles, 'comma string, blanks dropped');
-        Assert.isTrue(defs[2].forRoles.isEmpty(), 'no key = every signer');
-        Assert.isTrue(defs[0].appliesTo('  CUSTOMER '));
-        Assert.isFalse(defs[0].appliesTo('Managing Director'));
-        Assert.isFalse(defs[0].appliesTo(null));
-        Assert.isTrue(defs[2].appliesTo(null));
-        Assert.areEqual(3, DocGenFieldWritebackService.forSigner(defs, 'customer').size());
-        Assert.areEqual(1, DocGenFieldWritebackService.forSigner(defs, 'Managing Director').size());
-        Assert.areEqual(
-            new List<String>{ 'a', 'b' },
-            DocGenFieldWritebackService.parseRoles(new List<Object>{ 'A', ' b ', null, 'a', '' })
+        Assert.areEqual(3, DocGenFieldWritebackService.forSigner(defs, null).size(), 'blank = every input');
+        Assert.areEqual(0, DocGenFieldWritebackService.forSigner(defs, 'none').size(), 'none = sign only');
+        List<DocGenFieldWritebackService.FormFieldDef> two = DocGenFieldWritebackService.forSigner(
+            defs,
+            ' Notes , PO_Number, Unknown'
         );
+        Assert.areEqual(2, two.size());
+        Assert.areEqual('PO_Number', two[0].key, 'template order is kept');
+        Assert.areEqual('none', DocGenFieldWritebackService.normaliseAssignedKeys('  '));
+        Assert.areEqual('none', DocGenFieldWritebackService.normaliseAssignedKeys(null));
+        Assert.areEqual('A,B', DocGenFieldWritebackService.normaliseAssignedKeys(' A, B ,A,'));
     }
 
     @IsTest
@@ -162,6 +161,7 @@ private class DocGenSigningRound2Test {
                 Role_Name__c,
                 PIN_Verified_At__c,
                 Field_Data_Json__c,
+                Form_Field_Keys__c,
                 Signature_Data__c
             FROM DocGen_Signer__c
             WHERE Signature_Request__c = :reqId
@@ -437,5 +437,38 @@ private class DocGenSigningRound2Test {
             [SELECT Signature_Image_CV_Id__c FROM DocGen_Signer__c WHERE Secure_Token__c = :DIRECTOR_TOKEN]
             .Signature_Image_CV_Id__c
         );
+    }
+
+    // ---------------------------------------------------------------- send-time choice
+
+    @IsTest
+    static void getTemplateSigners_listsTheTemplateInputs() {
+        Id reqId = buildRequest(PO_CONFIG, null);
+        Id tmplId = [SELECT Template__c FROM DocGen_Signature_Request__c WHERE Id = :reqId].Template__c;
+        List<DocGenTemplateField> fields = DocGenGetTemplateSignersAction.templateFields(tmplId);
+        Assert.areEqual(3, fields.size());
+        Assert.areEqual('PO_Number', fields[0].key);
+        Assert.areEqual('PO number', fields[0].label);
+        Assert.areEqual(false, fields[0].required);
+        Assert.areEqual(0, DocGenGetTemplateSignersAction.templateFields(null).size());
+    }
+
+    @IsTest
+    static void sendAction_carriesEachSignersKeys_onlyWhenAsked() {
+        DocGenSigner first = new DocGenSigner();
+        first.name = 'Casey';
+        first.email = 'casey@example.com';
+        first.formFieldKeys = 'PO_Number,PO_File';
+        DocGenSigner second = new DocGenSigner();
+        second.name = 'Dana';
+        second.email = 'dana@example.com';
+        DocGenSignatureFlowAction.Request req = new DocGenSignatureFlowAction.Request();
+        req.signerRecords = new List<DocGenSigner>{ first, second };
+        List<Map<String, Object>> legacy = DocGenSignatureFlowAction.buildSignerInputs(req);
+        Assert.isFalse(legacy[0].containsKey('formFieldKeys'), 'Without the option, every signer gets every input');
+        req.assignFieldsPerSigner = true;
+        List<Map<String, Object>> perSigner = DocGenSignatureFlowAction.buildSignerInputs(req);
+        Assert.areEqual('PO_Number,PO_File', perSigner[0].get('formFieldKeys'));
+        Assert.areEqual('none', perSigner[1].get('formFieldKeys'), 'No keys = sign only');
     }
 }

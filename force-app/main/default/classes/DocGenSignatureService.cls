@@ -333,10 +333,11 @@ public without sharing class DocGenSignatureService {
                 String fieldRows = '';
                 Map<String, String> fileNames = uploadedFileNames(shown, signers);
                 for (DocGen_Signer__c sgn : signers) {
-                    // Dura: only the fields asked of this signer's role.
+                    // Dura: only the inputs this signer was asked at send time.
                     List<DocGenFieldWritebackService.FormFieldDef> mine = DocGenFieldWritebackService.forSigner(
                         shown,
-                        sgn.Role_Name__c
+                        // Callers that did not load the keys get every input (the pre-1.2 view).
+                        sgn.isSet('Form_Field_Keys__c') ? sgn.Form_Field_Keys__c : null
                     );
                     Map<String, Object> sVals = new Map<String, Object>();
                     if (String.isNotBlank(sgn.Field_Data_Json__c)) {
@@ -2274,7 +2275,8 @@ public without sharing class DocGenSignatureService {
                         'Signature_Request__c',
                         'Status__c',
                         'Sort_Order__c',
-                        'Field_Data_Json__c'
+                        'Field_Data_Json__c',
+                        'Form_Field_Keys__c'
                     }
                 );
                 /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
@@ -2285,7 +2287,8 @@ public without sharing class DocGenSignatureService {
                         Signer_Email__c,
                         Role_Name__c,
                         PIN_Verified_At__c,
-                        Field_Data_Json__c
+                        Field_Data_Json__c,
+                        Form_Field_Keys__c
                     FROM DocGen_Signer__c
                     WHERE Signature_Request__c = :reqId AND Status__c = 'Signed'
                     WITH SYSTEM_MODE
@@ -2498,7 +2501,8 @@ public without sharing class DocGenSignatureService {
                     'Signature_Request__c',
                     'Status__c',
                     'Sort_Order__c',
-                    'Field_Data_Json__c'
+                    'Field_Data_Json__c',
+                    'Form_Field_Keys__c'
                 }
             );
             /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
@@ -2509,7 +2513,8 @@ public without sharing class DocGenSignatureService {
                     Signer_Email__c,
                     Role_Name__c,
                     PIN_Verified_At__c,
-                    Field_Data_Json__c
+                    Field_Data_Json__c,
+                    Form_Field_Keys__c
                 FROM DocGen_Signer__c
                 WHERE Signature_Request__c = :reqId AND Status__c = 'Signed'
                 WITH SYSTEM_MODE
