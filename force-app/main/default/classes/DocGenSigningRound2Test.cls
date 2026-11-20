@@ -276,6 +276,16 @@ private class DocGenSigningRound2Test {
         Assert.areEqual('', rows[1].get('Name'), 'An unsigned signer has no signature yet');
         Assert.areEqual('Dana Director', rows[1].get('RegisteredName'), 'but keeps the invited name');
         Assert.areEqual('Pending', rows[1].get('Status'));
+        Assert.areEqual('', rows[0].get('SignHere'), 'Signed: no Sign here anchor');
+        Assert.areEqual('@@SIGROW-2@@', rows[1].get('SignHere'), 'Still to sign: anchor for signer 2');
+        List<Map<String, Object>> pending = DocGenSignatureService.buildPendingSignerLoopData(
+            new List<Map<String, Object>>{
+                new Map<String, Object>{ 'signerName' => 'A' },
+                new Map<String, Object>{ 'signerName' => 'B' }
+            }
+        );
+        Assert.areEqual('@@SIGROW-1@@', pending[0].get('SignHere'));
+        Assert.areEqual('@@SIGROW-2@@', pending[1].get('SignHere'));
 
         Test.startTest();
         System.enqueueJob(new DocGenSignatureService.TemplateSignaturePdfQueueable(reqId, true));

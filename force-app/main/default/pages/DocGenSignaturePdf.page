@@ -165,6 +165,19 @@
                     border-color: #ba0517;
                     box-shadow: 0 0 0 1px #ba0517;
                 }
+                /* Dura: Sign here chip on the signer's own {#Signatures} line */
+                .block-sign-chip {
+                    cursor: pointer;
+                }
+                .block-sign-chip-label {
+                    display: block;
+                    font-size: 11px;
+                    font-weight: 700;
+                    letter-spacing: 0.04em;
+                    text-transform: uppercase;
+                    color: #8c4b02;
+                    padding: 4px 8px;
+                }
                 /* Dura: "Your information" summary on the final step */
                 .fields-summary {
                     border: 1px solid #dddbda;
@@ -5648,12 +5661,48 @@
                                 }
                                 if (!placements.length) {
                                     console.info('DocGen signing path: legacy; placements=0; located=0');
+                                    addBlockSignChip();
                                     return; // legitimate placement-less request
                                 }
                                 buildGuidedSpots(placements);
                             },
                             { escape: false }
                         );
+                    }
+
+                    // Dura: on a document that signs through a {#Signatures} block there are no
+                    // placements; the block row carries an invisible anchor ({SignHere}) for each
+                    // signer still to sign. Put a "Sign here" chip on this signer's line. Nothing
+                    // happens when the template has no anchor (older templates), so it is safe.
+                    function addBlockSignChip() {
+                        if (!signerData || !signerData.signerNumber || signerData.waitingFor) return;
+                        var needle = '@@SIGROW-' + signerData.signerNumber + '@@';
+                        var hits = DocGenPdfViewer.locateAnchors([needle]);
+                        if (!hits || !hits.length) return;
+                        var hit = hits[0];
+                        // The anchor is tiny text: give the chip a usable size on the line.
+                        hit.box = {
+                            x: hit.box.x,
+                            y: hit.box.y - 2,
+                            w: Math.max(hit.box.w, 160),
+                            h: Math.max(hit.box.h, 26)
+                        };
+                        // Label inside the box: a tab above it would cover the template's own label.
+                        var chip = DocGenPdfViewer.addChip(hit, null, 'block-sign-chip');
+                        var inner = document.createElement('span');
+                        inner.className = 'block-sign-chip-label';
+                        inner.textContent = 'Sign here';
+                        chip.appendChild(inner);
+                        chip.setAttribute('role', 'button');
+                        chip.setAttribute('tabindex', '0');
+                        chip.setAttribute('aria-label', 'Sign here');
+                        chip.addEventListener('click', openSignModal);
+                        chip.addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                openSignModal();
+                            }
+                        });
                     }
 
                     function buildGuidedSpots(placements) {

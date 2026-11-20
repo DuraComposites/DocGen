@@ -984,6 +984,7 @@ public without sharing class DocGenSignatureService {
                 Signer_Email__c,
                 Role_Name__c,
                 Status__c,
+                Sort_Order__c,
                 Signature_Image_CV_Id__c
             FROM DocGen_Signer__c
             WHERE Signature_Request__c = :requestId
@@ -1041,6 +1042,10 @@ public without sharing class DocGenSignatureService {
                     ? '/sfc/servlet.shepherd/version/download/' + s.Signature_Image_CV_Id__c
                     : ''
             );
+            row.put(
+                'SignHere',
+                s.Status__c != 'Signed' && s.Sort_Order__c != null ? signHereAnchor(s.Sort_Order__c.intValue()) : ''
+            );
             rows.add(row);
         }
         return rows;
@@ -1057,20 +1062,28 @@ public without sharing class DocGenSignatureService {
         if (signerInputs == null) {
             return rows;
         }
-        for (Map<String, Object> input : signerInputs) {
+        for (Integer idx = 0; idx < signerInputs.size(); idx++) {
+            Map<String, Object> input = signerInputs[idx];
             String name = (String) input.get('signerName');
-            rows.add(
-                buildSignerLoopRow(
-                    '', // pending: signature line stays BLANK until the signer actually signs
-                    name, // RegisteredName = the invited (printed) name
-                    (String) input.get('roleName'),
-                    (String) input.get('signerEmail'),
-                    null,
-                    'Pending'
-                )
+            Map<String, Object> pendingRow = buildSignerLoopRow(
+                '', // pending: signature line stays BLANK until the signer actually signs
+                name, // RegisteredName = the invited (printed) name
+                (String) input.get('roleName'),
+                (String) input.get('signerEmail'),
+                null,
+                'Pending'
             );
+            // Dura: an invisible anchor the signing page finds to put this signer's
+            // "Sign here" chip on their line (template: {SignHere} in tiny white text).
+            pendingRow.put('SignHere', signHereAnchor(idx + 1));
+            rows.add(pendingRow);
         }
         return rows;
+    }
+
+    /** Dura: the {SignHere} anchor text for the signer in this signing position (1-based). */
+    public static String signHereAnchor(Integer signerNumber) {
+        return '@@SIGROW-' + signerNumber + '@@';
     }
 
     /**
@@ -1087,6 +1100,7 @@ public without sharing class DocGenSignatureService {
     ) {
         return new Map<String, Object>{
             'SignatureImageUrl' => '',
+            'SignHere' => '',
             'Name' => String.isNotBlank(name) ? name : '',
             'RegisteredName' => String.isNotBlank(registeredName) ? registeredName : '',
             'Role' => String.isNotBlank(role) ? role : 'Signer',
