@@ -1,7 +1,7 @@
 {
     "schemaVersion": 1,
     "release": {
-        "packageAlias": "DocGen@1.1.0-1"
+        "packageAlias": "DocGen@1.2.0-3"
     },
     "groups": [
         {
