@@ -8,7 +8,7 @@ We use DocGen in our own Salesforce org. This fork holds the features we need th
 
 ## Changes from Portwood
 
-The list of what this fork changes. Every pull request that changes behaviour adds a row.
+The list of what this fork changes. Every pull request that changes behaviour adds a row. Released versions, with install links, are in [CHANGELOG.md](../CHANGELOG.md#docgen-releases).
 
 | Change                                                                                                                                                                                                                                                                      | Pull request                                            |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
