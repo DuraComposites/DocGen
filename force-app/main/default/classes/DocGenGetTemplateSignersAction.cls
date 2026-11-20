@@ -109,6 +109,7 @@ global with sharing class DocGenGetTemplateSignersAction { // NOPMD AvoidGlobalM
             f.key = def.key;
             f.label = String.isNotBlank(def.label) ? def.label : def.key;
             f.required = def.required == true;
+            f.writesBack = def.writeback == true && String.isNotBlank(def.fieldApiName);
             out.add(f);
         }
         return out;

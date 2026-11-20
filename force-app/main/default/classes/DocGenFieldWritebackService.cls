@@ -637,6 +637,96 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
     }
 
     /**
+     * Dura: the value to write for each writeback field: from the single signer who was asked
+     * it (see performWriteback). Skipped fields are logged on the request.
+     */
+    @TestVisible
+    private static Map<String, Object> writebackValues(Id requestId, List<FormFieldDef> writebackDefs) {
+        Map<String, Object> values = new Map<String, Object>();
+        DocGenFlsGuard.assertAccessible(
+            DocGen_Signer__c.sObjectType,
+            new Set<String>{ 'Field_Data_Json__c', 'Form_Field_Keys__c', 'Signature_Request__c', 'Sort_Order__c' }
+        );
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        List<DocGen_Signer__c> signers = [
+            SELECT Field_Data_Json__c, Form_Field_Keys__c
+            FROM DocGen_Signer__c
+            WHERE Signature_Request__c = :requestId
+            WITH SYSTEM_MODE
+            ORDER BY Sort_Order__c ASC
+        ];
+        for (FormFieldDef def : writebackDefs) {
+            List<DocGen_Signer__c> asked = new List<DocGen_Signer__c>();
+            for (DocGen_Signer__c s : signers) {
+                if (!forSigner(new List<FormFieldDef>{ def }, s.Form_Field_Keys__c).isEmpty()) {
+                    asked.add(s);
+                }
+            }
+            if (asked.size() != 1) {
+                if (asked.size() > 1) {
+                    logWritebackError(
+                        requestId,
+                        'Form-field writeback skipped for ' +
+                            def.key +
+                            ': ' +
+                            asked.size() +
+                            ' signers were asked it, so there is no single answer to write.'
+                    );
+                }
+                continue;
+            }
+            Object v = null;
+            if (String.isNotBlank(asked[0].Field_Data_Json__c)) {
+                try {
+                    Object parsed = JSON.deserializeUntyped(asked[0].Field_Data_Json__c);
+                    if (parsed instanceof Map<String, Object>) {
+                        v = ((Map<String, Object>) parsed).get(def.key);
+                    }
+                } catch (Exception e) {
+                    v = null;
+                }
+            }
+            if (v != null) {
+                values.put(def.key, v);
+            }
+        }
+        return values;
+    }
+
+    /**
+     * Dura: at send time, an input that writes back to the record may be given to only one
+     * signer (otherwise there is no single answer to write). Throws a message naming it.
+     * signerInputs are the send inputs; only those carrying 'formFieldKeys' are counted.
+     */
+    public static void assertSingleOwnerForWriteback(String formFieldsConfig, List<Map<String, Object>> signerInputs) {
+        if (signerInputs == null || signerInputs.isEmpty()) {
+            return;
+        }
+        for (FormFieldDef def : parseConfig(formFieldsConfig)) {
+            if (!(def.writeback && String.isNotBlank(def.fieldApiName))) {
+                continue;
+            }
+            Integer owners = 0;
+            for (Map<String, Object> input : signerInputs) {
+                Object keys = input.get('formFieldKeys');
+                if (keys == null) {
+                    continue;
+                }
+                if (!forSigner(new List<FormFieldDef>{ def }, String.valueOf(keys)).isEmpty()) {
+                    owners++;
+                }
+            }
+            if (owners > 1) {
+                throw new DocGenException(
+                    '"' +
+                        (String.isNotBlank(def.label) ? def.label : def.key) +
+                        '" updates the record, so only one signer can be asked for it.'
+                );
+            }
+        }
+    }
+
+    /**
      * Writes collected signer form-field values back to the base record.
      *
      * SECURITY (see class header): the writable allowlist is rebuilt from the
@@ -686,29 +776,13 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
                 return;
             }
 
-            // Writeback is single-signer only. On a multi-signer request every signer
-            // fills the same template-scoped fields, so there is no unambiguous single
-            // value to write (collectValues would merge them last-writer-wins). Skip the
-            // record write — capture + per-signer certificate attribution still happen.
-            DocGenFlsGuard.assertAccessible(DocGen_Signer__c.sObjectType, new Set<String>{ 'Signature_Request__c' });
-            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
-            Integer signerCount = [
-                SELECT COUNT()
-                FROM DocGen_Signer__c
-                WHERE Signature_Request__c = :requestId
-                WITH SYSTEM_MODE
-            ];
-            if (signerCount > 1) {
-                logWritebackError(
-                    requestId,
-                    'Form-field writeback skipped — multi-signer request (' +
-                        signerCount +
-                        ' signers); writeback applies to single-signer requests only.'
-                );
-                return;
-            }
-
-            Map<String, Object> values = collectValues(requestId);
+            // Dura: whose answer to write. With one signer, theirs. With several, a field is
+            // written only when exactly one signer was asked it (inputs chosen per signer at
+            // send time, DocGen_Signer__c.Form_Field_Keys__c); a field several signers were
+            // asked is ambiguous and skipped (logged). Requests sent without a per-signer
+            // choice ask everyone everything, so with several signers nothing is written, as
+            // before.
+            Map<String, Object> values = writebackValues(requestId, writebackDefs.values());
             if (values.isEmpty()) {
                 return;
             }

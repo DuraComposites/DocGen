@@ -297,6 +297,13 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
         // Build signer inputs — prefer the new Signer collection, fall back to legacy lists
         // buildSignerInputs throws on validation errors (blank names/emails, length mismatch)
         List<Map<String, Object>> signerInputs = buildSignerInputs(req);
+        // Dura: an input that writes back to the record can only be given to one signer.
+        if (req.assignFieldsPerSigner == true && req.templateId != null) {
+            DocGenFieldWritebackService.assertSingleOwnerForWriteback(
+                templateFormFieldsConfig(req.templateId),
+                signerInputs
+            );
+        }
         if (signerInputs.isEmpty()) {
             throw new DocGenException(
                 'At least one signer is required. Pass a Signers collection or Signer Names + Emails.'
@@ -557,5 +564,19 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
             options.reminderMode = DocGenSignatureReminderRules.MODE_EVERY;
             options.reminderEveryDays = req.reminderEveryDays;
         }
+    }
+
+    /** Dura: the template's signer-input config, for the send-time writeback check. */
+    private static String templateFormFieldsConfig(Id templateId) {
+        DocGenFlsGuard.assertAccessible(DocGen_Template__c.sObjectType, new Set<String>{ 'Form_Fields_Config__c' });
+        /* code-analyzer-suppress ApexFlsViolation */
+        List<DocGen_Template__c> rows = [
+            SELECT Form_Fields_Config__c
+            FROM DocGen_Template__c
+            WHERE Id = :templateId
+            WITH SYSTEM_MODE
+            LIMIT 1
+        ];
+        return rows.isEmpty() ? null : rows[0].Form_Fields_Config__c;
     }
 }

@@ -23,4 +23,8 @@ global class DocGenTemplateField {
     /** True when the template marks the input as required for whoever is asked it. */
     @AuraEnabled
     global Boolean required;
+
+    /** True when the answer is written back to the record: give it to only one signer. */
+    @AuraEnabled
+    global Boolean writesBack;
 }

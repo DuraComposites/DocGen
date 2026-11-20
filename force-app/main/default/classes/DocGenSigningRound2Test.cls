@@ -531,4 +531,80 @@ private class DocGenSigningRound2Test {
         Assert.areEqual('Quote for Acme Walkways', DocGenSignatureService.documentTitleFor(reqId2));
         Assert.areEqual('Document', DocGenSignatureService.documentTitleFor(null));
     }
+
+    // ---------------------------------------------------------------- writeback with several signers
+
+    private static final String WB_CONFIG =
+        '{\"formFields\":[' +
+        '{\"key\":\"PO_Number\",\"label\":\"PO number\",\"type\":\"text\"},' +
+        '{\"key\":\"Notes\",\"label\":\"Notes\",\"type\":\"text\",\"fieldApiName\":\"Description\",\"writeback\":true}' +
+        ']}';
+
+    @IsTest
+    static void writeback_fromTheOneSignerAsked() {
+        Account acct = new Account(Name = 'Writeback Co');
+        insert acct;
+        Id reqId = buildRequest(WB_CONFIG, null);
+        update new DocGen_Signature_Request__c(Id = reqId, Related_Record_Id__c = acct.Id);
+        update new List<DocGen_Signer__c>{
+            new DocGen_Signer__c(
+                Id = signer(CUSTOMER_TOKEN).Id,
+                Form_Field_Keys__c = 'PO_Number',
+                Field_Data_Json__c = '{\"PO_Number\":\"PO-1\"}'
+            ),
+            new DocGen_Signer__c(
+                Id = signer(DIRECTOR_TOKEN).Id,
+                Field_Data_Json__c = '{\"Notes\":\"Approved by the MD\"}'
+            )
+        };
+        Test.startTest();
+        DocGenFieldWritebackService.performWriteback(reqId);
+        Test.stopTest();
+        Assert.areEqual(
+            'Approved by the MD',
+            [SELECT Description FROM Account WHERE Id = :acct.Id].Description,
+            'Only the director was asked Notes, so their answer is written'
+        );
+    }
+
+    @IsTest
+    static void writeback_skipsAFieldSeveralSignersWereAsked() {
+        Account acct = new Account(Name = 'Writeback Co');
+        insert acct;
+        Id reqId = buildRequest(WB_CONFIG, null);
+        update new DocGen_Signature_Request__c(Id = reqId, Related_Record_Id__c = acct.Id);
+        // The customer has no keys (asked everything) and the director was asked Notes too.
+        update new DocGen_Signer__c(Id = signer(CUSTOMER_TOKEN).Id, Field_Data_Json__c = '{\"Notes\":\"A\"}');
+        update new DocGen_Signer__c(Id = signer(DIRECTOR_TOKEN).Id, Field_Data_Json__c = '{\"Notes\":\"B\"}');
+        Test.startTest();
+        DocGenFieldWritebackService.performWriteback(reqId);
+        Test.stopTest();
+        Assert.isNull(
+            [SELECT Description FROM Account WHERE Id = :acct.Id].Description,
+            'No single answer, nothing written'
+        );
+    }
+
+    @IsTest
+    static void sendCheck_refusesAWritebackInputForTwoSigners() {
+        List<Map<String, Object>> inputs = new List<Map<String, Object>>{
+            new Map<String, Object>{ 'formFieldKeys' => 'Notes,PO_Number' },
+            new Map<String, Object>{ 'formFieldKeys' => 'Notes' }
+        };
+        String message = '';
+        try {
+            DocGenFieldWritebackService.assertSingleOwnerForWriteback(WB_CONFIG, inputs);
+        } catch (DocGenException e) {
+            message = e.getMessage();
+        }
+        Assert.isTrue(message.contains('"Notes" updates the record'), message);
+        inputs[1].put('formFieldKeys', 'PO_Number');
+        DocGenFieldWritebackService.assertSingleOwnerForWriteback(WB_CONFIG, inputs); // one owner: fine
+        DocGenFieldWritebackService.assertSingleOwnerForWriteback(WB_CONFIG, null);
+        Id reqId = buildRequest(WB_CONFIG, null);
+        Id tmplId = [SELECT Template__c FROM DocGen_Signature_Request__c WHERE Id = :reqId].Template__c;
+        List<DocGenTemplateField> fields = DocGenGetTemplateSignersAction.templateFields(tmplId);
+        Assert.areEqual(false, fields[0].writesBack);
+        Assert.areEqual(true, fields[1].writesBack, 'The send screen can see Notes writes back');
+    }
 }

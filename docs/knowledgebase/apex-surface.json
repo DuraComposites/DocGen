@@ -373,7 +373,8 @@
             "global DocGenTemplateField()",
             "global String key",
             "global String label",
-            "global Boolean required"
+            "global Boolean required",
+            "global Boolean writesBack"
         ]
     },
     {
