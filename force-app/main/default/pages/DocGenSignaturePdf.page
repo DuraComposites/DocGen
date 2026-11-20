@@ -4305,7 +4305,11 @@
                         if (isMultiSigner) {
                             var progressEl = document.getElementById('pdf-progress-info');
                             progressEl.textContent =
-                                ' (Signer ' + ((data.signedCount || 0) + 1) + ' of ' + (data.totalSigners || 1) + ')';
+                                ' (Signer ' +
+                                (data.signerNumber || (data.signedCount || 0) + 1) +
+                                ' of ' +
+                                (data.totalSigners || 1) +
+                                ')';
                             progressEl.style.display = 'inline';
                         }
 

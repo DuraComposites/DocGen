@@ -164,12 +164,8 @@ trigger DocGenSignaturePdfTrigger on DocGen_Signature_PDF__e(after insert) {
                             : DocGenSignatureSenderController.getSigningPagePath();
                         String sigUrl = siteUrl + signingPath + '?token=' + nextPendingSigner.Secure_Token__c;
 
-                        String docTitle = 'Document';
-                        if (req.Template__c != null && templateNameMap.containsKey(req.Template__c)) {
-                            String tName = templateNameMap.get(req.Template__c);
-                            if (tName != null)
-                                docTitle = tName;
-                        }
+                        // Dura: the document's own title (Document Title Format), not the template name.
+                        String docTitle = DocGenSignatureService.documentTitleFor(requestId);
 
                         DocGenSignatureEmailService.sendSignatureRequestEmails(
                             new List<DocGenSignatureEmailService.SignerEmail>{

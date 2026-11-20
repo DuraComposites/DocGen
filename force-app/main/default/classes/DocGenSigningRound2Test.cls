@@ -347,6 +347,8 @@ private class DocGenSigningRound2Test {
         DocGenSignatureController.assertSignerTurn(dir.Id); // no throw now
         Test.stopTest();
         Assert.areEqual('Casey Customer', early.waitingFor);
+        Assert.areEqual(2, early.signerNumber, 'The second signer is Signer 2, whoever has signed');
+        Assert.areEqual(1, first.signerNumber);
         Assert.isTrue(refused, 'The server refuses an out-of-turn signature');
         Assert.areEqual(false, upload.get('success'));
         Assert.isNull(first.waitingFor, 'The first signer never waits');
@@ -505,5 +507,28 @@ private class DocGenSigningRound2Test {
         }
         Test.stopTest();
         Assert.isTrue(message.contains('This template is for Contact records'), message);
+    }
+
+    // ---------------------------------------------------------------- document title in emails
+
+    @IsTest
+    static void documentTitle_usesTheTitleFormatElseTheTemplateName() {
+        Id reqId = buildRequest(null, null);
+        String tmplName = [SELECT Template__r.Name FROM DocGen_Signature_Request__c WHERE Id = :reqId].Template__r.Name;
+        Assert.areEqual(tmplName, DocGenSignatureService.documentTitleFor(reqId), 'No format: the template name');
+
+        Account acct = new Account(Name = 'Acme Walkways');
+        insert acct;
+        DocGen_Signature_Request__c second = new DocGen_Signature_Request__c(
+            Status__c = 'Sent',
+            Template__c = [SELECT Template__c FROM DocGen_Signature_Request__c WHERE Id = :reqId]
+            .Template__c,
+            Related_Record_Id__c = acct.Id,
+            Document_Title_Format__c = 'Quote for {Name}'
+        );
+        insert second;
+        Id reqId2 = second.Id;
+        Assert.areEqual('Quote for Acme Walkways', DocGenSignatureService.documentTitleFor(reqId2));
+        Assert.areEqual('Document', DocGenSignatureService.documentTitleFor(null));
     }
 }

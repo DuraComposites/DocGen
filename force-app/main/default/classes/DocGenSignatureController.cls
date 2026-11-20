@@ -129,6 +129,9 @@ public without sharing class DocGenSignatureController {
         public Integer totalSigners;
         @AuraEnabled
         public Integer signedCount;
+        // Dura: this signer's place in the signing order (1-based), for "Signer N of M".
+        @AuraEnabled
+        public Integer signerNumber;
         @AuraEnabled
         public Boolean isSignerToken;
         @AuraEnabled
@@ -886,6 +889,7 @@ public without sharing class DocGenSignatureController {
                 signed++;
         }
         res.signedCount = signed;
+        res.signerNumber = signer.Sort_Order__c == null ? null : signer.Sort_Order__c.intValue();
 
         // Get document metadata — template name or source document title
         if (String.isNotBlank(parentReq.Original_Document_CV_Id__c)) {

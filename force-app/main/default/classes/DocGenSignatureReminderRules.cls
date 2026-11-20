@@ -195,7 +195,7 @@ public with sharing class DocGenSignatureReminderRules {
 
         String siteUrl = DocGenSignatureSenderController.getSiteBaseUrl();
         Set<Id> firstTurnTaken = new Set<Id>();
-        List<DocGenSignatureEmailService.SignerEmail> emails = new List<DocGenSignatureEmailService.SignerEmail>();
+        Map<Id, List<DocGenSignatureEmailService.SignerEmail>> emails = new Map<Id, List<DocGenSignatureEmailService.SignerEmail>>();
         List<DocGen_Signer__c> reminded = new List<DocGen_Signer__c>();
         for (DocGen_Signer__c s : candidates) {
             DocGen_Signature_Request__c req = s.Signature_Request__r;
@@ -210,15 +210,19 @@ public with sharing class DocGenSignatureReminderRules {
                 continue;
             }
             String path = DocGenSignatureSenderController.resolveSigningPath(req);
-            emails.add(
-                new DocGenSignatureEmailService.SignerEmail(
-                    s.Signer_Name__c,
-                    s.Signer_Email__c,
-                    s.Role_Name__c,
-                    siteUrl + path + '?token=' + s.Secure_Token__c,
-                    s.Contact__c
-                )
-            );
+            if (!emails.containsKey(s.Signature_Request__c)) {
+                emails.put(s.Signature_Request__c, new List<DocGenSignatureEmailService.SignerEmail>());
+            }
+            emails.get(s.Signature_Request__c)
+                .add(
+                    new DocGenSignatureEmailService.SignerEmail(
+                        s.Signer_Name__c,
+                        s.Signer_Email__c,
+                        s.Role_Name__c,
+                        siteUrl + path + '?token=' + s.Secure_Token__c,
+                        s.Contact__c
+                    )
+                );
             s.Reminder_Sent_At__c = now;
             s.Reminders_Sent__c = (s.Reminders_Sent__c == null ? 0 : s.Reminders_Sent__c) + 1;
             reminded.add(s);
@@ -226,7 +230,7 @@ public with sharing class DocGenSignatureReminderRules {
         if (reminded.isEmpty()) {
             return 0;
         }
-        DocGenSignatureEmailService.sendSignatureReminderEmails(emails, 'Document awaiting your signature', null);
+        sendGroupedReminders(emails);
         DocGenFlsGuard.assertUpdateable(reminded, new Set<String>{ 'Reminder_Sent_At__c', 'Reminders_Sent__c' });
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
         Database.update(reminded, false, AccessLevel.SYSTEM_MODE);
@@ -384,5 +388,20 @@ public with sharing class DocGenSignatureReminderRules {
 
     private static String day(Date d) {
         return Datetime.newInstance(d, Time.newInstance(12, 0, 0, 0)).format('d MMM yyyy');
+    }
+
+    /**
+     * Dura: sends reminders one request at a time, so each carries that document's own title
+     * (DocGenSignatureService.documentTitleFor) and the request's brand, instead of one batch
+     * titled "Document awaiting your signature".
+     */
+    private static void sendGroupedReminders(Map<Id, List<DocGenSignatureEmailService.SignerEmail>> byRequest) {
+        for (Id requestId : byRequest.keySet()) {
+            DocGenSignatureEmailService.sendSignatureReminderEmails(
+                byRequest.get(requestId),
+                DocGenSignatureService.documentTitleFor(requestId),
+                requestId
+            );
+        }
     }
 }

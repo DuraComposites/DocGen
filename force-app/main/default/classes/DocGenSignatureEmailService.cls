@@ -374,18 +374,6 @@ public without sharing class DocGenSignatureEmailService {
         }
     }
 
-    private static String getDocumentTitle(Id contentVersionId) {
-        if (contentVersionId == null)
-            return 'Document';
-        List<ContentVersion> cvs = [
-            SELECT Title
-            FROM ContentVersion
-            WHERE Id = :contentVersionId
-            WITH SYSTEM_MODE
-            LIMIT 1
-        ];
-        return !cvs.isEmpty() && String.isNotBlank(cvs[0].Title) ? cvs[0].Title : 'Document';
-    }
     /** Notifies every signer who had not signed when the request was revoked. */
     public static void sendSignerRevokedEmails(Id requestId) {
         if (isInternalPreview(requestId)) {
@@ -448,10 +436,8 @@ public without sharing class DocGenSignatureEmailService {
             if (String.isNotBlank(creator.Email))
                 senderEmail = creator.Email;
 
-            String documentTitle = req.Template__r != null ? req.Template__r.Name : 'Document';
-            if (String.isBlank(documentTitle) && req.Source_Document_Id__c != null) {
-                documentTitle = getDocumentTitle(req.Source_Document_Id__c);
-            }
+            // Dura: the document's own title (Document Title Format), not the template name.
+            String documentTitle = DocGenSignatureService.documentTitleFor(req.Id);
 
             List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
             for (DocGen_Signer__c signer : req.Signers__r) {
@@ -663,21 +649,8 @@ public without sharing class DocGenSignatureEmailService {
             }
 
             // Resolve a friendly document name (best-effort, guarded).
-            String docTitle = 'your document';
-            if (req.Template__c != null) {
-                DocGenFlsGuard.guestAssertAccessible(DocGen_Template__c.sObjectType, new Set<String>{ 'Name' });
-                /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
-                List<DocGen_Template__c> tpls = [
-                    SELECT Name
-                    FROM DocGen_Template__c
-                    WHERE Id = :req.Template__c
-                    WITH SYSTEM_MODE
-                    LIMIT 1
-                ];
-                if (!tpls.isEmpty() && String.isNotBlank(tpls[0].Name)) {
-                    docTitle = tpls[0].Name;
-                }
-            }
+            // Dura: the document's own title (Document Title Format), not the template name.
+            String docTitle = DocGenSignatureService.documentTitleFor(req.Id);
 
             List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
             for (DocGen_Signer__c s : req.Signers__r) {

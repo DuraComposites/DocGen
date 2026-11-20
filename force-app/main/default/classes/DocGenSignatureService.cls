@@ -819,6 +819,78 @@ public without sharing class DocGenSignatureService {
         return EncodingUtil.convertToHex(Crypto.generateDigest('SHA-256', Blob.valueOf(frozenJson)));
     }
 
+    private static Map<Id, String> documentTitleCache = new Map<Id, String>();
+
+    /**
+     * Dura: the document's title for signing emails (request, next signer, reminder, completion):
+     * the request's Document_Title_Format__c resolved against its record (e.g. "Quote {Name}" ->
+     * "Quote Q-00042"), else the template's Name, else the source document's title. So customers
+     * read the document's own name, not the template's ("Quote Template"). Never throws.
+     */
+    public static String documentTitleFor(Id requestId) {
+        if (requestId == null) {
+            return 'Document';
+        }
+        if (documentTitleCache.containsKey(requestId)) {
+            return documentTitleCache.get(requestId);
+        }
+        String title = 'Document';
+        try {
+            DocGenFlsGuard.guestAssertAccessible(
+                DocGen_Signature_Request__c.sObjectType,
+                new Set<String>{
+                    'Template__c',
+                    'Document_Title_Format__c',
+                    'Related_Record_Id__c',
+                    'Source_Document_Id__c'
+                }
+            );
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            List<DocGen_Signature_Request__c> reqs = [
+                SELECT Template__r.Name, Document_Title_Format__c, Related_Record_Id__c, Source_Document_Id__c
+                FROM DocGen_Signature_Request__c
+                WHERE Id = :requestId
+                WITH SYSTEM_MODE
+                LIMIT 1
+            ];
+            if (!reqs.isEmpty()) {
+                DocGen_Signature_Request__c req = reqs[0];
+                if (req.Template__r != null && String.isNotBlank(req.Template__r.Name)) {
+                    title = req.Template__r.Name;
+                } else if (String.isNotBlank(req.Source_Document_Id__c)) {
+                    Id cvId = (Id) req.Source_Document_Id__c;
+                    /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+                    for (ContentVersion cv : [
+                        SELECT Title
+                        FROM ContentVersion
+                        WHERE Id = :cvId
+                        WITH SYSTEM_MODE
+                        LIMIT 1
+                    ]) {
+                        title = cv.Title;
+                    }
+                }
+                if (String.isNotBlank(req.Document_Title_Format__c) && String.isNotBlank(req.Related_Record_Id__c)) {
+                    Map<String, Object> data = DocGenService.loadRecordDataForTitle(
+                        req.Related_Record_Id__c,
+                        req.Document_Title_Format__c
+                    );
+                    String resolved = DocGenService.generateDocTitle(
+                        req.Document_Title_Format__c,
+                        data != null ? data : new Map<String, Object>()
+                    );
+                    if (String.isNotBlank(resolved)) {
+                        title = resolved.trim();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.debug(LoggingLevel.WARN, 'DocGen: document title fell back: ' + e.getMessage());
+        }
+        documentTitleCache.put(requestId, title);
+        return title;
+    }
+
     /**
      * Resolves the signed-PDF file name for a request, in priority order:
      *   1. Document_Title_Format__c (admin naming pattern, issue #42) resolved against
