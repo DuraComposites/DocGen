@@ -21,7 +21,18 @@ global without sharing class DocGenSignatureFinalizer { // NOPMD AvoidGlobalModi
             // CxSAST: Loop bounded by design — max 1 iteration (InvocableMethod single-record pattern)
             System.debug(LoggingLevel.DEBUG, 'DocGen: Finalizing signature via Flow System Context.');
             // This runs in System Mode thanks to the Flow context, bypassing Guest User limits on ContentVersion
-            DocGenSignatureService.handleSignatureSubmission(req.token, req.base64Image);
+            // Dura: an expired or reused token is routine at the last step of a custom
+            // signing Flow. Log it rather than fault the Flow (the action has no result).
+            try {
+                DocGenSignatureService.handleSignatureSubmission(req.token, req.base64Image);
+            } catch (Exception e) {
+                DocGenErrorLogger.warn(
+                    'DocGenSignatureFinalizer',
+                    'finalizeSignature',
+                    'Signature not finalized: ' + e.getMessage()
+                );
+            }
         }
+        DocGenErrorLogger.flush();
     }
 }

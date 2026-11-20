@@ -2326,10 +2326,13 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
         // Cache results of per-record-filter evaluations so templates sharing the same
         // clause incur only one SOQL query per (clause, record) combo.
         Map<String, Boolean> filterCache = new Map<String, Boolean>();
+        Set<Id> withBody = templatesWithBody(userReadableTemplateIds);
 
         List<DocGen_Template__c> visible = new List<DocGen_Template__c>();
         for (DocGen_Template__c t : all) {
             if (!userReadableTemplateIds.contains(t.Id))
+                continue;
+            if (!withBody.contains(t.Id))
                 continue;
             if (applyRecordFilter && !templateMatchesRecord(t, recordId18, filterCache))
                 continue;
@@ -2378,6 +2381,43 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Dura: the templates that have something to merge, by the same rule generation
+     * uses (DocGenTemplateManager): an active version with a file, else a file attached
+     * to the template. A template with neither fails only after the user presses
+     * Generate, so the runner picker leaves it out.
+     */
+    @TestVisible
+    private static Set<Id> templatesWithBody(Set<Id> templateIds) {
+        Set<Id> result = new Set<Id>();
+        if (templateIds == null || templateIds.isEmpty()) {
+            return result;
+        }
+        /* code-analyzer-suppress ApexFlsViolation */
+        for (DocGen_Template_Version__c v : [
+            SELECT Template__c
+            FROM DocGen_Template_Version__c
+            WHERE Template__c IN :templateIds AND Is_Active__c = TRUE AND Content_Version_Id__c != NULL
+            WITH SYSTEM_MODE
+        ]) {
+            result.add(v.Template__c);
+        }
+        Set<Id> rest = new Set<Id>(templateIds);
+        rest.removeAll(result);
+        if (!rest.isEmpty()) {
+            /* code-analyzer-suppress ApexFlsViolation */
+            for (ContentDocumentLink l : [
+                SELECT LinkedEntityId
+                FROM ContentDocumentLink
+                WHERE LinkedEntityId IN :rest
+                WITH SYSTEM_MODE
+            ]) {
+                result.add(l.LinkedEntityId);
+            }
+        }
+        return result;
     }
 
     private static Set<Id> getUserReadableTemplateIds(List<DocGen_Template__c> templates) {
