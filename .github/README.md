@@ -36,7 +36,7 @@ To work on the fork, deploy it from source to a scratch org: see [CONTRIBUTING](
 
 ## Documentation
 
-The [User Guide](../UserGuide.md) covers DocGen as this fork ships it. It's generated from the articles in [`docs/knowledgebase`](../docs/knowledgebase), and each feature added here adds or updates an article. Portwood's [main README](../README.md) and [changelog](../CHANGELOG.md) are kept as Portwood wrote them, for the upstream history.
+The [User Guide](../UserGuide.md) covers DocGen as this fork ships it. It's generated from the articles in [`docs/knowledgebase`](../docs/knowledgebase), and each feature added here adds or updates an article. Portwood's [main README](../README.md) is kept as Portwood wrote it. The [changelog](../CHANGELOG.md) lists DocGen's releases first, then Portwood's history.
 
 ## Contributing
 
