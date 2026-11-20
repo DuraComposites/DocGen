@@ -1169,6 +1169,25 @@ public with sharing class DocGenSignatureSenderController {
             tpl.Base_Object_API__c,
             tpl.Query_Config__c
         );
+        // Dura: a record of a different object (e.g. an Account for a quote template) loads no
+        // data; say so instead of failing later with a null error.
+        if (snapshot == null) {
+            String recordObject = '';
+            try {
+                recordObject = ((Id) relatedRecordId).getSObjectType().getDescribe().getLabel();
+            } catch (Exception e) {
+                recordObject = 'this record';
+            }
+            throw DocGenService.ahe(
+                'This template is for ' +
+                    tpl.Base_Object_API__c +
+                    ' records, so it cannot be sent from ' +
+                    (String.isBlank(recordObject) ? 'this record' : 'a ' + recordObject) +
+                    '. Open a ' +
+                    tpl.Base_Object_API__c +
+                    ' record, or choose a template for this object.'
+            );
+        }
         String snapshotJson = JSON.serialize(snapshot);
         if (snapshotJson.length() > 131072) {
             throw new AuraHandledException(
@@ -3005,6 +3024,11 @@ public with sharing class DocGenSignatureSenderController {
             if (String.isNotBlank(contactId)) {
                 signer.Contact__c = contactId;
             }
+            // Dura: the inputs chosen for this signer at send time (blank = every input).
+            String fieldKeys = (String) input.get('formFieldKeys');
+            if (String.isNotBlank(fieldKeys)) {
+                signer.Form_Field_Keys__c = fieldKeys;
+            }
             signerRecords.add(signer);
 
             SignerResult sr = new SignerResult();
@@ -3027,7 +3051,8 @@ public with sharing class DocGenSignatureSenderController {
                 'Secure_Token__c',
                 'Status__c',
                 'Sort_Order__c',
-                'Contact__c'
+                'Contact__c',
+                'Form_Field_Keys__c'
             }
         );
         /* code-analyzer-suppress ApexFlsViolation */

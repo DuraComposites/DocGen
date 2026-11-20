@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Form_Field_Keys__c</fullName>
+    <description
+    >Which of the template's signer inputs this signer is asked to fill, chosen at send time: comma-separated input keys, or "none" for sign only. Blank means every input (requests sent without a per-signer choice).</description>
+    <externalId>false</externalId>
+    <label>Form Field Keys</label>
+    <length>2000</length>
+    <type>LongTextArea</type>
+    <visibleLines>2</visibleLines>
+</CustomField>

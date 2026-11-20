@@ -181,12 +181,13 @@ public without sharing class DocGenSignatureService {
                     'User_Agent__c',
                     'Signed_Date__c',
                     'Consent_Captured__c',
+                    'Consent_Text__c',
                     'Signature_Request__c'
                 }
             );
             /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
             List<DocGen_Signature_Audit__c> audits = [
-                SELECT Signer__c, IP_Address__c, User_Agent__c, Signed_Date__c, Consent_Captured__c
+                SELECT Signer__c, IP_Address__c, User_Agent__c, Signed_Date__c, Consent_Captured__c, Consent_Text__c
                 FROM DocGen_Signature_Audit__c
                 WHERE Signature_Request__c = :requestId AND Signer__c != NULL
                 WITH SYSTEM_MODE
@@ -293,6 +294,13 @@ public without sharing class DocGenSignatureService {
                 }
                 if (audit.Consent_Captured__c) {
                     html += '<span style="color:#2e844a;">&#10003; Consent captured</span><br/>';
+                    // Dura: the exact statement agreed to, as recorded at signing.
+                    if (String.isNotBlank(audit.Consent_Text__c)) {
+                        html +=
+                            '<span style="color:#555;font-size:8pt;">Agreed: &quot;' +
+                            audit.Consent_Text__c.escapeHtml4() +
+                            '&quot;</span><br/>';
+                    }
                 }
             }
             if (s.PIN_Verified_At__c != null) {
@@ -323,7 +331,14 @@ public without sharing class DocGenSignatureService {
                 Boolean multi = signers.size() > 1;
                 Boolean anyRendered = false;
                 String fieldRows = '';
+                Map<String, String> fileNames = uploadedFileNames(shown, signers);
                 for (DocGen_Signer__c sgn : signers) {
+                    // Dura: only the inputs this signer was asked at send time.
+                    List<DocGenFieldWritebackService.FormFieldDef> mine = DocGenFieldWritebackService.forSigner(
+                        shown,
+                        // Callers that did not load the keys get every input (the pre-1.2 view).
+                        sgn.isSet('Form_Field_Keys__c') ? sgn.Form_Field_Keys__c : null
+                    );
                     Map<String, Object> sVals = new Map<String, Object>();
                     if (String.isNotBlank(sgn.Field_Data_Json__c)) {
                         try {
@@ -338,7 +353,7 @@ public without sharing class DocGenSignatureService {
                     if (multi) {
                         // Skip signers who answered none of the listed fields.
                         Boolean hasAny = false;
-                        for (DocGenFieldWritebackService.FormFieldDef def : shown) {
+                        for (DocGenFieldWritebackService.FormFieldDef def : mine) {
                             if (sVals.get(def.key) != null) {
                                 hasAny = true;
                                 break;
@@ -358,7 +373,7 @@ public without sharing class DocGenSignatureService {
                             who.escapeHtml4() +
                             '</td></tr>';
                     }
-                    for (DocGenFieldWritebackService.FormFieldDef def : shown) {
+                    for (DocGenFieldWritebackService.FormFieldDef def : mine) {
                         Object raw = sVals.get(def.key);
                         String display;
                         if (def.type == 'checkbox') {
@@ -366,6 +381,10 @@ public without sharing class DocGenSignatureService {
                                 ? (Boolean) raw
                                 : (raw != null && String.valueOf(raw).equalsIgnoreCase('true'));
                             display = checked ? 'Yes' : 'No';
+                        } else if (def.type == 'file' && raw != null) {
+                            // Dura: show the uploaded file's name, not its Id.
+                            String fileName = fileNames.get(String.valueOf(raw));
+                            display = String.isNotBlank(fileName) ? fileName : 'File uploaded';
                         } else {
                             display = raw == null ? '' : String.valueOf(raw);
                         }
@@ -412,6 +431,47 @@ public without sharing class DocGenSignatureService {
      * finalize context). Returns an empty list when the template has none or can't
      * be read — the certificate then renders without a Form Field Responses section.
      */
+    /**
+     * Dura: ContentVersion Id -> file name for every file-type answer listed on the
+     * certificate, in one query. Unknown or unreadable Ids are simply left out.
+     */
+    private static Map<String, String> uploadedFileNames(
+        List<DocGenFieldWritebackService.FormFieldDef> defs,
+        List<DocGen_Signer__c> signers
+    ) {
+        Map<String, String> names = new Map<String, String>();
+        Set<Id> ids = new Set<Id>();
+        for (DocGen_Signer__c sgn : signers) {
+            if (String.isBlank(sgn.Field_Data_Json__c)) {
+                continue;
+            }
+            try {
+                Map<String, Object> vals = (Map<String, Object>) JSON.deserializeUntyped(sgn.Field_Data_Json__c);
+                for (DocGenFieldWritebackService.FormFieldDef def : defs) {
+                    Object v = vals.get(def.key);
+                    if (def.type == 'file' && v != null && String.valueOf(v).startsWith('068')) {
+                        ids.add((Id) String.valueOf(v));
+                    }
+                }
+            } catch (Exception e) {
+                continue;
+            }
+        }
+        if (ids.isEmpty()) {
+            return names;
+        }
+        try {
+            DocGenFlsGuard.assertAccessible(ContentVersion.sObjectType, new Set<String>{ 'PathOnClient' });
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            for (ContentVersion cv : [SELECT Id, PathOnClient FROM ContentVersion WHERE Id IN :ids WITH SYSTEM_MODE]) {
+                names.put(String.valueOf(cv.Id), cv.PathOnClient);
+            }
+        } catch (Exception e) {
+            System.debug(LoggingLevel.WARN, 'DocGen: certificate file names unavailable: ' + e.getMessage());
+        }
+        return names;
+    }
+
     private static List<DocGenFieldWritebackService.FormFieldDef> loadCertFieldDefs(Id templateId) {
         if (templateId == null) {
             return new List<DocGenFieldWritebackService.FormFieldDef>();
@@ -759,6 +819,78 @@ public without sharing class DocGenSignatureService {
         return EncodingUtil.convertToHex(Crypto.generateDigest('SHA-256', Blob.valueOf(frozenJson)));
     }
 
+    private static Map<Id, String> documentTitleCache = new Map<Id, String>();
+
+    /**
+     * Dura: the document's title for signing emails (request, next signer, reminder, completion):
+     * the request's Document_Title_Format__c resolved against its record (e.g. "Quote {Name}" ->
+     * "Quote Q-00042"), else the template's Name, else the source document's title. So customers
+     * read the document's own name, not the template's ("Quote Template"). Never throws.
+     */
+    public static String documentTitleFor(Id requestId) {
+        if (requestId == null) {
+            return 'Document';
+        }
+        if (documentTitleCache.containsKey(requestId)) {
+            return documentTitleCache.get(requestId);
+        }
+        String title = 'Document';
+        try {
+            DocGenFlsGuard.guestAssertAccessible(
+                DocGen_Signature_Request__c.sObjectType,
+                new Set<String>{
+                    'Template__c',
+                    'Document_Title_Format__c',
+                    'Related_Record_Id__c',
+                    'Source_Document_Id__c'
+                }
+            );
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            List<DocGen_Signature_Request__c> reqs = [
+                SELECT Template__r.Name, Document_Title_Format__c, Related_Record_Id__c, Source_Document_Id__c
+                FROM DocGen_Signature_Request__c
+                WHERE Id = :requestId
+                WITH SYSTEM_MODE
+                LIMIT 1
+            ];
+            if (!reqs.isEmpty()) {
+                DocGen_Signature_Request__c req = reqs[0];
+                if (req.Template__r != null && String.isNotBlank(req.Template__r.Name)) {
+                    title = req.Template__r.Name;
+                } else if (String.isNotBlank(req.Source_Document_Id__c)) {
+                    Id cvId = (Id) req.Source_Document_Id__c;
+                    /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+                    for (ContentVersion cv : [
+                        SELECT Title
+                        FROM ContentVersion
+                        WHERE Id = :cvId
+                        WITH SYSTEM_MODE
+                        LIMIT 1
+                    ]) {
+                        title = cv.Title;
+                    }
+                }
+                if (String.isNotBlank(req.Document_Title_Format__c) && String.isNotBlank(req.Related_Record_Id__c)) {
+                    Map<String, Object> data = DocGenService.loadRecordDataForTitle(
+                        req.Related_Record_Id__c,
+                        req.Document_Title_Format__c
+                    );
+                    String resolved = DocGenService.generateDocTitle(
+                        req.Document_Title_Format__c,
+                        data != null ? data : new Map<String, Object>()
+                    );
+                    if (String.isNotBlank(resolved)) {
+                        title = resolved.trim();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.debug(LoggingLevel.WARN, 'DocGen: document title fell back: ' + e.getMessage());
+        }
+        documentTitleCache.put(requestId, title);
+        return title;
+    }
+
     /**
      * Resolves the signed-PDF file name for a request, in priority order:
      *   1. Document_Title_Format__c (admin naming pattern, issue #42) resolved against
@@ -839,12 +971,21 @@ public without sharing class DocGenSignatureService {
                 'Role_Name__c',
                 'Status__c',
                 'Signature_Request__c',
-                'Sort_Order__c'
+                'Sort_Order__c',
+                'Signature_Image_CV_Id__c'
             }
         );
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
         List<DocGen_Signer__c> signers = [
-            SELECT Id, Signer_Name__c, Signature_Data__c, Signer_Email__c, Role_Name__c, Status__c
+            SELECT
+                Id,
+                Signer_Name__c,
+                Signature_Data__c,
+                Signer_Email__c,
+                Role_Name__c,
+                Status__c,
+                Sort_Order__c,
+                Signature_Image_CV_Id__c
             FROM DocGen_Signer__c
             WHERE Signature_Request__c = :requestId
             WITH SYSTEM_MODE
@@ -879,16 +1020,33 @@ public without sharing class DocGenSignatureService {
         }
 
         for (DocGen_Signer__c s : signers) {
-            rows.add(
-                buildSignerLoopRow(
-                    String.isNotBlank(s.Signature_Data__c) ? s.Signature_Data__c : s.Signer_Name__c,
-                    s.Signer_Name__c,
-                    s.Role_Name__c,
-                    s.Signer_Email__c,
-                    signedDates.get(s.Id),
-                    s.Status__c
-                )
+            // Dura: the signature line stays blank until the signer has signed (as in the
+            // send-time preview). It matters for the live viewing copy re-rendered while
+            // others are still to sign; at completion everyone has signed.
+            String typed = String.isNotBlank(s.Signature_Data__c)
+                ? s.Signature_Data__c
+                : (s.Status__c == 'Signed' ? s.Signer_Name__c : '');
+            Map<String, Object> row = buildSignerLoopRow(
+                typed,
+                s.Signer_Name__c,
+                s.Role_Name__c,
+                s.Signer_Email__c,
+                signedDates.get(s.Id),
+                s.Status__c
             );
+            // Dura: the drawn signature, for templates that show it ({SignatureImageUrl}).
+            // Relative /sfc/ URL: the only form Blob.toPdf draws (no data: URIs).
+            row.put(
+                'SignatureImageUrl',
+                s.Status__c == 'Signed' && String.isNotBlank(s.Signature_Image_CV_Id__c)
+                    ? '/sfc/servlet.shepherd/version/download/' + s.Signature_Image_CV_Id__c
+                    : ''
+            );
+            row.put(
+                'SignHere',
+                s.Status__c != 'Signed' && s.Sort_Order__c != null ? signHereAnchor(s.Sort_Order__c.intValue()) : ''
+            );
+            rows.add(row);
         }
         return rows;
     }
@@ -904,20 +1062,28 @@ public without sharing class DocGenSignatureService {
         if (signerInputs == null) {
             return rows;
         }
-        for (Map<String, Object> input : signerInputs) {
+        for (Integer idx = 0; idx < signerInputs.size(); idx++) {
+            Map<String, Object> input = signerInputs[idx];
             String name = (String) input.get('signerName');
-            rows.add(
-                buildSignerLoopRow(
-                    '', // pending: signature line stays BLANK until the signer actually signs
-                    name, // RegisteredName = the invited (printed) name
-                    (String) input.get('roleName'),
-                    (String) input.get('signerEmail'),
-                    null,
-                    'Pending'
-                )
+            Map<String, Object> pendingRow = buildSignerLoopRow(
+                '', // pending: signature line stays BLANK until the signer actually signs
+                name, // RegisteredName = the invited (printed) name
+                (String) input.get('roleName'),
+                (String) input.get('signerEmail'),
+                null,
+                'Pending'
             );
+            // Dura: an invisible anchor the signing page finds to put this signer's
+            // "Sign here" chip on their line (template: {SignHere} in tiny white text).
+            pendingRow.put('SignHere', signHereAnchor(idx + 1));
+            rows.add(pendingRow);
         }
         return rows;
+    }
+
+    /** Dura: the {SignHere} anchor text for the signer in this signing position (1-based). */
+    public static String signHereAnchor(Integer signerNumber) {
+        return '@@SIGROW-' + signerNumber + '@@';
     }
 
     /**
@@ -933,6 +1099,8 @@ public without sharing class DocGenSignatureService {
         String status
     ) {
         return new Map<String, Object>{
+            'SignatureImageUrl' => '',
+            'SignHere' => '',
             'Name' => String.isNotBlank(name) ? name : '',
             'RegisteredName' => String.isNotBlank(registeredName) ? registeredName : '',
             'Role' => String.isNotBlank(role) ? role : 'Signer',
@@ -1558,12 +1726,28 @@ public without sharing class DocGenSignatureService {
     // CxSAST: without sharing required for guest user signing context; access gated by cryptographic token
     public class TemplateSignaturePdfQueueable implements Queueable, Database.AllowsCallouts {
         private Id requestId;
+        // Dura: true = only refresh the signer-facing viewing PDF (see refreshViewingPdf).
+        private Boolean viewOnly = false;
 
         public TemplateSignaturePdfQueueable(Id requestId) {
             this.requestId = requestId;
         }
 
+        /**
+         * Dura: viewOnly = true re-renders the viewing PDF of a snapshot (PDF-viewer) request
+         * with the live {#Signatures} rows, so signers who open the link later see who has
+         * already signed. Enqueued by DocGenSignaturePdfTrigger after a non-final signature.
+         */
+        public TemplateSignaturePdfQueueable(Id requestId, Boolean viewOnly) {
+            this.requestId = requestId;
+            this.viewOnly = viewOnly == true;
+        }
+
         public void execute(QueueableContext ctx) {
+            if (viewOnly) {
+                refreshViewingPdf();
+                return;
+            }
             DocGenFlsGuard.assertAccessible(
                 DocGen_Signature_Request__c.sObjectType,
                 new Set<String>{
@@ -1846,6 +2030,100 @@ public without sharing class DocGenSignatureService {
          * Merges template, stamps typed-name signatures into XML, renders PDF.
          * No DOCX intermediate — pure XML → HTML → PDF.
          */
+        /**
+         * Dura: re-renders the viewing PDF of a snapshot request from the SAME frozen data
+         * snapshot (Render_Data_Snapshot__c is never changed), with the {#Signatures} rows
+         * built from live signer state: signed signers show their typed name and date,
+         * the rest show Pending. The new file becomes Source_Document_Id__c, which the
+         * signing page loads. Best effort: any failure is logged and the old copy stays.
+         */
+        private void refreshViewingPdf() {
+            try {
+                DocGenFlsGuard.assertAccessible(
+                    DocGen_Signature_Request__c.sObjectType,
+                    new Set<String>{ 'Template__c', 'Render_Data_Snapshot__c', 'Status__c', 'Source_Document_Id__c' }
+                );
+                /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+                List<DocGen_Signature_Request__c> reqs = [
+                    SELECT Id, Template__c, Render_Data_Snapshot__c, Status__c, Source_Document_Id__c
+                    FROM DocGen_Signature_Request__c
+                    WHERE Id = :requestId
+                    WITH SYSTEM_MODE
+                    LIMIT 1
+                ];
+                if (
+                    reqs.isEmpty() ||
+                    reqs[0].Template__c == null ||
+                    String.isBlank(reqs[0].Render_Data_Snapshot__c) ||
+                    new Set<String>{ 'Signed', 'Declined', 'Cancelled' }.contains(reqs[0].Status__c)
+                ) {
+                    return;
+                }
+                DocGen_Signature_Request__c req = reqs[0];
+                Map<String, Object> snap = (Map<String, Object>) JSON.deserializeUntyped(req.Render_Data_Snapshot__c);
+                snap.put('Signatures', buildSignerLoopData(requestId));
+                Blob viewBlob = Test.isRunningTest()
+                    ? Blob.valueOf('%PDF-1.4 live view')
+                    : renderTemplateSignaturePdf(requestId, req.Template__c, null, snap, null, false);
+
+                String title = 'Document';
+                if (String.isNotBlank(req.Source_Document_Id__c)) {
+                    Id oldId = (Id) req.Source_Document_Id__c;
+                    /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+                    for (ContentVersion old : [
+                        SELECT Title
+                        FROM ContentVersion
+                        WHERE Id = :oldId
+                        WITH SYSTEM_MODE
+                        LIMIT 1
+                    ]) {
+                        title = old.Title;
+                    }
+                }
+                ContentVersion cv = new ContentVersion(
+                    Title = title,
+                    PathOnClient = title + '.pdf',
+                    VersionData = viewBlob
+                );
+                DocGenFlsGuard.assertCreateable(cv, new Set<String>{ 'Title', 'PathOnClient', 'VersionData' });
+                /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+                Database.insert(cv, AccessLevel.SYSTEM_MODE);
+                // Shared with the guest signer through the request, exactly as the send-time
+                // viewing copy is (DocGenSignatureSenderController.shareViewingDocumentWithGuest).
+                /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+                Id docId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id WITH SYSTEM_MODE]
+                .ContentDocumentId;
+                ContentDocumentLink cdl = new ContentDocumentLink(
+                    ContentDocumentId = docId,
+                    LinkedEntityId = requestId,
+                    ShareType = 'V',
+                    Visibility = 'AllUsers'
+                );
+                DocGenFlsGuard.assertCreateable(
+                    cdl,
+                    new Set<String>{ 'ContentDocumentId', 'LinkedEntityId', 'ShareType', 'Visibility' }
+                );
+                /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+                Database.insert(cdl, AccessLevel.SYSTEM_MODE);
+                DocGen_Signature_Request__c upd = new DocGen_Signature_Request__c(
+                    Id = requestId,
+                    Source_Document_Id__c = cv.Id
+                );
+                DocGenFlsGuard.assertUpdateable(upd, new Set<String>{ 'Source_Document_Id__c' });
+                /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+                Database.update(upd, false, AccessLevel.SYSTEM_MODE);
+            } catch (Exception e) {
+                DocGenErrorLogger.warn(
+                    'DocGenSignatureService',
+                    'Refresh signing view',
+                    'The live signing view could not be refreshed: ' + e.getMessage(),
+                    null,
+                    String.valueOf(requestId)
+                );
+                DocGenErrorLogger.flush();
+            }
+        }
+
         private Blob renderTemplateSignaturePdf(Id reqId, Id templateId, String recordId) {
             return renderTemplateSignaturePdf(reqId, templateId, recordId, null, null);
         }
@@ -1877,6 +2155,18 @@ public without sharing class DocGenSignatureService {
             String recordId,
             Map<String, Object> snapshotData,
             Map<String, Object> formValues
+        ) {
+            return renderTemplateSignaturePdf(reqId, templateId, recordId, snapshotData, formValues, true);
+        }
+
+        /** Dura: appendCertificate = false renders the document only (the live viewing copy). */
+        private Blob renderTemplateSignaturePdf(
+            Id reqId,
+            Id templateId,
+            String recordId,
+            Map<String, Object> snapshotData,
+            Map<String, Object> formValues,
+            Boolean appendCertificate
         ) {
             // Load the request cache: the frozen document body (classic-flow snapshot) +
             // the image/style maps. One query serves both.
@@ -2059,41 +2349,45 @@ public without sharing class DocGenSignatureService {
             }
 
             // Append verification certificate block before closing body
-            DocGenFlsGuard.assertAccessible(
-                DocGen_Signer__c.sObjectType,
-                new Set<String>{
-                    'Signer_Name__c',
-                    'Signature_Data__c',
-                    'Signer_Email__c',
-                    'Role_Name__c',
-                    'PIN_Verified_At__c',
-                    'Signature_Request__c',
-                    'Status__c',
-                    'Sort_Order__c',
-                    'Field_Data_Json__c'
-                }
-            );
-            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
-            List<DocGen_Signer__c> fullSigners = [
-                SELECT
-                    Signer_Name__c,
-                    Signature_Data__c,
-                    Signer_Email__c,
-                    Role_Name__c,
-                    PIN_Verified_At__c,
-                    Field_Data_Json__c
-                FROM DocGen_Signer__c
-                WHERE Signature_Request__c = :reqId AND Status__c = 'Signed'
-                WITH SYSTEM_MODE
-                ORDER BY Sort_Order__c ASC
-            ];
-            String verifyBlock = buildVerificationBlockHtml(
-                reqId,
-                fullSigners,
-                loadCertFieldDefs(templateId),
-                formValues
-            );
-            html = injectVerifyBlockBeforeLastBody(html, verifyBlock);
+            if (appendCertificate) {
+                DocGenFlsGuard.assertAccessible(
+                    DocGen_Signer__c.sObjectType,
+                    new Set<String>{
+                        'Signer_Name__c',
+                        'Signature_Data__c',
+                        'Signer_Email__c',
+                        'Role_Name__c',
+                        'PIN_Verified_At__c',
+                        'Signature_Request__c',
+                        'Status__c',
+                        'Sort_Order__c',
+                        'Field_Data_Json__c',
+                        'Form_Field_Keys__c'
+                    }
+                );
+                /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+                List<DocGen_Signer__c> fullSigners = [
+                    SELECT
+                        Signer_Name__c,
+                        Signature_Data__c,
+                        Signer_Email__c,
+                        Role_Name__c,
+                        PIN_Verified_At__c,
+                        Field_Data_Json__c,
+                        Form_Field_Keys__c
+                    FROM DocGen_Signer__c
+                    WHERE Signature_Request__c = :reqId AND Status__c = 'Signed'
+                    WITH SYSTEM_MODE
+                    ORDER BY Sort_Order__c ASC
+                ];
+                String verifyBlock = buildVerificationBlockHtml(
+                    reqId,
+                    fullSigners,
+                    loadCertFieldDefs(templateId),
+                    formValues
+                );
+                html = injectVerifyBlockBeforeLastBody(html, verifyBlock);
+            }
 
             assertNoUnresolvedSignatureSentinels(html);
 
@@ -2293,7 +2587,8 @@ public without sharing class DocGenSignatureService {
                     'Signature_Request__c',
                     'Status__c',
                     'Sort_Order__c',
-                    'Field_Data_Json__c'
+                    'Field_Data_Json__c',
+                    'Form_Field_Keys__c'
                 }
             );
             /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
@@ -2304,7 +2599,8 @@ public without sharing class DocGenSignatureService {
                     Signer_Email__c,
                     Role_Name__c,
                     PIN_Verified_At__c,
-                    Field_Data_Json__c
+                    Field_Data_Json__c,
+                    Form_Field_Keys__c
                 FROM DocGen_Signer__c
                 WHERE Signature_Request__c = :reqId AND Status__c = 'Signed'
                 WITH SYSTEM_MODE

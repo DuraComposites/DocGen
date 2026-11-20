@@ -165,6 +165,61 @@
                     border-color: #ba0517;
                     box-shadow: 0 0 0 1px #ba0517;
                 }
+                /* Dura: Sign here chip on the signer's own {#Signatures} line */
+                .block-sign-chip {
+                    cursor: pointer;
+                }
+                .block-sign-chip-label {
+                    display: block;
+                    font-size: 11px;
+                    font-weight: 700;
+                    letter-spacing: 0.04em;
+                    text-transform: uppercase;
+                    color: #8c4b02;
+                    padding: 4px 8px;
+                }
+                /* Dura: "Your information" summary on the final step */
+                .fields-summary {
+                    border: 1px solid #dddbda;
+                    border-radius: 4px;
+                    padding: 8px 12px;
+                    margin: 0 0 12px;
+                    font-size: 0.8125rem;
+                }
+                .fields-summary-head {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-weight: 600;
+                    margin-bottom: 4px;
+                }
+                .fields-summary-change {
+                    background: none;
+                    border: none;
+                    color: var(--brand-color, #0176d3);
+                    cursor: pointer;
+                    font-size: 0.8125rem;
+                    text-decoration: underline;
+                    padding: 0;
+                }
+                .fields-summary-row {
+                    display: flex;
+                    gap: 8px;
+                    padding: 2px 0;
+                }
+                .fields-summary-label {
+                    color: #555;
+                    min-width: 40%;
+                }
+                .fields-summary-value {
+                    word-break: break-word;
+                }
+                /* Dura: Sequential signing, not this signer's turn yet */
+                .turn-notice {
+                    margin-top: 4px;
+                    font-size: 0.8125rem;
+                    color: #8c4b02;
+                }
                 /* Dura: "at least one of" hint and file-field upload status */
                 .form-group-hint {
                     font-size: 0.8125rem;
@@ -1412,6 +1467,14 @@
                         z-index: 100;
                         border-top: 3px solid #0176d3;
                     }
+                    /* Dura: on a phone the signer line takes its own row above the buttons,
+                       and the buttons share the row, so nothing is squeezed into a column. */
+                    .pdf-action-bar .signer-context {
+                        flex: 1 0 100%;
+                    }
+                    .pdf-action-bar .btn {
+                        flex: 1 1 0;
+                    }
                     .sig-card {
                         padding: 1.25rem;
                     }
@@ -2085,9 +2148,11 @@
                              during per-spot capture. Built + validated by renderFormFields /
                              validateFormFields. -->
                         <div id="modal-form-fields" style="display: none"></div>
+                        <!-- Dura: what the signer entered, shown on the final step with a Change link. -->
+                        <div id="modal-fields-summary" class="fields-summary" style="display: none"></div>
                         <div class="consent-row" style="margin: 0">
                             <input id="modal-consent-checkbox" type="checkbox" />
-                            <label for="modal-consent-checkbox">
+                            <label id="modal-consent-label" for="modal-consent-checkbox">
                                 I agree to sign this document electronically. I understand that my typed name
                                 constitutes my legal electronic signature, and I consent to conducting this transaction
                                 electronically.
@@ -4244,10 +4309,28 @@
                             badge.textContent = data.badgeLabel;
                             badge.style.display = 'inline-block';
                         }
+                        // Dura: Sequential request and an earlier signer has not signed yet: the
+                        // document can be read, but signing waits (the server refuses it too).
+                        if (data.waitingFor) {
+                            var turnNotice = document.createElement('div');
+                            turnNotice.id = 'turn-notice';
+                            turnNotice.className = 'turn-notice';
+                            turnNotice.setAttribute('role', 'status');
+                            turnNotice.textContent =
+                                'Waiting for ' +
+                                data.waitingFor +
+                                ' to sign first. You can read the document now and sign once they have.';
+                            document.querySelector('#state-pdf .signer-context').appendChild(turnNotice);
+                            document.getElementById('btn-open-sign').style.display = 'none';
+                        }
                         if (isMultiSigner) {
                             var progressEl = document.getElementById('pdf-progress-info');
                             progressEl.textContent =
-                                ' (Signer ' + ((data.signedCount || 0) + 1) + ' of ' + (data.totalSigners || 1) + ')';
+                                ' (Signer ' +
+                                (data.signerNumber || (data.signedCount || 0) + 1) +
+                                ' of ' +
+                                (data.totalSigners || 1) +
+                                ')';
                             progressEl.style.display = 'inline';
                         }
 
@@ -4298,6 +4381,10 @@
                     }
 
                     function applyBrand(data) {
+                        // Dura: the consent wording is set per template (Signing_Consent_Text__c).
+                        // The server records the same text on the signer's audit.
+                        var consentLabel = document.getElementById('modal-consent-label');
+                        if (consentLabel && data && data.consentText) consentLabel.textContent = data.consentText;
                         var color = data && data.brandColor ? data.brandColor : '#0176d3';
                         document.documentElement.style.setProperty('--brand-color', color);
                         if (document.body) document.body.style.setProperty('--brand-color', color);
@@ -5582,12 +5669,50 @@
                                 }
                                 if (!placements.length) {
                                     console.info('DocGen signing path: legacy; placements=0; located=0');
+                                    addBlockSignChip();
                                     return; // legitimate placement-less request
                                 }
                                 buildGuidedSpots(placements);
                             },
                             { escape: false }
                         );
+                    }
+
+                    // Dura: on a document that signs through a {#Signatures} block there are no
+                    // placements; the block row carries an invisible anchor ({SignHere}) for each
+                    // signer still to sign. Put a "Sign here" chip on this signer's line. Nothing
+                    // happens when the template has no anchor (older templates), so it is safe.
+                    function addBlockSignChip() {
+                        if (!signerData || !signerData.signerNumber || signerData.waitingFor) return;
+                        var needle = '@@SIGROW-' + signerData.signerNumber + '@@';
+                        var hits = DocGenPdfViewer.locateAnchors([needle]);
+                        if (!hits || !hits.length) return;
+                        var hit = hits[0];
+                        // The anchor is tiny text: give the chip a usable size on the line.
+                        hit.box = {
+                            x: hit.box.x,
+                            y: hit.box.y - 2,
+                            // About a third of the page width (160px on a desktop page), so it
+                            // scales down with the page on a phone.
+                            w: Math.max(hit.box.w, Math.min(160, Math.round((hit.wrapEl.clientWidth || 480) * 0.33))),
+                            h: Math.max(hit.box.h, (hit.wrapEl.clientWidth || 480) < 400 ? 18 : 26)
+                        };
+                        // Label inside the box: a tab above it would cover the template's own label.
+                        var chip = DocGenPdfViewer.addChip(hit, null, 'block-sign-chip');
+                        var inner = document.createElement('span');
+                        inner.className = 'block-sign-chip-label';
+                        inner.textContent = 'Sign here';
+                        chip.appendChild(inner);
+                        chip.setAttribute('role', 'button');
+                        chip.setAttribute('tabindex', '0');
+                        chip.setAttribute('aria-label', 'Sign here');
+                        chip.addEventListener('click', openSignModal);
+                        chip.addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                openSignModal();
+                            }
+                        });
                     }
 
                     function buildGuidedSpots(placements) {
@@ -6338,6 +6463,22 @@
                                 if (ua.length > 95) ua = ua.substring(0, 95) + '…';
                                 page.drawText('Device: ' + ua, { x: 60, y: y, size: 7.5, font: helv, color: gray });
                             }
+                            // Dura: the exact consent statement agreed to (this signer's comes from
+                            // the page, which shows what validateToken returned; others from audit).
+                            var agreed = s.consentText || (s.isMe && signerData ? signerData.consentText : '');
+                            if (agreed) {
+                                y -= 11;
+                                y = drawWrappedText(page, winAnsi('Agreed: "' + agreed + '"'), {
+                                    x: 60,
+                                    y: y,
+                                    size: 7.5,
+                                    font: helv,
+                                    color: gray,
+                                    maxWidth: 612 - 60 - 54,
+                                    lineHeight: 10
+                                });
+                                y += 10;
+                            }
                             y -= 22;
                         });
                         // Form Field Responses — list configured fields flagged
@@ -6922,6 +7063,8 @@
                     }
 
                     function openPlacementCapture(spot, forceModal, openNext) {
+                        if (notMyTurn()) return;
+                        hideFieldsSummary();
                         activeSpot = spot;
                         var type = spot.placement.type;
 
@@ -7057,6 +7200,7 @@
                         document.getElementById('btn-sign-submit-next').style.display = 'none';
                         // Form fields were collected up front (before signing) — not here.
                         hideFormFields();
+                        showFieldsSummary(openFinalSubmit);
                         showModalMsg('', 'info');
                         updateSignSubmitState();
                         document.getElementById('sign-modal').style.display = '';
@@ -7430,6 +7574,50 @@
                         return raw == null ? '' : String(raw);
                     }
 
+                    // Dura: "Your information": the answers this signer gave, with a Change link that
+                    // reopens the fields (answers kept) and then comes back to this step. Shown on
+                    // the final step so the signer checks them before consenting.
+                    function showFieldsSummary(returnTo) {
+                        var box = document.getElementById('modal-fields-summary');
+                        if (!box) return;
+                        var defs = signerData && signerData.formFields ? signerData.formFields : [];
+                        if (!formFieldsCollected || !defs.length) {
+                            box.style.display = 'none';
+                            box.innerHTML = '';
+                            return;
+                        }
+                        var vals = {};
+                        try {
+                            vals = JSON.parse(collectedFormFieldJson || '{}') || {};
+                        } catch (e) {
+                            vals = {};
+                        }
+                        var rows = '';
+                        for (var i = 0; i < defs.length; i++) {
+                            var shown = formFieldDisplay(defs[i], vals[defs[i].key]);
+                            rows +=
+                                '<div class="fields-summary-row"><span class="fields-summary-label">' +
+                                escapeHtml(defs[i].label || defs[i].key) +
+                                '</span><span class="fields-summary-value">' +
+                                escapeHtml(shown || 'Not given') +
+                                '</span></div>';
+                        }
+                        box.innerHTML =
+                            '<div class="fields-summary-head"><span>Your information</span>' +
+                            '<button type="button" class="fields-summary-change" id="fields-summary-change">Change</button></div>' +
+                            rows;
+                        box.style.display = '';
+                        document.getElementById('fields-summary-change').addEventListener('click', function () {
+                            formFieldsCollected = false;
+                            openFormFieldsStep(returnTo);
+                        });
+                    }
+
+                    function hideFieldsSummary() {
+                        var box = document.getElementById('modal-fields-summary');
+                        if (box) box.style.display = 'none';
+                    }
+
                     function showFormFields() {
                         renderFormFields(
                             document.getElementById('modal-form-fields'),
@@ -7464,6 +7652,7 @@
                     }
 
                     function openFormFieldsStep(onContinue) {
+                        hideFieldsSummary();
                         modalMode = 'fields';
                         afterFieldsAction = onContinue || null;
                         document.getElementById('modal-draw-group').style.display = 'none';
@@ -7551,7 +7740,16 @@
                         DrawPad.init();
                     }
 
+                    // Dura: true (and the notice is pointed out) while an earlier signer must sign first.
+                    function notMyTurn() {
+                        if (!(signerData && signerData.waitingFor)) return false;
+                        var n = document.getElementById('turn-notice');
+                        if (n) n.scrollIntoView({ block: 'nearest' });
+                        return true;
+                    }
+
                     function openSignModal() {
+                        if (notMyTurn()) return;
                         // Form fields first, then the single typed-name + consent modal.
                         if (hasPendingFormFields()) {
                             openFormFieldsStep(openSignModal);
@@ -7563,13 +7761,14 @@
                         // Respect the input restriction in the no-placement flow too.
                         document.getElementById('modal-draw-group').style.display = isTypeOnly() ? 'none' : '';
                         document.getElementById('modal-typed-name').parentNode.style.display = '';
-                        document.getElementById('modal-consent-checkbox').parentNode.style.display = 'none';
+                        // Dura: consent sits under the signature on this one step (no confirm modal).
+                        document.getElementById('modal-consent-checkbox').parentNode.style.display = '';
                         showAttachmentsReviewed(false);
                         document.querySelector('#sign-modal .modal-header h2').textContent = 'Sign Document';
                         document.querySelector('#sign-modal .modal-subtitle').textContent = isTypeOnly()
                             ? 'Type your full name to sign this document.'
                             : 'Choose how you want to sign this document.';
-                        document.getElementById('btn-sign-submit').textContent = 'Save & Next';
+                        document.getElementById('btn-sign-submit').textContent = 'Finish & Submit';
                         // Prefill the confirmed name from validateToken.signerName.
                         var nameInput = document.getElementById('modal-typed-name');
                         // Show the verified signer name without claiming the typed method.
@@ -7577,6 +7776,7 @@
                         document.getElementById('modal-consent-checkbox').checked = false;
                         // Form fields were collected up front — don't ask again here.
                         hideFormFields();
+                        showFieldsSummary(openSignModal);
                         showModalMsg('', 'info');
                         updateSignSubmitState();
                         document.getElementById('sign-modal').style.display = '';
@@ -7630,7 +7830,8 @@
                         } else {
                             // 'pdf' legacy flow has separate signature-entry and consent steps.
                             var signatureReady = !!(nameVal || DrawPad.hasInk());
-                            btn.disabled = legacyConsentStep ? !consentVal : !signatureReady;
+                            // Dura: one step: a signature AND the consent tick enable Finish & Submit.
+                            btn.disabled = !signatureReady || !consentVal;
                         }
                     }
 
@@ -7674,35 +7875,16 @@
                             return;
                         }
 
-                        if (modalMode === 'pdf' && !legacyConsentStep) {
-                            var signatureReady = !!(
-                                document.getElementById('modal-typed-name').value.trim() || DrawPad.hasInk()
-                            );
-                            if (!signatureReady) return;
-                            legacyConsentStep = true;
-                            document.getElementById('modal-draw-group').style.display = 'none';
-                            document.getElementById('modal-name-group').style.display = 'none';
-                            document.getElementById('modal-consent-checkbox').parentNode.style.display = '';
-                            document.querySelector('#sign-modal .modal-header h2').textContent =
-                                'Confirm your signature';
-                            document.querySelector('#sign-modal .modal-subtitle').textContent =
-                                'Review your signature and confirm your consent to finish.';
-                            document.getElementById('btn-sign-submit').textContent = 'Finish & Submit';
-                            document.getElementById('modal-consent-checkbox').checked = false;
-                            updateSignSubmitState();
-                            return;
-                        }
+                        // Dura: no separate "Confirm your signature" step: consent is ticked on the
+                        // signature step, and Finish & Submit there signs straight away.
 
                         var typedName = document.getElementById('modal-typed-name').value.trim();
                         var consentGiven = document.getElementById('modal-consent-checkbox').checked;
                         if (!consentGiven) return;
                         if (!typedName && DrawPad.hasInk()) {
-                            // This legacy 'pdf' flow has no image-compositing path (unlike the
-                            // guided/spot flow's compositeAndFinalize) -- savePdfSignature only
-                            // ever accepts a typed name. A drawn mark is visual confirmation on
-                            // screen; the already-verified signer name on record (same source
-                            // handleFinalSubmit falls back to) is what is actually submitted as
-                            // the signature of record, so drawing-only no longer dead-ends here.
+                            // Drawing only: the verified signer name is the signature of record
+                            // (as in handleFinalSubmit); the drawing itself is sent alongside
+                            // (savePdfSignatureDrawn) for templates whose block shows it.
                             typedName = signerData && signerData.signerName ? signerData.signerName : '';
                         }
                         if (!typedName) {
@@ -7717,14 +7899,21 @@
                         // Capture IP (browser fetch above; server resolveClientIp falls back).
                         var userAgent = navigator.userAgent || 'Unknown';
 
+                        // Dura: send the drawing too, so a {#Signatures} block can show it.
+                        var drawnPng = '';
+                        if (DrawPad.hasInk()) {
+                            var dataUrl = DrawPad.toPng() || '';
+                            drawnPng = dataUrl.indexOf(',') >= 0 ? dataUrl.substring(dataUrl.indexOf(',') + 1) : '';
+                        }
                         Visualforce.remoting.Manager.invokeAction(
-                            '{!$RemoteAction.DocGenSignatureController.savePdfSignature}',
+                            '{!$RemoteAction.DocGenSignatureController.savePdfSignatureDrawn}',
                             token,
                             typedName,
                             consentGiven,
                             capturedIp,
                             userAgent,
                             collectedFormFieldJson,
+                            drawnPng,
                             function (result, event) {
                                 btn.disabled = false;
                                 btn.textContent = 'Sign';

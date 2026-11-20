@@ -91,6 +91,53 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
         public List<String> accept = new List<String>();
     }
 
+    /** Dura: Form_Field_Keys__c value meaning the signer was asked no inputs (sign only). */
+    public static final String NO_FIELDS = 'none';
+
+    /**
+     * Dura: the inputs one signer is asked, from the keys chosen for them at send time
+     * (DocGen_Signer__c.Form_Field_Keys__c). Blank = every input (a request sent without a
+     * per-signer choice, as before); "none" = sign only; otherwise the comma-separated keys,
+     * kept in template order. Unknown keys are ignored.
+     */
+    public static List<FormFieldDef> forSigner(List<FormFieldDef> defs, String assignedKeys) {
+        if (String.isBlank(assignedKeys)) {
+            return defs;
+        }
+        List<FormFieldDef> out = new List<FormFieldDef>();
+        if (assignedKeys.trim().equalsIgnoreCase(NO_FIELDS)) {
+            return out;
+        }
+        Set<String> keys = new Set<String>();
+        for (String k : assignedKeys.split(',')) {
+            if (String.isNotBlank(k)) {
+                keys.add(k.trim());
+            }
+        }
+        for (FormFieldDef def : defs) {
+            if (keys.contains(def.key)) {
+                out.add(def);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Dura: the value to store on the signer for a send-time choice: the keys as given
+     * (trimmed, comma-joined), or "none" when the list is blank.
+     */
+    public static String normaliseAssignedKeys(String keys) {
+        List<String> clean = new List<String>();
+        if (String.isNotBlank(keys)) {
+            for (String k : keys.split(',')) {
+                if (String.isNotBlank(k) && !clean.contains(k.trim())) {
+                    clean.add(k.trim());
+                }
+            }
+        }
+        return clean.isEmpty() ? NO_FIELDS : String.join(clean, ',');
+    }
+
     /**
      * Flow-invocable wrapper input — carries only the request Id. The writeback
      * field allowlist is re-derived from the template config (never from Flow
@@ -181,8 +228,17 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
      * Certificate of Completion just like the server cert does.
      */
     public static List<Object> publicFormFields(String queryConfigJson) {
+        return publicFormFields(parseConfig(queryConfigJson));
+    }
+
+    /** Dura: the public projection of only the inputs this signer was asked (Form_Field_Keys__c). */
+    public static List<Object> publicFormFields(String queryConfigJson, String assignedKeys) {
+        return publicFormFields(forSigner(parseConfig(queryConfigJson), assignedKeys));
+    }
+
+    private static List<Object> publicFormFields(List<FormFieldDef> defs) {
         List<Object> publicDefs = new List<Object>();
-        for (FormFieldDef def : parseConfig(queryConfigJson)) {
+        for (FormFieldDef def : defs) {
             publicDefs.add(
                 new Map<String, Object>{
                     'key' => def.key,
@@ -581,6 +637,96 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
     }
 
     /**
+     * Dura: the value to write for each writeback field: from the single signer who was asked
+     * it (see performWriteback). Skipped fields are logged on the request.
+     */
+    @TestVisible
+    private static Map<String, Object> writebackValues(Id requestId, List<FormFieldDef> writebackDefs) {
+        Map<String, Object> values = new Map<String, Object>();
+        DocGenFlsGuard.assertAccessible(
+            DocGen_Signer__c.sObjectType,
+            new Set<String>{ 'Field_Data_Json__c', 'Form_Field_Keys__c', 'Signature_Request__c', 'Sort_Order__c' }
+        );
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        List<DocGen_Signer__c> signers = [
+            SELECT Field_Data_Json__c, Form_Field_Keys__c
+            FROM DocGen_Signer__c
+            WHERE Signature_Request__c = :requestId
+            WITH SYSTEM_MODE
+            ORDER BY Sort_Order__c ASC
+        ];
+        for (FormFieldDef def : writebackDefs) {
+            List<DocGen_Signer__c> asked = new List<DocGen_Signer__c>();
+            for (DocGen_Signer__c s : signers) {
+                if (!forSigner(new List<FormFieldDef>{ def }, s.Form_Field_Keys__c).isEmpty()) {
+                    asked.add(s);
+                }
+            }
+            if (asked.size() != 1) {
+                if (asked.size() > 1) {
+                    logWritebackError(
+                        requestId,
+                        'Form-field writeback skipped for ' +
+                            def.key +
+                            ': ' +
+                            asked.size() +
+                            ' signers were asked it, so there is no single answer to write.'
+                    );
+                }
+                continue;
+            }
+            Object v = null;
+            if (String.isNotBlank(asked[0].Field_Data_Json__c)) {
+                try {
+                    Object parsed = JSON.deserializeUntyped(asked[0].Field_Data_Json__c);
+                    if (parsed instanceof Map<String, Object>) {
+                        v = ((Map<String, Object>) parsed).get(def.key);
+                    }
+                } catch (Exception e) {
+                    v = null;
+                }
+            }
+            if (v != null) {
+                values.put(def.key, v);
+            }
+        }
+        return values;
+    }
+
+    /**
+     * Dura: at send time, an input that writes back to the record may be given to only one
+     * signer (otherwise there is no single answer to write). Throws a message naming it.
+     * signerInputs are the send inputs; only those carrying 'formFieldKeys' are counted.
+     */
+    public static void assertSingleOwnerForWriteback(String formFieldsConfig, List<Map<String, Object>> signerInputs) {
+        if (signerInputs == null || signerInputs.isEmpty()) {
+            return;
+        }
+        for (FormFieldDef def : parseConfig(formFieldsConfig)) {
+            if (!(def.writeback && String.isNotBlank(def.fieldApiName))) {
+                continue;
+            }
+            Integer owners = 0;
+            for (Map<String, Object> input : signerInputs) {
+                Object keys = input.get('formFieldKeys');
+                if (keys == null) {
+                    continue;
+                }
+                if (!forSigner(new List<FormFieldDef>{ def }, String.valueOf(keys)).isEmpty()) {
+                    owners++;
+                }
+            }
+            if (owners > 1) {
+                throw new DocGenException(
+                    '"' +
+                        (String.isNotBlank(def.label) ? def.label : def.key) +
+                        '" updates the record, so only one signer can be asked for it.'
+                );
+            }
+        }
+    }
+
+    /**
      * Writes collected signer form-field values back to the base record.
      *
      * SECURITY (see class header): the writable allowlist is rebuilt from the
@@ -630,29 +776,13 @@ global without sharing class DocGenFieldWritebackService { // NOPMD AvoidGlobalM
                 return;
             }
 
-            // Writeback is single-signer only. On a multi-signer request every signer
-            // fills the same template-scoped fields, so there is no unambiguous single
-            // value to write (collectValues would merge them last-writer-wins). Skip the
-            // record write — capture + per-signer certificate attribution still happen.
-            DocGenFlsGuard.assertAccessible(DocGen_Signer__c.sObjectType, new Set<String>{ 'Signature_Request__c' });
-            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
-            Integer signerCount = [
-                SELECT COUNT()
-                FROM DocGen_Signer__c
-                WHERE Signature_Request__c = :requestId
-                WITH SYSTEM_MODE
-            ];
-            if (signerCount > 1) {
-                logWritebackError(
-                    requestId,
-                    'Form-field writeback skipped — multi-signer request (' +
-                        signerCount +
-                        ' signers); writeback applies to single-signer requests only.'
-                );
-                return;
-            }
-
-            Map<String, Object> values = collectValues(requestId);
+            // Dura: whose answer to write. With one signer, theirs. With several, a field is
+            // written only when exactly one signer was asked it (inputs chosen per signer at
+            // send time, DocGen_Signer__c.Form_Field_Keys__c); a field several signers were
+            // asked is ambiguous and skipped (logged). Requests sent without a per-signer
+            // choice ask everyone everything, so with several signers nothing is written, as
+            // before.
+            Map<String, Object> values = writebackValues(requestId, writebackDefs.values());
             if (values.isEmpty()) {
                 return;
             }

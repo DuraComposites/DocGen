@@ -2,6 +2,36 @@
 // CxSAST: Test class — SOQL/DML findings are test data operations, not production code paths
 @IsTest
 private class DocGenControllerTests {
+    // Dura: the runner picker hides templates with nothing to merge, so picker
+    // tests give every template a file first (attached, as generation's fallback reads).
+    private static void giveTemplatesBodies() {
+        Map<Id, DocGen_Template__c> all = new Map<Id, DocGen_Template__c>([SELECT Id FROM DocGen_Template__c]);
+        if (all.isEmpty()) {
+            return;
+        }
+        Set<Id> has = new Set<Id>();
+        for (ContentDocumentLink l : [
+            SELECT LinkedEntityId
+            FROM ContentDocumentLink
+            WHERE LinkedEntityId IN :all.keySet()
+        ]) {
+            has.add(l.LinkedEntityId);
+        }
+        List<ContentVersion> files = new List<ContentVersion>();
+        for (DocGen_Template__c t : all.values()) {
+            if (!has.contains(t.Id)) {
+                files.add(
+                    new ContentVersion(
+                        Title = 'body',
+                        PathOnClient = 'body.html',
+                        VersionData = Blob.valueOf('<p>{Name}</p>'),
+                        FirstPublishLocationId = t.Id
+                    )
+                );
+            }
+        }
+        insert files;
+    }
     @TestSetup
     static void setup() {
         TestDataFactory.createStandardTestData();
@@ -991,6 +1021,7 @@ private class DocGenControllerTests {
         User u = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
         System.runAs(u) {
             Test.startTest();
+            giveTemplatesBodies();
             List<DocGen_Template__c> templates = DocGenController.getTemplatesForObject('Account');
             Test.stopTest();
 
@@ -1004,6 +1035,7 @@ private class DocGenControllerTests {
         User u = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
         System.runAs(u) {
             Test.startTest();
+            giveTemplatesBodies();
             List<DocGen_Template__c> templates = DocGenController.getTemplatesForObject('NonExistentObject__c');
             Test.stopTest();
 
@@ -1027,7 +1059,9 @@ private class DocGenControllerTests {
             insert flowTpl;
 
             Test.startTest();
+            giveTemplatesBodies();
             List<DocGen_Template__c> accountTpls = DocGenController.getTemplatesForObject('Account');
+            giveTemplatesBodies();
             List<DocGen_Template__c> flowTpls = DocGenController.getTemplatesForObject('FlowJsonData');
             Test.stopTest();
 
@@ -5999,8 +6033,11 @@ private class DocGenControllerTests {
         insert tplBoundOther;
 
         Test.startTest();
+        giveTemplatesBodies();
         List<DocGen_Template__c> noRecordPicker = DocGenController.getTemplatesForObject('Account');
+        giveTemplatesBodies();
         List<DocGen_Template__c> forAcc = DocGenController.getTemplatesForObjectAndRecord('Account', acc.Id);
+        giveTemplatesBodies();
         List<DocGen_Template__c> forOther = DocGenController.getTemplatesForObjectAndRecord('Account', other.Id);
         Test.stopTest();
 
@@ -6048,10 +6085,13 @@ private class DocGenControllerTests {
         insert multi;
 
         Test.startTest();
+        giveTemplatesBodies();
         List<DocGen_Template__c> forA2 = DocGenController.getTemplatesForObjectAndRecord('Account', a2.Id);
+        giveTemplatesBodies();
         List<DocGen_Template__c> forA3 = DocGenController.getTemplatesForObjectAndRecord('Account', a3.Id);
         Account a4 = new Account(Name = 'A4');
         insert a4;
+        giveTemplatesBodies();
         List<DocGen_Template__c> forA4 = DocGenController.getTemplatesForObjectAndRecord('Account', a4.Id);
         Test.stopTest();
 
@@ -6086,6 +6126,7 @@ private class DocGenControllerTests {
         insert multi;
 
         Test.startTest();
+        giveTemplatesBodies();
         List<DocGen_Template__c> visible = DocGenController.getTemplatesForObjectAndRecord('Account', a2.Id);
         Test.stopTest();
 
@@ -6122,6 +6163,7 @@ private class DocGenControllerTests {
         insert eitherOr;
 
         Test.startTest();
+        giveTemplatesBodies();
         List<DocGen_Template__c> visible = DocGenController.getTemplatesForObject('Account');
         Test.stopTest();
 
@@ -6148,6 +6190,7 @@ private class DocGenControllerTests {
         insert gated;
 
         Test.startTest();
+        giveTemplatesBodies();
         List<DocGen_Template__c> visible = DocGenController.getTemplatesForObject('Account');
         Test.stopTest();
 
@@ -6170,6 +6213,7 @@ private class DocGenControllerTests {
         insert scoped;
 
         Test.startTest();
+        giveTemplatesBodies();
         List<DocGen_Template__c> visible = DocGenController.getTemplatesForObjectAndRecord('Account', 'not-an-id');
         Test.stopTest();
 
@@ -6198,6 +6242,7 @@ private class DocGenControllerTests {
         insert new List<DocGen_Template__c>{ first, third };
 
         Test.startTest();
+        giveTemplatesBodies();
         List<DocGen_Template__c> visible = DocGenController.getTemplatesForObject('Account');
         Test.stopTest();
 
@@ -6347,6 +6392,7 @@ private class DocGenControllerTests {
         insert t;
 
         Test.startTest();
+        giveTemplatesBodies();
         List<DocGen_Template__c> visible = DocGenController.getTemplatesForObjectAndRecord('Account', matching.Id);
         Test.stopTest();
 
@@ -6373,6 +6419,7 @@ private class DocGenControllerTests {
         insert t;
 
         Test.startTest();
+        giveTemplatesBodies();
         List<DocGen_Template__c> visible = DocGenController.getTemplatesForObjectAndRecord('Account', nonMatching.Id);
         Test.stopTest();
 
@@ -6402,6 +6449,7 @@ private class DocGenControllerTests {
         insert t;
 
         Test.startTest();
+        giveTemplatesBodies();
         List<DocGen_Template__c> forA = DocGenController.getTemplatesForObjectAndRecord('Account', a.Id);
         Test.stopTest();
 
@@ -6427,6 +6475,7 @@ private class DocGenControllerTests {
         insert t;
 
         Test.startTest();
+        giveTemplatesBodies();
         List<DocGen_Template__c> visible = DocGenController.getTemplatesForObjectAndRecord('Account', acc.Id);
         Test.stopTest();
 
@@ -6453,6 +6502,7 @@ private class DocGenControllerTests {
         insert t;
 
         Test.startTest();
+        giveTemplatesBodies();
         List<DocGen_Template__c> visible = DocGenController.getTemplatesForObjectAndRecord('Account', acc.Id);
         Test.stopTest();
 

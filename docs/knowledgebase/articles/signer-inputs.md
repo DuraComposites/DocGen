@@ -34,6 +34,15 @@ Give two or more inputs the same **At-least-one group** name (under the label in
 
 Leave **Required** off on grouped inputs. The signing page and the server both check the rule. A ticked checkbox counts as filled; an unticked one does not.
 
+#### Choose who fills which inputs
+
+The template defines the inputs and which are **Required**. Who is asked what is chosen when the request is sent, so the same template can ask the buyer for a PO and ask a director only to sign.
+
+- From Flow, set **Assign Inputs Per Signer** on **DocGen: Create Signature Request**, and give each signer the input keys they fill in their **Form Field Keys** (for example `PO_Number,PO_File`). A signer with no keys only signs. **DocGen: Get Template Signers** returns the template's inputs (**Form Fields**: key, label, required) for a send screen to offer as checkboxes.
+- Without that option, every signer is asked every input, as before.
+- **Required** and **At-least-one group** apply only to the inputs a signer was given. A signer with none goes straight to signing, without the **Your Information** step.
+- The certificate lists each signer's own answers.
+
 #### Place the answer
 
 ```text
@@ -49,7 +58,7 @@ The signer fills these fields during signing. Answers can appear in the finished
 
 Writeback runs after the completed signed PDF is saved. It updates only fields explicitly mapped and enabled in the template configuration. The guest does not receive general permission to edit the related Account, Opportunity, or other base record.
 
-**Writeback supports single-signer requests.** With several signers, answers are captured and attributed on the certificate, but record writeback is skipped because there is no unambiguous single answer for a shared field. Do not design a multi-signer packet expecting the last answer to overwrite Salesforce.
+**Writeback needs one answer per field.** With one signer, their answers are written. With several, an input is written back only when exactly one signer was asked it, which is what choosing inputs per signer at send time gives you. An input several signers were asked is skipped and logged, because there is no single answer to write. Requests sent without a per-signer choice ask everyone everything, so with several signers nothing is written back. When sending with **Assign Inputs Per Signer**, an input that writes back can be given to only one signer; **Get Template Signers** marks these inputs with **writesBack**.
 
 Field access, supported value conversion, and validation rules still apply. A failed record update is logged; it does not undo a completed signing request. Check the related record and **DocGen Signature Audits** for writeback failures rather than treating a Signed status as proof of a successful field update.
 
