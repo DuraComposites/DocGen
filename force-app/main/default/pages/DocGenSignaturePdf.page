@@ -1467,6 +1467,14 @@
                         z-index: 100;
                         border-top: 3px solid #0176d3;
                     }
+                    /* Dura: on a phone the signer line takes its own row above the buttons,
+                       and the buttons share the row, so nothing is squeezed into a column. */
+                    .pdf-action-bar .signer-context {
+                        flex: 1 0 100%;
+                    }
+                    .pdf-action-bar .btn {
+                        flex: 1 1 0;
+                    }
                     .sig-card {
                         padding: 1.25rem;
                     }
@@ -5684,8 +5692,10 @@
                         hit.box = {
                             x: hit.box.x,
                             y: hit.box.y - 2,
-                            w: Math.max(hit.box.w, 160),
-                            h: Math.max(hit.box.h, 26)
+                            // About a third of the page width (160px on a desktop page), so it
+                            // scales down with the page on a phone.
+                            w: Math.max(hit.box.w, Math.min(160, Math.round((hit.wrapEl.clientWidth || 480) * 0.33))),
+                            h: Math.max(hit.box.h, (hit.wrapEl.clientWidth || 480) < 400 ? 18 : 26)
                         };
                         // Label inside the box: a tab above it would cover the template's own label.
                         var chip = DocGenPdfViewer.addChip(hit, null, 'block-sign-chip');
