@@ -191,23 +191,26 @@ private class DocGenPdfMergerTest {
         Blob single = DocGenPdfMerger.mergePdfs(new List<Blob>{ jp }, false);
 
         Test.startTest();
-        Blob merged = DocGenPdfMerger.mergePdfs(new List<Blob>{ jp, jp, jp, jp, jp }, true);
+        // Dura: 3 copies, not 5. The checks after stopTest share the setup's CPU budget, and
+        // the 5-copy packet (parsed, then merged with itself and parsed again) ran near the
+        // 10 s limit and failed package builds. 3 identical subsets still prove the dedup.
+        Blob merged = DocGenPdfMerger.mergePdfs(new List<Blob>{ jp, jp, jp }, true);
         Test.stopTest();
 
-        // 5 two-page docs, each even → no padding.
-        System.assertEquals(10, DocGenPdfMerger.pageCount(merged), '5 x 2 pages, no blanks (even docs)');
+        // 3 two-page docs, each even → no padding.
+        System.assertEquals(6, DocGenPdfMerger.pageCount(merged), '3 x 2 pages, no blanks (even docs)');
         System.assertEquals(0, DocGenPdfMerger.blankPageCount(merged), 'even non-Latin docs are never padded');
         // Re-parse proves the object graph, xref and repointed font refs are sound.
         System.assertEquals(
-            20,
-            DocGenPdfMerger.pageCount(DocGenPdfMerger.mergePdfs(new List<Blob>{ merged, merged }, false)),
-            'the merged non-Latin packet must itself re-parse cleanly'
+            6,
+            DocGenPdfMerger.pageCount(DocGenPdfMerger.mergePdfs(new List<Blob>{ merged }, false)),
+            'the merged non-Latin packet must itself re-parse and re-merge cleanly'
         );
-        // The font dedup fired: 5 identical subsets collapse toward one embedded
-        // program, so the packet is far smaller than five standalone copies.
+        // The font dedup fired: 3 identical subsets collapse toward one embedded
+        // program, so the packet is well under three standalone copies.
         System.assert(
-            merged.size() < single.size() * 3,
-            'identical CID font subsets should be deduplicated (got ' + merged.size() + ' vs 5x ' + single.size() + ')'
+            merged.size() < single.size() * 2,
+            'identical CID font subsets should be deduplicated (got ' + merged.size() + ' vs 3x ' + single.size() + ')'
         );
     }
 
