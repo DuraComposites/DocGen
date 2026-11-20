@@ -26,7 +26,8 @@ This checkout is **DuraComposites/DocGen**, Dura Composites' fork of Portwood. T
     - **Never promote a version** (`sf package version promote`) unless Nathan asks for that version. Promoting freezes its API names for good.
     - `sf package create` and `sf package version create` rewrite `sfdx-project.json`. Check the `force-app` entry afterwards and keep `"default": true`.
     - `agentforce-ext` is a plain source folder, not a package. Portwood ships it as a separate extension; we don't package it.
-    - `guide.json` takes its release alias (`release.packageAlias`) from `sfdx-project.json`. It points at DocGen 1.1.0 (`DocGen@1.1.0-1`). Move it to each newly promoted version.
+    - `guide.json` takes its release alias (`release.packageAlias`) from `sfdx-project.json`. It points at DocGen 1.2.0 (`DocGen@1.2.0-3`). Move it to each newly promoted version.
+    - After each promotion, add the version to "DocGen releases" at the top of `CHANGELOG.md` (Id, install link, date, what's new), tag the build commit `docgen-vX.Y.Z` and create a GitHub release from that entry.
 
 ## Windows
 
