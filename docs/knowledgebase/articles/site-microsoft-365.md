@@ -64,7 +64,9 @@ Changes can take up to two hours to apply. Adding a new salesperson later means 
 
 1. Open the **Named Credentials** tab and click **New**.
 2. Label `Microsoft Graph`, Name `Microsoft_Graph`. URL `https://graph.microsoft.com`. External Credential: `Microsoft Graph`.
-3. Keep **Generate Authorization Header** ticked. Save.
+3. Keep **Generate Authorization Header** ticked.
+4. Under **Callout Options**, set **Allowed Namespaces for Callouts** to `duracomp`. DocGen is a managed package, and Salesforce only lets a package use a Named Credential that names its namespace. Without it every send fails with "The callout couldn't access the endpoint".
+5. Save.
 
 #### 5. Give access to the users that send
 
@@ -107,13 +109,13 @@ Use your permission set's API name. Without this, the first signer's email goes 
 
 #### If it doesn't work
 
-| Email Status or test result                                            | Likely cause and fix                                                                                                          |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `ErrorAccessDenied` or `Access to OData is disabled`                   | The sender isn't in the scoped group, or the RBAC change hasn't applied yet. Check with `Test-ServicePrincipalAuthorization`. |
-| `ErrorInvalidUser` or `ResourceNotFound`                               | The user's Salesforce **Email** isn't their Microsoft 365 sign-in address.                                                    |
-| `HTTP 401` or `invalid_client`                                         | The secret is wrong or has expired. Create a new one in Entra and update the principal.                                       |
-| `CalloutException` mentioning the Named Credential or principal access | The user who triggered the send doesn't have the permission set from step 5, or the Named Credential name is mistyped.        |
-| `Not sent: the user who created this request has no email address...`  | The request was created by a user without a real mailbox, such as an integration user. Send it from a person's account.       |
-| `Microsoft 365 is busy ... retrying`                                   | Microsoft throttled the send. DocGen retries automatically; the status updates when it finishes.                              |
+| Email Status or test result                                            | Likely cause and fix                                                                                                                                                                                   |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ErrorAccessDenied` or `Access to OData is disabled`                   | The sender isn't in the scoped group, or the RBAC change hasn't applied yet. Check with `Test-ServicePrincipalAuthorization`.                                                                          |
+| `ErrorInvalidUser` or `ResourceNotFound`                               | The user's Salesforce **Email** isn't their Microsoft 365 sign-in address.                                                                                                                             |
+| `HTTP 401` or `invalid_client`                                         | The secret is wrong or has expired. Create a new one in Entra and update the principal.                                                                                                                |
+| `CalloutException` mentioning the Named Credential or principal access | The user who triggered the send doesn't have the permission set from step 5, the Named Credential doesn't list `duracomp` under **Allowed Namespaces for Callouts** (step 4), or its name is mistyped. |
+| `Not sent: the user who created this request has no email address...`  | The request was created by a user without a real mailbox, such as an integration user. Send it from a person's account.                                                                                |
+| `Microsoft 365 is busy ... retrying`                                   | Microsoft throttled the send. DocGen retries automatically; the status updates when it finishes.                                                                                                       |
 
 Microsoft's own references: [RBAC for Applications in Exchange Online](https://learn.microsoft.com/en-us/exchange/permissions-exo/application-rbac) and [user: sendMail](https://learn.microsoft.com/en-us/graph/api/user-sendmail).

@@ -33,7 +33,7 @@ public without sharing class DocGenGraphMail {
     private static final Integer DEFAULT_RETRY_MINUTES = 2;
     private static final Integer MAX_RETRY_MINUTES = 10;
     private static final Pattern NAMED_CREDENTIAL_NAME = Pattern.compile('^[A-Za-z][A-Za-z0-9_]{0,79}$');
-    private static final String STATUS_FIX_HINT = '\n\nCheck: (1) the sender has a Microsoft 365 mailbox at their Salesforce email address (2) that mailbox is in the group the Exchange policy allows (3) the user who sent it has access to the Named Credential\'s External Credential (permission set) (4) the app\'s secret or certificate has not expired';
+    private static final String STATUS_FIX_HINT = '\n\nCheck: (1) the sender has a Microsoft 365 mailbox at their Salesforce email address (2) that mailbox is in the group the Exchange policy allows (3) the user who sent it has access to the Named Credential\'s External Credential (permission set) (4) the Named Credential lists this package\'s namespace under Allowed Namespaces for Callouts (5) the app\'s secret or certificate has not expired';
 
     // Test hook: the job a retry would enqueue (queueables cannot chain inside a test).
     @TestVisible

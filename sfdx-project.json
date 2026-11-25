@@ -4,8 +4,8 @@
       "path": "force-app",
       "default": true,
       "package": "DocGen",
-      "versionName": "1.2.0",
-      "versionNumber": "1.2.0.NEXT",
+      "versionName": "1.3.0",
+      "versionNumber": "1.3.0.NEXT",
       "ancestorVersion": "HIGHEST",
       "definitionFile": "config/build-def.json",
       "postInstallScript": "DocGenEmailTemplateInstall",
@@ -29,6 +29,7 @@
     "DocGen@1.1.0-1": "04tQ500000CZTEkIAP",
     "DocGen@1.2.0-1": "04tQ500000CbSUfIAN",
     "DocGen@1.2.0-2": "04tQ500000Cc7mLIAR",
-    "DocGen@1.2.0-3": "04tQ500000CcYWPIA3"
+    "DocGen@1.2.0-3": "04tQ500000CcYWPIA3",
+    "DocGen@1.3.0-1": "04tQ500000CsgY1IAJ"
   }
 }
