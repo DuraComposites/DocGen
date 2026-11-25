@@ -3697,16 +3697,21 @@
                                             </div>
                                         </template>
                                         <template if:true={showEditHtmlOwnsPageBanner}>
-                                            <div class="slds-box slds-theme_shade" role="status" aria-live="polite">
+                                            <div
+                                                class="slds-box slds-theme_shade slds-var-m-bottom_medium"
+                                                role="status"
+                                                aria-live="polite"
+                                            >
                                                 <p class="slds-text-body_small">
                                                     <lightning-icon
                                                         icon-name="utility:info"
                                                         size="x-small"
                                                         class="slds-var-m-right_x-small"
                                                     ></lightning-icon>
-                                                    Your HTML defines its own <code>@page</code> CSS, so Page Size /
-                                                    Orientation / Margins are ignored on render. Edit the
-                                                    <code>@page</code> rule inside your HTML to change page setup.
+                                                    Your HTML sets its own page with an <code>@page</code> rule. Leave
+                                                    these on Portrait, Letter and Default to use it. Landscape, A4 or
+                                                    Legal replaces the HTML's page size, and with one of those set, a
+                                                    Page Margins choice other than Default replaces its margins too.
                                                 </p>
                                             </div>
                                         </template>
