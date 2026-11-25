@@ -1743,8 +1743,8 @@
             "title": "Send signature emails from Microsoft 365",
             "group": "sign",
             "audience": "Salesforce administrators",
-            "minutes": 15,
-            "summary": "Send signature requests and reminders from the sender's own Microsoft 365 mailbox, saved in their Sent Items.",
+            "minutes": 45,
+            "summary": "Send signature requests and reminders from the sender's own Microsoft 365 mailbox: Entra app, Exchange scope, Salesforce credentials, and the routine jobs afterwards.",
             "sources": [
                 "force-app/main/default/classes/DocGenGraphMail.cls",
                 "force-app/main/default/classes/DocGenSignatureEmailService.cls",
