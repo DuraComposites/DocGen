@@ -1,0 +1,620 @@
+// Dura Composites Ltd.
+// CxSAST: Test class — SOQL/DML findings are test data operations, not production code paths
+/**
+ * Quote e-sign round 2 (all generic): signer inputs chosen per signer at send time, the live
+ * {#Signatures} viewing copy for parallel signers, and per-template consent wording
+ * recorded on the audit and printed on the certificate.
+ */
+@IsTest
+private class DocGenSigningRound2Test {
+    private static final String CUSTOMER_TOKEN = 'c1c2c3c4c5c6c1c2c3c4c5c6c1c2c3c4c5c6c1c2c3c4c5c6c1c2c3c4c5c6c1c2';
+    private static final String DIRECTOR_TOKEN = 'd1d2d3d4d5d6d1d2d3d4d5d6d1d2d3d4d5d6d1d2d3d4d5d6d1d2d3d4d5d6d1d2';
+    private static final String PO_CONFIG =
+        '{"formFields":[' +
+        '{"key":"PO_Number","label":"PO number","type":"text","atLeastOneGroup":"po","listOnCertificate":true},' +
+        '{"key":"PO_File","label":"PO file","type":"file","atLeastOneGroup":"po","listOnCertificate":true},' +
+        '{"key":"Notes","label":"Notes","type":"text","listOnCertificate":true}' +
+        ']}';
+
+    private static Id buildRequest(String config, String consentText) {
+        DocGen_Template__c tmpl = new DocGen_Template__c(
+            Name = 'Round 2 ' + Crypto.getRandomInteger(),
+            Base_Object_API__c = 'Account',
+            Form_Fields_Config__c = config,
+            Type__c = 'HTML',
+            Output_Format__c = 'PDF',
+            Signing_Consent_Text__c = consentText
+        );
+        insert tmpl;
+        DocGen_Signature_Request__c req = new DocGen_Signature_Request__c(
+            Status__c = 'Sent',
+            Template__c = tmpl.Id,
+            Require_Email_Verification__c = false,
+            Signing_Order__c = 'Parallel',
+            Signer_Name__c = 'Casey Customer',
+            Signer_Email__c = 'casey@example.com'
+        );
+        insert req;
+        insert new List<DocGen_Signer__c>{
+            new DocGen_Signer__c(
+                Signature_Request__c = req.Id,
+                Signer_Name__c = 'Casey Customer',
+                Signer_Email__c = 'casey@example.com',
+                Role_Name__c = ' Customer ',
+                Secure_Token__c = CUSTOMER_TOKEN,
+                Status__c = 'Pending',
+                Sort_Order__c = 1
+            ),
+            new DocGen_Signer__c(
+                Signature_Request__c = req.Id,
+                Signer_Name__c = 'Dana Director',
+                Signer_Email__c = 'dana@example.com',
+                Role_Name__c = 'Managing Director',
+                Form_Field_Keys__c = 'Notes',
+                Secure_Token__c = DIRECTOR_TOKEN,
+                Status__c = 'Pending',
+                Sort_Order__c = 2
+            )
+        };
+        return req.Id;
+    }
+
+    private static DocGen_Signer__c signer(String token) {
+        return [
+            SELECT Id, Signature_Request__c, Field_Data_Json__c
+            FROM DocGen_Signer__c
+            WHERE Secure_Token__c = :token
+        ];
+    }
+
+    // ---------------------------------------------------------------- inputs per signer
+
+    @IsTest
+    static void forSigner_blankAllNoneOrListedKeys() {
+        List<DocGenFieldWritebackService.FormFieldDef> defs = DocGenFieldWritebackService.parseConfig(PO_CONFIG);
+        Assert.areEqual(3, DocGenFieldWritebackService.forSigner(defs, null).size(), 'blank = every input');
+        Assert.areEqual(0, DocGenFieldWritebackService.forSigner(defs, 'none').size(), 'none = sign only');
+        List<DocGenFieldWritebackService.FormFieldDef> two = DocGenFieldWritebackService.forSigner(
+            defs,
+            ' Notes , PO_Number, Unknown'
+        );
+        Assert.areEqual(2, two.size());
+        Assert.areEqual('PO_Number', two[0].key, 'template order is kept');
+        Assert.areEqual('none', DocGenFieldWritebackService.normaliseAssignedKeys('  '));
+        Assert.areEqual('none', DocGenFieldWritebackService.normaliseAssignedKeys(null));
+        Assert.areEqual('A,B', DocGenFieldWritebackService.normaliseAssignedKeys(' A, B ,A,'));
+    }
+
+    @IsTest
+    static void validateToken_sendsOnlyTheSignersOwnFields() {
+        buildRequest(PO_CONFIG, null);
+        Test.startTest();
+        DocGenSignatureController.SignatureInitResponse cust = DocGenSignatureController.validateToken(CUSTOMER_TOKEN);
+        DocGenSignatureController.SignatureInitResponse dir = DocGenSignatureController.validateToken(DIRECTOR_TOKEN);
+        Test.stopTest();
+        Assert.areEqual(3, cust.formFields.size(), 'Customer is asked for the PO');
+        Assert.areEqual(1, dir.formFields.size(), 'The director is only asked the shared field');
+        Assert.areEqual('Notes', ((Map<String, Object>) dir.formFields[0]).get('key'));
+    }
+
+    @IsTest
+    static void capture_enforcesTheGroupOnlyForSignersItAppliesTo() {
+        Id reqId = buildRequest(PO_CONFIG, null);
+        DocGen_Signer__c cust = signer(CUSTOMER_TOKEN);
+        DocGen_Signer__c dir = signer(DIRECTOR_TOKEN);
+        Test.startTest();
+        // The director gives nothing for the PO group and is not blocked.
+        DocGenSignatureController.captureFormFieldData(
+            dir.Id,
+            reqId,
+            DIRECTOR_TOKEN,
+            '{"Notes":"ok","PO_Number":"sneaky"}'
+        );
+        // The customer must still give a PO number or file.
+        Boolean blocked = false;
+        try {
+            DocGenSignatureController.captureFormFieldData(cust.Id, reqId, CUSTOMER_TOKEN, '{}');
+        } catch (AuraHandledException e) {
+            blocked = e.getMessage().contains('PO number');
+        }
+        DocGenSignatureController.captureFormFieldData(cust.Id, reqId, CUSTOMER_TOKEN, '{"PO_Number":"PO-9"}');
+        Test.stopTest();
+        Assert.isTrue(blocked, 'The group still applies to the customer');
+        Map<String, Object> dirData = (Map<String, Object>) JSON.deserializeUntyped(
+            signer(DIRECTOR_TOKEN).Field_Data_Json__c
+        );
+        Assert.areEqual('ok', dirData.get('Notes'));
+        Assert.isFalse(dirData.containsKey('PO_Number'), 'A field not asked of this role is dropped');
+        Map<String, Object> custData = (Map<String, Object>) JSON.deserializeUntyped(
+            signer(CUSTOMER_TOKEN).Field_Data_Json__c
+        );
+        Assert.areEqual('PO-9', custData.get('PO_Number'));
+    }
+
+    @IsTest
+    static void certificate_listsEachSignersOwnFields_andFileNames() {
+        Id reqId = buildRequest(PO_CONFIG, null);
+        ContentVersion po = new ContentVersion(
+            Title = 'PO 77',
+            PathOnClient = 'PO 77.pdf',
+            VersionData = Blob.valueOf('%PDF-1.4'),
+            FirstPublishLocationId = reqId
+        );
+        insert po;
+        update new List<DocGen_Signer__c>{
+            new DocGen_Signer__c(
+                Id = signer(CUSTOMER_TOKEN).Id,
+                Status__c = 'Signed',
+                Field_Data_Json__c = '{"PO_Number":null,"PO_File":"' + po.Id + '","Notes":"c"}'
+            ),
+            new DocGen_Signer__c(
+                Id = signer(DIRECTOR_TOKEN).Id,
+                Status__c = 'Signed',
+                Field_Data_Json__c = '{"Notes":"d"}'
+            )
+        };
+        List<DocGen_Signer__c> signers = [
+            SELECT
+                Id,
+                Signer_Name__c,
+                Signer_Email__c,
+                Role_Name__c,
+                PIN_Verified_At__c,
+                Field_Data_Json__c,
+                Form_Field_Keys__c,
+                Signature_Data__c
+            FROM DocGen_Signer__c
+            WHERE Signature_Request__c = :reqId
+            ORDER BY Sort_Order__c
+        ];
+        Test.startTest();
+        String html = DocGenSignatureService.buildVerificationBlockHtml(
+            reqId,
+            signers,
+            DocGenFieldWritebackService.parseConfig(PO_CONFIG),
+            null
+        );
+        Test.stopTest();
+        Assert.isTrue(html.contains('PO 77.pdf'), 'The file shows by name');
+        Assert.isFalse(html.contains(String.valueOf(po.Id)), 'Never the raw Id');
+        Integer poRows = html.countMatches('PO number:');
+        Assert.areEqual(1, poRows, 'Only the customer section lists the PO fields');
+    }
+
+    // ---------------------------------------------------------------- consent text
+
+    @IsTest
+    static void consentText_defaultOrTemplate_isShownAndRecorded() {
+        Id reqId = buildRequest('{"formFields":[]}', 'I approve this design to proceed to the next phase.');
+        update new DocGen_Signer__c(Id = signer(CUSTOMER_TOKEN).Id, PIN_Verified_At__c = System.now());
+        Test.startTest();
+        DocGenSignatureController.SignatureInitResponse res = DocGenSignatureController.validateToken(CUSTOMER_TOKEN);
+        DocGenSignatureController.SavePdfSignatureResult saved = DocGenSignatureController.savePdfSignature(
+            CUSTOMER_TOKEN,
+            'Casey Customer',
+            true,
+            '203.0.113.7',
+            'JUnit',
+            '{}'
+        );
+        Test.stopTest();
+        Assert.areEqual('I approve this design to proceed to the next phase.', res.consentText);
+        Assert.isTrue(saved.success, String.valueOf(saved));
+        DocGen_Signature_Audit__c audit = [
+            SELECT Consent_Text__c, Consent_Captured__c
+            FROM DocGen_Signature_Audit__c
+            WHERE Signature_Request__c = :reqId AND Signer__c != NULL
+            LIMIT 1
+        ];
+        Assert.areEqual('I approve this design to proceed to the next phase.', audit.Consent_Text__c);
+
+        String html = DocGenSignatureService.buildVerificationBlockHtml(
+            reqId,
+            [
+                SELECT
+                    Id,
+                    Signer_Name__c,
+                    Signer_Email__c,
+                    Role_Name__c,
+                    PIN_Verified_At__c,
+                    Field_Data_Json__c,
+                    Signature_Data__c
+                FROM DocGen_Signer__c
+                WHERE Signature_Request__c = :reqId
+            ]
+        );
+        Assert.isTrue(html.contains('I approve this design'), 'The certificate prints the agreed wording');
+
+        Map<String, Object> cert = DocGenSignatureController.getSignatureCertificate(DIRECTOR_TOKEN);
+        Boolean found = false;
+        for (Object o : (List<Object>) cert.get('signers')) {
+            Map<String, Object> row = (Map<String, Object>) o;
+            if (row.get('consentText') == 'I approve this design to proceed to the next phase.') {
+                found = true;
+            }
+        }
+        Assert.isTrue(found, 'The page-built certificate gets the recorded wording too');
+    }
+
+    @IsTest
+    static void consentText_blankTemplateUsesTheStandardWording() {
+        Id reqId = buildRequest(null, '   ');
+        Assert.areEqual(
+            DocGenSignatureController.DEFAULT_CONSENT_TEXT,
+            DocGenSignatureController.consentTextFor(reqId)
+        );
+        Assert.areEqual(DocGenSignatureController.DEFAULT_CONSENT_TEXT, DocGenSignatureController.consentTextFor(null));
+        Assert.isFalse(DocGenSignatureController.DEFAULT_CONSENT_TEXT.contains('—'), 'No em dash');
+        Assert.isFalse(DocGenSignatureController.DEFAULT_CONSENT_TEXT.contains('–'), 'No en dash');
+    }
+
+    // ---------------------------------------------------------------- live viewing copy
+
+    @IsTest
+    static void liveView_rerendersTheViewingCopyWithCurrentSigners() {
+        Id reqId = buildRequest(null, null);
+        ContentVersion firstView = new ContentVersion(
+            Title = 'Quote Q-1',
+            PathOnClient = 'Quote Q-1.pdf',
+            VersionData = Blob.valueOf('%PDF-1.4 pending')
+        );
+        insert firstView;
+        update new DocGen_Signature_Request__c(
+            Id = reqId,
+            Status__c = 'In Progress',
+            Render_Data_Snapshot__c = '{"Name":"Q-1"}',
+            Source_Document_Id__c = firstView.Id
+        );
+        update new DocGen_Signer__c(
+            Id = signer(CUSTOMER_TOKEN).Id,
+            Status__c = 'Signed',
+            Signature_Data__c = 'Casey C'
+        );
+        // The live rows: the signer who signed shows their signature, the other stays blank.
+        List<Map<String, Object>> rows = DocGenSignatureService.buildSignerLoopData(reqId);
+        Assert.areEqual('Casey C', rows[0].get('Name'));
+        Assert.areEqual('', rows[1].get('Name'), 'An unsigned signer has no signature yet');
+        Assert.areEqual('Dana Director', rows[1].get('RegisteredName'), 'but keeps the invited name');
+        Assert.areEqual('Pending', rows[1].get('Status'));
+        Assert.areEqual('', rows[0].get('SignHere'), 'Signed: no Sign here anchor');
+        Assert.areEqual('@@SIGROW-2@@', rows[1].get('SignHere'), 'Still to sign: anchor for signer 2');
+        List<Map<String, Object>> pending = DocGenSignatureService.buildPendingSignerLoopData(
+            new List<Map<String, Object>>{
+                new Map<String, Object>{ 'signerName' => 'A' },
+                new Map<String, Object>{ 'signerName' => 'B' }
+            }
+        );
+        Assert.areEqual('@@SIGROW-1@@', pending[0].get('SignHere'));
+        Assert.areEqual('@@SIGROW-2@@', pending[1].get('SignHere'));
+
+        Test.startTest();
+        System.enqueueJob(new DocGenSignatureService.TemplateSignaturePdfQueueable(reqId, true));
+        Test.stopTest();
+
+        DocGen_Signature_Request__c after = [
+            SELECT Source_Document_Id__c, Render_Data_Snapshot__c
+            FROM DocGen_Signature_Request__c
+            WHERE Id = :reqId
+        ];
+        Assert.areNotEqual(String.valueOf(firstView.Id), after.Source_Document_Id__c, 'A new viewing copy');
+        Assert.areEqual('{"Name":"Q-1"}', after.Render_Data_Snapshot__c, 'The frozen data is untouched');
+        ContentVersion live = [
+            SELECT Title, ContentDocumentId
+            FROM ContentVersion
+            WHERE Id = :after.Source_Document_Id__c
+        ];
+        Assert.areEqual('Quote Q-1', live.Title);
+        Assert.areEqual(
+            1,
+            [
+                SELECT COUNT()
+                FROM ContentDocumentLink
+                WHERE
+                    ContentDocumentId = :live.ContentDocumentId
+                    AND LinkedEntityId = :reqId
+                    AND Visibility = 'AllUsers'
+            ],
+            'Shared with the guest signer through the request'
+        );
+    }
+
+    @IsTest
+    static void liveView_skipsFinishedOrNonSnapshotRequests() {
+        Id reqId = buildRequest(null, null);
+        Test.startTest();
+        System.enqueueJob(new DocGenSignatureService.TemplateSignaturePdfQueueable(reqId, true));
+        Test.stopTest();
+        Assert.isNull(
+            [SELECT Source_Document_Id__c FROM DocGen_Signature_Request__c WHERE Id = :reqId].Source_Document_Id__c,
+            'No snapshot, nothing to refresh'
+        );
+    }
+
+    // ---------------------------------------------------------------- sequential order
+
+    @IsTest
+    static void sequential_laterSignerWaitsUntilEarlierOnesSign() {
+        Id reqId = buildRequest(PO_CONFIG, null);
+        update new DocGen_Signature_Request__c(Id = reqId, Signing_Order__c = 'Sequential');
+        DocGen_Signer__c dir = signer(DIRECTOR_TOKEN);
+        Test.startTest();
+        DocGenSignatureController.SignatureInitResponse early = DocGenSignatureController.validateToken(DIRECTOR_TOKEN);
+        Boolean refused = false;
+        try {
+            DocGenSignatureController.assertSignerTurn(dir.Id);
+        } catch (AuraHandledException e) {
+            refused = e.getMessage().contains('Casey Customer');
+        }
+        Map<String, Object> upload = DocGenSignatureController.uploadFormFieldFile(
+            DIRECTOR_TOKEN,
+            'PO_File',
+            'po.pdf',
+            EncodingUtil.base64Encode(Blob.valueOf('%PDF-1.4'))
+        );
+        DocGenSignatureController.SignatureInitResponse first = DocGenSignatureController.validateToken(CUSTOMER_TOKEN);
+        update new DocGen_Signer__c(Id = signer(CUSTOMER_TOKEN).Id, Status__c = 'Signed');
+        DocGenSignatureController.SignatureInitResponse later = DocGenSignatureController.validateToken(DIRECTOR_TOKEN);
+        DocGenSignatureController.assertSignerTurn(dir.Id); // no throw now
+        Test.stopTest();
+        Assert.areEqual('Casey Customer', early.waitingFor);
+        Assert.areEqual(2, early.signerNumber, 'The second signer is Signer 2, whoever has signed');
+        Assert.areEqual(1, first.signerNumber);
+        Assert.isTrue(refused, 'The server refuses an out-of-turn signature');
+        Assert.areEqual(false, upload.get('success'));
+        Assert.isNull(first.waitingFor, 'The first signer never waits');
+        Assert.isNull(later.waitingFor, 'Once earlier signers have signed, it is this signers turn');
+    }
+
+    @IsTest
+    static void parallel_neverWaits() {
+        buildRequest(PO_CONFIG, null);
+        Assert.isTrue(DocGenSignatureController.signersAhead(signer(DIRECTOR_TOKEN).Id).isEmpty());
+        Assert.isTrue(DocGenSignatureController.signersAhead(null).isEmpty());
+        Assert.isNull(DocGenSignatureController.validateToken(DIRECTOR_TOKEN).waitingFor);
+    }
+
+    // ---------------------------------------------------------------- drawn signature in the block
+
+    private static final String PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
+    @IsTest
+    static void drawnSignature_isKeptAndShownInTheBlockRow() {
+        Id reqId = buildRequest('{\"formFields\":[]}', null);
+        update new DocGen_Signer__c(Id = signer(CUSTOMER_TOKEN).Id, PIN_Verified_At__c = System.now());
+        Test.startTest();
+        DocGenSignatureController.SavePdfSignatureResult res = DocGenSignatureController.savePdfSignatureDrawn(
+            CUSTOMER_TOKEN,
+            'Casey Customer',
+            true,
+            '203.0.113.7',
+            'JUnit',
+            '{}',
+            PNG_B64
+        );
+        Test.stopTest();
+        Assert.isTrue(res.success, String.valueOf(res));
+        DocGen_Signer__c s = [
+            SELECT Signature_Image_CV_Id__c, Signature_Data__c
+            FROM DocGen_Signer__c
+            WHERE Secure_Token__c = :CUSTOMER_TOKEN
+        ];
+        Assert.isNotNull(s.Signature_Image_CV_Id__c, 'The drawing is kept');
+        Assert.areEqual('Casey Customer', s.Signature_Data__c, 'The typed name is still the signature of record');
+        ContentVersion cv = [
+            SELECT ContentDocumentId, PathOnClient
+            FROM ContentVersion
+            WHERE Id = :s.Signature_Image_CV_Id__c
+        ];
+        Assert.areEqual('signature.png', cv.PathOnClient);
+        Assert.areEqual(
+            1,
+            [
+                SELECT COUNT()
+                FROM ContentDocumentLink
+                WHERE ContentDocumentId = :cv.ContentDocumentId AND LinkedEntityId = :reqId
+            ],
+            'Shared through the request'
+        );
+        List<Map<String, Object>> rows = DocGenSignatureService.buildSignerLoopData(reqId);
+        Assert.areEqual(
+            '/sfc/servlet.shepherd/version/download/' + s.Signature_Image_CV_Id__c,
+            rows[0].get('SignatureImageUrl')
+        );
+        Assert.areEqual('', rows[1].get('SignatureImageUrl'), 'Not signed yet: no image');
+    }
+
+    @IsTest
+    static void drawnSignature_invalidOrTypedOnly_keepsNoImage() {
+        buildRequest('{\"formFields\":[]}', null);
+        update new DocGen_Signer__c(Id = signer(CUSTOMER_TOKEN).Id, PIN_Verified_At__c = System.now());
+        Test.startTest();
+        DocGenSignatureController.SavePdfSignatureResult res = DocGenSignatureController.savePdfSignatureDrawn(
+            CUSTOMER_TOKEN,
+            'Casey Customer',
+            true,
+            '203.0.113.7',
+            'JUnit',
+            '{}',
+            'bm90IGEgcG5n'
+        );
+        DocGenSignatureController.storeDrawnSignature('not-a-token', PNG_B64);
+        DocGenSignatureController.storeDrawnSignature(DIRECTOR_TOKEN, PNG_B64); // not signed yet
+        Test.stopTest();
+        Assert.isTrue(res.success, 'A bad drawing never blocks signing');
+        Assert.isNull(
+            [SELECT Signature_Image_CV_Id__c FROM DocGen_Signer__c WHERE Secure_Token__c = :CUSTOMER_TOKEN]
+            .Signature_Image_CV_Id__c
+        );
+        Assert.isNull(
+            [SELECT Signature_Image_CV_Id__c FROM DocGen_Signer__c WHERE Secure_Token__c = :DIRECTOR_TOKEN]
+            .Signature_Image_CV_Id__c
+        );
+    }
+
+    // ---------------------------------------------------------------- send-time choice
+
+    @IsTest
+    static void getTemplateSigners_listsTheTemplateInputs() {
+        Id reqId = buildRequest(PO_CONFIG, null);
+        Id tmplId = [SELECT Template__c FROM DocGen_Signature_Request__c WHERE Id = :reqId].Template__c;
+        List<DocGenTemplateField> fields = DocGenGetTemplateSignersAction.templateFields(tmplId);
+        Assert.areEqual(3, fields.size());
+        Assert.areEqual('PO_Number', fields[0].key);
+        Assert.areEqual('PO number', fields[0].label);
+        Assert.areEqual(false, fields[0].required);
+        Assert.areEqual(0, DocGenGetTemplateSignersAction.templateFields(null).size());
+    }
+
+    @IsTest
+    static void sendAction_carriesEachSignersKeys_onlyWhenAsked() {
+        DocGenSigner first = new DocGenSigner();
+        first.name = 'Casey';
+        first.email = 'casey@example.com';
+        first.formFieldKeys = 'PO_Number,PO_File';
+        DocGenSigner second = new DocGenSigner();
+        second.name = 'Dana';
+        second.email = 'dana@example.com';
+        DocGenSignatureFlowAction.Request req = new DocGenSignatureFlowAction.Request();
+        req.signerRecords = new List<DocGenSigner>{ first, second };
+        List<Map<String, Object>> legacy = DocGenSignatureFlowAction.buildSignerInputs(req);
+        Assert.isFalse(legacy[0].containsKey('formFieldKeys'), 'Without the option, every signer gets every input');
+        req.assignFieldsPerSigner = true;
+        List<Map<String, Object>> perSigner = DocGenSignatureFlowAction.buildSignerInputs(req);
+        Assert.areEqual('PO_Number,PO_File', perSigner[0].get('formFieldKeys'));
+        Assert.areEqual('none', perSigner[1].get('formFieldKeys'), 'No keys = sign only');
+    }
+
+    @IsTest
+    static void snapshotSend_fromTheWrongObject_saysSo() {
+        DocGen_Template__c tmpl = new DocGen_Template__c(
+            Name = 'Contact only ' + Crypto.getRandomInteger(),
+            Base_Object_API__c = 'Contact',
+            Query_Config__c = 'FirstName,LastName',
+            Type__c = 'HTML',
+            Output_Format__c = 'PDF'
+        );
+        insert tmpl;
+        Account acct = new Account(Name = 'Not a contact');
+        insert acct;
+        String message = '';
+        Test.startTest();
+        try {
+            DocGenSignatureSenderController.createTemplateSnapshotRequest(
+                tmpl.Id,
+                acct.Id,
+                '[{\"signerName\":\"A\",\"signerEmail\":\"a@example.com\",\"roleName\":\"Signer\"}]',
+                'Parallel',
+                null,
+                null,
+                null,
+                false,
+                false,
+                false,
+                null
+            );
+        } catch (AuraHandledException e) {
+            message = e.getMessage();
+        }
+        Test.stopTest();
+        Assert.isTrue(message.contains('This template is for Contact records'), message);
+    }
+
+    // ---------------------------------------------------------------- document title in emails
+
+    @IsTest
+    static void documentTitle_usesTheTitleFormatElseTheTemplateName() {
+        Id reqId = buildRequest(null, null);
+        String tmplName = [SELECT Template__r.Name FROM DocGen_Signature_Request__c WHERE Id = :reqId].Template__r.Name;
+        Assert.areEqual(tmplName, DocGenSignatureService.documentTitleFor(reqId), 'No format: the template name');
+
+        Account acct = new Account(Name = 'Acme Walkways');
+        insert acct;
+        DocGen_Signature_Request__c second = new DocGen_Signature_Request__c(
+            Status__c = 'Sent',
+            Template__c = [SELECT Template__c FROM DocGen_Signature_Request__c WHERE Id = :reqId]
+            .Template__c,
+            Related_Record_Id__c = acct.Id,
+            Document_Title_Format__c = 'Quote for {Name}'
+        );
+        insert second;
+        Id reqId2 = second.Id;
+        Assert.areEqual('Quote for Acme Walkways', DocGenSignatureService.documentTitleFor(reqId2));
+        Assert.areEqual('Document', DocGenSignatureService.documentTitleFor(null));
+    }
+
+    // ---------------------------------------------------------------- writeback with several signers
+
+    private static final String WB_CONFIG =
+        '{\"formFields\":[' +
+        '{\"key\":\"PO_Number\",\"label\":\"PO number\",\"type\":\"text\"},' +
+        '{\"key\":\"Notes\",\"label\":\"Notes\",\"type\":\"text\",\"fieldApiName\":\"Description\",\"writeback\":true}' +
+        ']}';
+
+    @IsTest
+    static void writeback_fromTheOneSignerAsked() {
+        Account acct = new Account(Name = 'Writeback Co');
+        insert acct;
+        Id reqId = buildRequest(WB_CONFIG, null);
+        update new DocGen_Signature_Request__c(Id = reqId, Related_Record_Id__c = acct.Id);
+        update new List<DocGen_Signer__c>{
+            new DocGen_Signer__c(
+                Id = signer(CUSTOMER_TOKEN).Id,
+                Form_Field_Keys__c = 'PO_Number',
+                Field_Data_Json__c = '{\"PO_Number\":\"PO-1\"}'
+            ),
+            new DocGen_Signer__c(
+                Id = signer(DIRECTOR_TOKEN).Id,
+                Field_Data_Json__c = '{\"Notes\":\"Approved by the MD\"}'
+            )
+        };
+        Test.startTest();
+        DocGenFieldWritebackService.performWriteback(reqId);
+        Test.stopTest();
+        Assert.areEqual(
+            'Approved by the MD',
+            [SELECT Description FROM Account WHERE Id = :acct.Id].Description,
+            'Only the director was asked Notes, so their answer is written'
+        );
+    }
+
+    @IsTest
+    static void writeback_skipsAFieldSeveralSignersWereAsked() {
+        Account acct = new Account(Name = 'Writeback Co');
+        insert acct;
+        Id reqId = buildRequest(WB_CONFIG, null);
+        update new DocGen_Signature_Request__c(Id = reqId, Related_Record_Id__c = acct.Id);
+        // The customer has no keys (asked everything) and the director was asked Notes too.
+        update new DocGen_Signer__c(Id = signer(CUSTOMER_TOKEN).Id, Field_Data_Json__c = '{\"Notes\":\"A\"}');
+        update new DocGen_Signer__c(Id = signer(DIRECTOR_TOKEN).Id, Field_Data_Json__c = '{\"Notes\":\"B\"}');
+        Test.startTest();
+        DocGenFieldWritebackService.performWriteback(reqId);
+        Test.stopTest();
+        Assert.isNull(
+            [SELECT Description FROM Account WHERE Id = :acct.Id].Description,
+            'No single answer, nothing written'
+        );
+    }
+
+    @IsTest
+    static void sendCheck_refusesAWritebackInputForTwoSigners() {
+        List<Map<String, Object>> inputs = new List<Map<String, Object>>{
+            new Map<String, Object>{ 'formFieldKeys' => 'Notes,PO_Number' },
+            new Map<String, Object>{ 'formFieldKeys' => 'Notes' }
+        };
+        String message = '';
+        try {
+            DocGenFieldWritebackService.assertSingleOwnerForWriteback(WB_CONFIG, inputs);
+        } catch (DocGenException e) {
+            message = e.getMessage();
+        }
+        Assert.isTrue(message.contains('"Notes" updates the record'), message);
+        inputs[1].put('formFieldKeys', 'PO_Number');
+        DocGenFieldWritebackService.assertSingleOwnerForWriteback(WB_CONFIG, inputs); // one owner: fine
+        DocGenFieldWritebackService.assertSingleOwnerForWriteback(WB_CONFIG, null);
+        Id reqId = buildRequest(WB_CONFIG, null);
+        Id tmplId = [SELECT Template__c FROM DocGen_Signature_Request__c WHERE Id = :reqId].Template__c;
+        List<DocGenTemplateField> fields = DocGenGetTemplateSignersAction.templateFields(tmplId);
+        Assert.areEqual(false, fields[0].writesBack);
+        Assert.areEqual(true, fields[1].writesBack, 'The send screen can see Notes writes back');
+    }
+}

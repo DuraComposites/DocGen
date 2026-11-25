@@ -2326,10 +2326,13 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
         // Cache results of per-record-filter evaluations so templates sharing the same
         // clause incur only one SOQL query per (clause, record) combo.
         Map<String, Boolean> filterCache = new Map<String, Boolean>();
+        Set<Id> withBody = templatesWithBody(userReadableTemplateIds);
 
         List<DocGen_Template__c> visible = new List<DocGen_Template__c>();
         for (DocGen_Template__c t : all) {
             if (!userReadableTemplateIds.contains(t.Id))
+                continue;
+            if (!withBody.contains(t.Id))
                 continue;
             if (applyRecordFilter && !templateMatchesRecord(t, recordId18, filterCache))
                 continue;
@@ -2378,6 +2381,43 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Dura: the templates that have something to merge, by the same rule generation
+     * uses (DocGenTemplateManager): an active version with a file, else a file attached
+     * to the template. A template with neither fails only after the user presses
+     * Generate, so the runner picker leaves it out.
+     */
+    @TestVisible
+    private static Set<Id> templatesWithBody(Set<Id> templateIds) {
+        Set<Id> result = new Set<Id>();
+        if (templateIds == null || templateIds.isEmpty()) {
+            return result;
+        }
+        /* code-analyzer-suppress ApexFlsViolation */
+        for (DocGen_Template_Version__c v : [
+            SELECT Template__c
+            FROM DocGen_Template_Version__c
+            WHERE Template__c IN :templateIds AND Is_Active__c = TRUE AND Content_Version_Id__c != NULL
+            WITH SYSTEM_MODE
+        ]) {
+            result.add(v.Template__c);
+        }
+        Set<Id> rest = new Set<Id>(templateIds);
+        rest.removeAll(result);
+        if (!rest.isEmpty()) {
+            /* code-analyzer-suppress ApexFlsViolation */
+            for (ContentDocumentLink l : [
+                SELECT LinkedEntityId
+                FROM ContentDocumentLink
+                WHERE LinkedEntityId IN :rest
+                WITH SYSTEM_MODE
+            ]) {
+                result.add(l.LinkedEntityId);
+            }
+        }
+        return result;
     }
 
     private static Set<Id> getUserReadableTemplateIds(List<DocGen_Template__c> templates) {
@@ -2723,6 +2763,7 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                 'Signer_Verification__c',
                 'Prefill_Signer_Email__c',
                 'Hide_Signer_Decline__c',
+                'Signing_Consent_Text__c',
                 'Attached_Documents__c',
                 'Attached_Document_Markup__c',
                 'Signature_Expiry_Days__c',
@@ -2763,6 +2804,7 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                 Signer_Verification__c,
                 Prefill_Signer_Email__c,
                 Hide_Signer_Decline__c,
+                Signing_Consent_Text__c,
                 Attached_Documents__c,
                 Attached_Document_Markup__c,
                 Signature_Expiry_Days__c,
@@ -2820,6 +2862,7 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                 'Signer_Verification__c',
                 'Prefill_Signer_Email__c',
                 'Hide_Signer_Decline__c',
+                'Signing_Consent_Text__c',
                 'Attached_Documents__c',
                 'Attached_Document_Markup__c',
                 'Signature_Expiry_Days__c',
@@ -2861,6 +2904,7 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                 Signer_Verification__c,
                 Prefill_Signer_Email__c,
                 Hide_Signer_Decline__c,
+                Signing_Consent_Text__c,
                 Attached_Documents__c,
                 Attached_Document_Markup__c,
                 Signature_Expiry_Days__c,
@@ -3080,6 +3124,10 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
             if (fields.containsKey('Hide_Signer_Decline__c')) {
                 template.Hide_Signer_Decline__c = (Boolean) fields.get('Hide_Signer_Decline__c');
             }
+            // Dura: per-template signing consent wording (blank = the standard wording)
+            if (fields.containsKey('Signing_Consent_Text__c')) {
+                template.Signing_Consent_Text__c = (String) fields.get('Signing_Consent_Text__c');
+            }
             // #412 — per-template attached documents: Off / Optional / Required
             if (fields.containsKey('Attached_Documents__c')) {
                 String attachedMode = (String) fields.get('Attached_Documents__c');
@@ -3187,6 +3235,7 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                     'Signer_Verification__c',
                     'Prefill_Signer_Email__c',
                     'Hide_Signer_Decline__c',
+                    'Signing_Consent_Text__c',
                     'Attached_Documents__c',
                     'Attached_Document_Markup__c',
                     'Signature_Expiry_Days__c',
@@ -8236,6 +8285,7 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                     'Signer_Verification__c',
                     'Prefill_Signer_Email__c',
                     'Hide_Signer_Decline__c',
+                    'Signing_Consent_Text__c',
                     'Attached_Documents__c',
                     'Attached_Document_Markup__c',
                     'Signature_Expiry_Days__c',
@@ -8275,6 +8325,7 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                     Signer_Verification__c,
                     Prefill_Signer_Email__c,
                     Hide_Signer_Decline__c,
+                    Signing_Consent_Text__c,
                     Attached_Documents__c,
                     Attached_Document_Markup__c,
                     Signature_Expiry_Days__c,
@@ -8345,6 +8396,7 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
             tmplData.put('Signer_Verification__c', tmpl.Signer_Verification__c);
             tmplData.put('Prefill_Signer_Email__c', tmpl.Prefill_Signer_Email__c);
             tmplData.put('Hide_Signer_Decline__c', tmpl.Hide_Signer_Decline__c);
+            tmplData.put('Signing_Consent_Text__c', tmpl.Signing_Consent_Text__c);
             tmplData.put('Attached_Documents__c', tmpl.Attached_Documents__c);
             tmplData.put('Attached_Document_Markup__c', tmpl.Attached_Document_Markup__c);
             tmplData.put('Signature_Expiry_Days__c', tmpl.Signature_Expiry_Days__c);
@@ -8578,6 +8630,7 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
             tmpl.Prefill_Signer_Email__c = (String) tmplData.get('Prefill_Signer_Email__c');
             // #367 — a bundle without the key (older export) keeps Decline shown
             tmpl.Hide_Signer_Decline__c = tmplData.get('Hide_Signer_Decline__c') == true;
+            tmpl.Signing_Consent_Text__c = (String) tmplData.get('Signing_Consent_Text__c');
             // #412 — a bundle without the key (older export) gets the default: Off
             String importedAttachedMode = (String) tmplData.get('Attached_Documents__c');
             tmpl.Attached_Documents__c = String.isBlank(importedAttachedMode) ? 'Off' : importedAttachedMode;
@@ -8638,6 +8691,7 @@ public with sharing class DocGenController { // NOPMD ExcessivePublicCount — c
                     'Signer_Verification__c',
                     'Prefill_Signer_Email__c',
                     'Hide_Signer_Decline__c',
+                    'Signing_Consent_Text__c',
                     'Attached_Documents__c',
                     'Attached_Document_Markup__c',
                     'Signature_Expiry_Days__c',

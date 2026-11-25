@@ -4,7 +4,7 @@
 
 Make your first document, build a template, send it for signature, and keep your team moving. Pick the task you want to finish; you do not need to read this guide from beginning to end.
 
-**Current release:** 1.1.0.
+**Current release:** 1.2.0.
 
 ## Table of contents
 
@@ -1897,7 +1897,9 @@ If email verification is required, request the code, check the intended inbox, a
 3. At a signature or initials field, draw with your mouse/finger or type the value.
 4. Choose **Save** to return to the document or **Save & Next** to continue to the next field when offered.
 5. Complete any requested date fields.
-6. Review the final confirmation, give electronic-signature consent, and submit.
+6. Tick the consent box and choose **Finish & Submit**. On a document without signing fields, the consent box sits under the signature, so you sign and submit in one step.
+
+The consent wording can differ by document: each template can set its own **Signing consent text**. The exact words you agreed to are kept with your signature and printed on the certificate.
 
 Drawing and typing are alternative ways to fill a signature. Clear the current value before switching methods.
 
@@ -1907,7 +1909,7 @@ Drawing and typing are alternative ways to fill a signature. Clear the current v
 
 #### After signing
 
-If other people still need to sign, you may see a waiting confirmation. When everyone finishes, DocGen creates the completed file on the related Salesforce record. Depending on the request's delivery settings, completion emails can also carry the finished file.
+If other people still need to sign, you may see a waiting confirmation. On a document with a `{#Signatures}` block, people who open their link after you see your signature and date in the block; the others still show as Pending. When everyone finishes, DocGen creates the completed file on the related Salesforce record. Depending on the request's delivery settings, completion emails can also carry the finished file.
 
 Active verification and signing screens can use the selected company's branding. The final success and waiting-for-other-signers cards are intentionally plain.
 
@@ -2497,6 +2499,15 @@ Give two or more inputs the same **At-least-one group** name (under the label in
 
 Leave **Required** off on grouped inputs. The signing page and the server both check the rule. A ticked checkbox counts as filled; an unticked one does not.
 
+#### Choose who fills which inputs
+
+The template defines the inputs and which are **Required**. Who is asked what is chosen when the request is sent, so the same template can ask the buyer for a PO and ask a director only to sign.
+
+- From Flow, set **Assign Inputs Per Signer** on **DocGen: Create Signature Request**, and give each signer the input keys they fill in their **Form Field Keys** (for example `PO_Number,PO_File`). A signer with no keys only signs. **DocGen: Get Template Signers** returns the template's inputs (**Form Fields**: key, label, required) for a send screen to offer as checkboxes.
+- Without that option, every signer is asked every input, as before.
+- **Required** and **At-least-one group** apply only to the inputs a signer was given. A signer with none goes straight to signing, without the **Your Information** step.
+- The certificate lists each signer's own answers.
+
 #### Place the answer
 
 ```text
@@ -2512,7 +2523,7 @@ The signer fills these fields during signing. Answers can appear in the finished
 
 Writeback runs after the completed signed PDF is saved. It updates only fields explicitly mapped and enabled in the template configuration. The guest does not receive general permission to edit the related Account, Opportunity, or other base record.
 
-**Writeback supports single-signer requests.** With several signers, answers are captured and attributed on the certificate, but record writeback is skipped because there is no unambiguous single answer for a shared field. Do not design a multi-signer packet expecting the last answer to overwrite Salesforce.
+**Writeback needs one answer per field.** With one signer, their answers are written. With several, an input is written back only when exactly one signer was asked it, which is what choosing inputs per signer at send time gives you. An input several signers were asked is skipped and logged, because there is no single answer to write. Requests sent without a per-signer choice ask everyone everything, so with several signers nothing is written back. When sending with **Assign Inputs Per Signer**, an input that writes back can be given to only one signer; **Get Template Signers** marks these inputs with **writesBack**.
 
 Field access, supported value conversion, and validation rules still apply. A failed record update is logged; it does not undo a completed signing request. Check the related record and **DocGen Signature Audits** for writeback failures rather than treating a Signed status as proof of a successful field update.
 
@@ -2670,10 +2681,11 @@ To build one signer row per role from the template itself, add **DocGen: Get Tem
 | ---------------------------------------- | -------------------------- |
 | **Template API Name** or **Template Id** | The template you will send |
 
-| Output                   | What it holds                                                                                                                                                        |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Signers**              | A collection of **DocGenTemplateSigner**: **role** (from `{@Signature_Role:Order:Type}`, underscores as spaces) and **signingOrder**, one per role, in signing order |
-| **Has Signatures Block** | True when the template has a `{#Signatures}` repeating block, so the document can take signers beyond its fixed roles                                                |
+| Output                   | What it holds                                                                                                                                                                 |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Signers**              | A collection of **DocGenTemplateSigner**: **role** (from `{@Signature_Role:Order:Type}`, underscores as spaces) and **signingOrder**, one per role, in signing order          |
+| **Has Signatures Block** | True when the template has a `{#Signatures}` repeating block, so the document can take signers beyond its fixed roles                                                         |
+| **Form Fields**          | The template's signer inputs, as **DocGenTemplateField**: **key**, **label**, **required**. Offer them per signer and pass the chosen keys in each signer's **formFieldKeys** |
 
 A role used by several tags appears once, at its lowest order. Pass each **role** unchanged as the signer's role: it is what places the signature.
 
@@ -2685,12 +2697,13 @@ Create a single **Apex-Defined** variable using the packaged **DocGenSigner** cl
 
 Assign the single signer's fields:
 
-| Field         | Example                                             |
-| ------------- | --------------------------------------------------- |
-| **name**      | Your Contact's full name                            |
-| **email**     | Your Contact's email                                |
-| **role**      | `Customer`, matching `{@Signature_Customer:1:Full}` |
-| **contactId** | The Contact ID, when available                      |
+| Field             | Example                                                                                |
+| ----------------- | -------------------------------------------------------------------------------------- |
+| **name**          | Your Contact's full name                                                               |
+| **email**         | Your Contact's email                                                                   |
+| **role**          | `Customer`, matching `{@Signature_Customer:1:Full}`                                    |
+| **contactId**     | The Contact ID, when available                                                         |
+| **formFieldKeys** | The input keys this person fills, comma-separated (used with Assign Inputs Per Signer) |
 
 Add the populated signer to the collection. Repeat for additional people.
 
@@ -4403,22 +4416,25 @@ The `{#Signatures}` loop block solves this: author **one** signature layout and 
 
 Per-row fields available inside the block:
 
-| Field              | Value                                                                                           |
-| ------------------ | ----------------------------------------------------------------------------------------------- |
-| `{Name}`           | The name the signer typed at signing (their e-signature); the invited name if none was captured |
-| `{RegisteredName}` | The name the signer was invited under                                                           |
-| `{Role}`           | The signer's role (defaults to `Signer`)                                                        |
-| `{Email}`          | The signer's email                                                                              |
-| `{SignedDate}`     | The date they signed (blank before signing)                                                     |
-| `{Status}`         | `Pending` before signing, `Signed` after                                                        |
+| Field                 | Value                                                                                                                                                                                                           |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `{Name}`              | The name the signer typed at signing (their e-signature); the invited name if none was captured                                                                                                                 |
+| `{RegisteredName}`    | The name the signer was invited under                                                                                                                                                                           |
+| `{Role}`              | The signer's role (defaults to `Signer`)                                                                                                                                                                        |
+| `{Email}`             | The signer's email                                                                                                                                                                                              |
+| `{SignedDate}`        | The date they signed (blank before signing)                                                                                                                                                                     |
+| `{Status}`            | `Pending` before signing, `Signed` after                                                                                                                                                                        |
+| `{SignatureImageUrl}` | The signature the signer drew, as an image link; blank if they typed or have not signed yet                                                                                                                     |
+| `{SignHere}`          | A hidden marker on the line of each signer still to sign; the signing page puts that signer's **Sign here** box on it. Put it in tiny white text: `<span style="color:#ffffff;font-size:1pt">{SignHere}</span>` |
 
 **Styling is yours.** The block is plain template content, so style `{Name}` however you like — a cursive web font for a handwritten look, a bordered box, a two-column table of signers, etc. (HTML templates have full CSS control within the Flying Saucer CSS 2.1 subset; Word templates can style the line too.)
 
 Notes:
 
 - **Backwards-compatible and additive.** Role tags (`{@Signature_Role}`) are unchanged and continue to work exactly as before — use them when you want signatures in fixed, scattered positions. A template **without** a `{#Signatures}` block renders identically to previous releases. You can even combine both in one template.
-- **Where it applies.** The loop is populated by the snapshot/PDF-viewer signing flow (the flow that re-renders the document from a send-time data snapshot and attaches the completed PDF + certificate to the record). Before signing, the block previews the invited signers with a `Pending` status; on completion it shows each signer's typed signature and signed date.
-- **Typed-name signatures** today (drawn-signature images are a planned future enhancement; the loop already supports per-row image fields for when that lands).
+- **Where it applies.** The loop is populated by the snapshot/PDF-viewer signing flow (the flow that re-renders the document from a send-time data snapshot and attaches the completed PDF + certificate to the record). Before signing, the block previews the invited signers with a `Pending` status. After each signature, the copy the remaining signers open is re-rendered from the same frozen data, so it shows who has signed (typed signature and date) and who is still Pending. On completion it shows every signer's typed signature and signed date.
+- **No signers (plain Generate).** The block prints nothing. To keep wet-signature lines on a printed copy, add an inverse section after it: `{^Signatures}Signed: ____ Date: ____{/Signatures}`.
+- **Drawn or typed.** A signer who draws gets their drawing in `{SignatureImageUrl}`; `{Name}` is always the typed name. Show the drawing when there is one: `{#IF SignatureImageUrl}<img src="{SignatureImageUrl}" style="height:40px"/>{:else}{Name}{/IF}`.
 
 _Template builders · 8 min read · Reviewed for 3.60.0_
 
@@ -5271,6 +5287,7 @@ global class Result
 global Result()
 global List<DocGenTemplateSigner> signers
 global Boolean hasSignaturesBlock
+global List<DocGenTemplateField> formFields
 global static List<Result> getSigners(List<Request> requests)
 ```
 
@@ -5391,6 +5408,7 @@ global Integer reminderEveryDays
 global Integer reminderForDays
 global List<String> attachedDocumentIds
 global String attachedDocumentPosition
+global Boolean assignFieldsPerSigner
 global class Result
 global Id signatureRequestId
 global List<String> signerUrls
@@ -5485,6 +5503,20 @@ global String name
 global String email
 global String role
 global Id contactId
+global String formFieldKeys
+```
+
+#### DocGenTemplateField
+
+Core · [Source](https://github.com/DuraComposites/DocGen/blob/main/force-app/main/default/classes/DocGenTemplateField.cls)
+
+```apex
+global class DocGenTemplateField
+global DocGenTemplateField()
+global String key
+global String label
+global Boolean required
+global Boolean writesBack
 ```
 
 #### DocGenTemplateSigner

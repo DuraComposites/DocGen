@@ -15,7 +15,9 @@ If email verification is required, request the code, check the intended inbox, a
 3. At a signature or initials field, draw with your mouse/finger or type the value.
 4. Choose **Save** to return to the document or **Save & Next** to continue to the next field when offered.
 5. Complete any requested date fields.
-6. Review the final confirmation, give electronic-signature consent, and submit.
+6. Tick the consent box and choose **Finish & Submit**. On a document without signing fields, the consent box sits under the signature, so you sign and submit in one step.
+
+The consent wording can differ by document: each template can set its own **Signing consent text**. The exact words you agreed to are kept with your signature and printed on the certificate.
 
 Drawing and typing are alternative ways to fill a signature. Clear the current value before switching methods.
 
@@ -25,7 +27,7 @@ Drawing and typing are alternative ways to fill a signature. Clear the current v
 
 #### After signing
 
-If other people still need to sign, you may see a waiting confirmation. When everyone finishes, DocGen creates the completed file on the related Salesforce record. Depending on the request's delivery settings, completion emails can also carry the finished file.
+If other people still need to sign, you may see a waiting confirmation. On a document with a `{#Signatures}` block, people who open their link after you see your signature and date in the block; the others still show as Pending. When everyone finishes, DocGen creates the completed file on the related Salesforce record. Depending on the request's delivery settings, completion emails can also carry the finished file.
 
 Active verification and signing screens can use the selected company's branding. The final success and waiting-for-other-signers cards are intentionally plain.
 

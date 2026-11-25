@@ -12,10 +12,11 @@ To build one signer row per role from the template itself, add **DocGen: Get Tem
 | ---------------------------------------- | -------------------------- |
 | **Template API Name** or **Template Id** | The template you will send |
 
-| Output                   | What it holds                                                                                                                                                        |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Signers**              | A collection of **DocGenTemplateSigner**: **role** (from `{@Signature_Role:Order:Type}`, underscores as spaces) and **signingOrder**, one per role, in signing order |
-| **Has Signatures Block** | True when the template has a `{#Signatures}` repeating block, so the document can take signers beyond its fixed roles                                                |
+| Output                   | What it holds                                                                                                                                                                 |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Signers**              | A collection of **DocGenTemplateSigner**: **role** (from `{@Signature_Role:Order:Type}`, underscores as spaces) and **signingOrder**, one per role, in signing order          |
+| **Has Signatures Block** | True when the template has a `{#Signatures}` repeating block, so the document can take signers beyond its fixed roles                                                         |
+| **Form Fields**          | The template's signer inputs, as **DocGenTemplateField**: **key**, **label**, **required**. Offer them per signer and pass the chosen keys in each signer's **formFieldKeys** |
 
 A role used by several tags appears once, at its lowest order. Pass each **role** unchanged as the signer's role: it is what places the signature.
 
@@ -27,12 +28,13 @@ Create a single **Apex-Defined** variable using the packaged **DocGenSigner** cl
 
 Assign the single signer's fields:
 
-| Field         | Example                                             |
-| ------------- | --------------------------------------------------- |
-| **name**      | Your Contact's full name                            |
-| **email**     | Your Contact's email                                |
-| **role**      | `Customer`, matching `{@Signature_Customer:1:Full}` |
-| **contactId** | The Contact ID, when available                      |
+| Field             | Example                                                                                |
+| ----------------- | -------------------------------------------------------------------------------------- |
+| **name**          | Your Contact's full name                                                               |
+| **email**         | Your Contact's email                                                                   |
+| **role**          | `Customer`, matching `{@Signature_Customer:1:Full}`                                    |
+| **contactId**     | The Contact ID, when available                                                         |
+| **formFieldKeys** | The input keys this person fills, comma-separated (used with Assign Inputs Per Signer) |
 
 Add the populated signer to the collection. Repeat for additional people.
 

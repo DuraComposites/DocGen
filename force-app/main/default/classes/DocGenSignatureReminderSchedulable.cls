@@ -101,7 +101,7 @@ public with sharing class DocGenSignatureReminderSchedulable implements Schedula
 
         String siteUrl = DocGenSignatureSenderController.getSiteBaseUrl();
 
-        List<DocGenSignatureEmailService.SignerEmail> emailList = new List<DocGenSignatureEmailService.SignerEmail>();
+        Map<Id, List<DocGenSignatureEmailService.SignerEmail>> emailList = new Map<Id, List<DocGenSignatureEmailService.SignerEmail>>();
         List<DocGen_Signer__c> signersToUpdate = new List<DocGen_Signer__c>();
         for (DocGen_Signer__c s : pendingSigners) {
             // Skip expired signing windows (stamped Expires_At__c, or legacy 48h)
@@ -124,15 +124,19 @@ public with sharing class DocGenSignatureReminderSchedulable implements Schedula
             String sigPagePath = DocGenSignatureSenderController.resolveSigningPath(s.Signature_Request__r);
             String sigUrl = siteUrl + sigPagePath + '?token=' + s.Secure_Token__c;
 
-            emailList.add(
-                new DocGenSignatureEmailService.SignerEmail(
-                    s.Signer_Name__c,
-                    s.Signer_Email__c,
-                    s.Role_Name__c,
-                    sigUrl,
-                    s.Contact__c
-                )
-            );
+            if (!emailList.containsKey(s.Signature_Request__c)) {
+                emailList.put(s.Signature_Request__c, new List<DocGenSignatureEmailService.SignerEmail>());
+            }
+            emailList.get(s.Signature_Request__c)
+                .add(
+                    new DocGenSignatureEmailService.SignerEmail(
+                        s.Signer_Name__c,
+                        s.Signer_Email__c,
+                        s.Role_Name__c,
+                        sigUrl,
+                        s.Contact__c
+                    )
+                );
 
             s.Reminder_Sent_At__c = System.now();
             s.Reminders_Sent__c = dueCount;
@@ -140,11 +144,7 @@ public with sharing class DocGenSignatureReminderSchedulable implements Schedula
         }
 
         if (!emailList.isEmpty()) {
-            DocGenSignatureEmailService.sendSignatureReminderEmails(
-                emailList,
-                'Document awaiting your signature',
-                null
-            );
+            sendGroupedReminders(emailList);
 
             // v2.0.1 — per-field FLS enforcement (Checkmarx "FLS Update").
             DocGenFlsGuard.assertUpdateable(
@@ -204,5 +204,20 @@ public with sharing class DocGenSignatureReminderSchedulable implements Schedula
             }
         }
         return due;
+    }
+
+    /**
+     * Dura: sends reminders one request at a time, so each carries that document's own title
+     * (DocGenSignatureService.documentTitleFor) and the request's brand, instead of one batch
+     * titled "Document awaiting your signature".
+     */
+    private static void sendGroupedReminders(Map<Id, List<DocGenSignatureEmailService.SignerEmail>> byRequest) {
+        for (Id requestId : byRequest.keySet()) {
+            DocGenSignatureEmailService.sendSignatureReminderEmails(
+                byRequest.get(requestId),
+                DocGenSignatureService.documentTitleFor(requestId),
+                requestId
+            );
+        }
     }
 }

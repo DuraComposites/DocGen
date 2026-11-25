@@ -3827,6 +3827,15 @@
                                                 class="slds-var-m-top_medium"
                                             ></lightning-input>
                                         </template>
+                                        <lightning-textarea
+                                            label="Signing consent text"
+                                            value={editTemplateConsentText}
+                                            onchange={handleConsentTextChange}
+                                            max-length="1000"
+                                            placeholder="Blank uses the standard wording: I agree to sign this document electronically..."
+                                            field-level-help="What signers agree to when they tick the consent box. The exact text each signer saw is kept on their signature audit and printed on the certificate."
+                                            class="slds-var-m-top_medium"
+                                        ></lightning-textarea>
                                         <!-- #412 — existing record PDFs (e.g. drawings) attached to signature requests -->
                                         <lightning-combobox
                                             label="Attached Documents (e-sign)"

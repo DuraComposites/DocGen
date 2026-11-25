@@ -129,6 +129,9 @@ public without sharing class DocGenSignatureController {
         public Integer totalSigners;
         @AuraEnabled
         public Integer signedCount;
+        // Dura: this signer's place in the signing order (1-based), for "Signer N of M".
+        @AuraEnabled
+        public Integer signerNumber;
         @AuraEnabled
         public Boolean isSignerToken;
         @AuraEnabled
@@ -163,6 +166,16 @@ public without sharing class DocGenSignatureController {
         // the role is the template tag name (it places the signature), not a label for people.
         @AuraEnabled
         public String badgeLabel;
+        // Dura: the consent statement shown next to the tick box (the template's
+        // Signing_Consent_Text__c, else the standard wording). The server records the
+        // same text on the signer's audit, so the page never decides what was agreed.
+        @AuraEnabled
+        public String consentText;
+        // Dura: on a Sequential request, the names of earlier signers who have not signed yet
+        // (comma-separated); blank when it is this signer's turn. The page shows the document
+        // read-only until then; the server refuses any signature (assertSignerTurn).
+        @AuraEnabled
+        public String waitingFor;
         @AuraEnabled
         public String brandColor;
         @AuraEnabled
@@ -277,8 +290,20 @@ public without sharing class DocGenSignatureController {
             return; // No template / capture-only flat-PDF flow — nothing to capture.
         }
 
-        List<DocGenFieldWritebackService.FormFieldDef> defs = DocGenFieldWritebackService.parseConfig(
-            reqs[0].Template__r.Form_Fields_Config__c
+        // Dura: only the inputs this signer was asked are validated and saved, so required
+        // and at-least-one rules apply only to the signers an input was given to.
+        DocGenFlsGuard.guestAssertAccessible(DocGen_Signer__c.sObjectType, new Set<String>{ 'Form_Field_Keys__c' });
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        List<DocGen_Signer__c> keyRows = [
+            SELECT Form_Field_Keys__c
+            FROM DocGen_Signer__c
+            WHERE Id = :signerId
+            WITH SYSTEM_MODE
+            LIMIT 1
+        ];
+        List<DocGenFieldWritebackService.FormFieldDef> defs = DocGenFieldWritebackService.forSigner(
+            DocGenFieldWritebackService.parseConfig(reqs[0].Template__r.Form_Fields_Config__c),
+            keyRows.isEmpty() ? null : keyRows[0].Form_Field_Keys__c
         );
         // validateAndClean enforces required + coerces + drops unknown keys, and
         // returns null when there are no configured form fields.
@@ -388,7 +413,8 @@ public without sharing class DocGenSignatureController {
                 'CreatedDate',
                 'PIN_Verified_At__c',
                 'Signature_Request__c',
-                'Secure_Token__c'
+                'Secure_Token__c',
+                'Form_Field_Keys__c'
             }
         );
         // Form_Fields_Config__c carries the signer form-field config rendered on the page.
@@ -408,6 +434,7 @@ public without sharing class DocGenSignatureController {
                 Sort_Order__c,
                 CreatedDate,
                 PIN_Verified_At__c,
+                Form_Field_Keys__c,
                 Signature_Request__r.Id,
                 Signature_Request__r.Status__c,
                 Signature_Request__r.Require_Email_Verification__c,
@@ -819,6 +846,8 @@ public without sharing class DocGenSignatureController {
         res.signerName = signer.Signer_Name__c;
         res.signerEmail = signer.Signer_Email__c;
         res.roleName = signer.Role_Name__c;
+        List<String> ahead = signersAhead(signer.Id);
+        res.waitingFor = ahead.isEmpty() ? null : String.join(ahead, ', ');
         // #verification — PIN is required only if this request still requires it AND the signer
         // hasn't verified yet. When pre-fill is on, the page may auto-send to signerEmail.
         Boolean requireVerification = parentReq.Require_Email_Verification__c != false; // null → required (default)
@@ -860,6 +889,7 @@ public without sharing class DocGenSignatureController {
                 signed++;
         }
         res.signedCount = signed;
+        res.signerNumber = signer.Sort_Order__c == null ? null : signer.Sort_Order__c.intValue();
 
         // Get document metadata — template name or source document title
         if (String.isNotBlank(parentReq.Original_Document_CV_Id__c)) {
@@ -900,7 +930,11 @@ public without sharing class DocGenSignatureController {
         // only). The writeback flags + base-field API names from the config never
         // leave the server; the writeback allowlist is re-derived at completion.
         if (parentReq.Template__c != null && parentReq.Template__r != null) {
-            res.formFields = DocGenFieldWritebackService.publicFormFields(parentReq.Template__r.Form_Fields_Config__c);
+            // Dura: only the inputs this signer was asked at send time (Form_Field_Keys__c).
+            res.formFields = DocGenFieldWritebackService.publicFormFields(
+                parentReq.Template__r.Form_Fields_Config__c,
+                signer.Form_Field_Keys__c
+            );
         }
 
         res.attachmentCount = DocGenSignatureAttachments.attachmentCount(parentReq.Id);
@@ -967,6 +1001,10 @@ public without sharing class DocGenSignatureController {
         DocGenSignatureAttachments.GuestResult gate = DocGenSignatureAttachments.resolveSigner(token);
         if (gate.status != 200) {
             return new Map<String, Object>{ 'success' => false, 'message' => gate.error };
+        }
+        List<String> ahead = signersAhead(gate.signer.Id);
+        if (!ahead.isEmpty()) {
+            return new Map<String, Object>{ 'success' => false, 'message' => notYourTurnMessage(ahead) };
         }
         return DocGenFieldWritebackService.saveUploadedFile(gate.signer, fieldKey, fileName, base64Data);
     }
@@ -1058,8 +1096,126 @@ public without sharing class DocGenSignatureController {
         return res;
     }
 
+    /**
+     * Dura: on a Sequential request, the names of the earlier signers (lower Sort_Order__c)
+     * who have not signed yet, in order. Empty when it is this signer's turn, or when the
+     * request is Parallel or Single. Sequential otherwise only times the emails, so a signer
+     * holding their link early (copied, forwarded, resent) could sign out of order.
+     */
+    @TestVisible
+    private static List<String> signersAhead(Id signerId) {
+        List<String> names = new List<String>();
+        if (signerId == null) {
+            return names;
+        }
+        DocGenFlsGuard.guestAssertAccessible(
+            DocGen_Signer__c.sObjectType,
+            new Set<String>{ 'Signature_Request__c', 'Sort_Order__c', 'Status__c', 'Signer_Name__c' }
+        );
+        DocGenFlsGuard.guestAssertAccessible(
+            DocGen_Signature_Request__c.sObjectType,
+            new Set<String>{ 'Signing_Order__c' }
+        );
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        List<DocGen_Signer__c> me = [
+            SELECT Signature_Request__c, Sort_Order__c, Signature_Request__r.Signing_Order__c
+            FROM DocGen_Signer__c
+            WHERE Id = :signerId
+            WITH SYSTEM_MODE
+            LIMIT 1
+        ];
+        if (
+            me.isEmpty() ||
+            me[0].Sort_Order__c == null ||
+            me[0].Signature_Request__r == null ||
+            me[0].Signature_Request__r.Signing_Order__c != 'Sequential'
+        ) {
+            return names;
+        }
+        /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+        for (DocGen_Signer__c earlier : [
+            SELECT Signer_Name__c
+            FROM DocGen_Signer__c
+            WHERE
+                Signature_Request__c = :me[0].Signature_Request__c
+                AND Sort_Order__c < :me[0].Sort_Order__c
+                AND Status__c != 'Signed'
+            WITH SYSTEM_MODE
+            ORDER BY Sort_Order__c ASC
+        ]) {
+            names.add(String.isNotBlank(earlier.Signer_Name__c) ? earlier.Signer_Name__c : 'an earlier signer');
+        }
+        return names;
+    }
+
+    private static String notYourTurnMessage(List<String> ahead) {
+        return 'It is not your turn to sign yet. Waiting for ' + String.join(ahead, ', ') + ' to sign first.';
+    }
+
+    /** Dura: throws (readable message) when an earlier signer on a Sequential request has not signed. */
+    @TestVisible
+    private static void assertSignerTurn(Id signerId) {
+        List<String> ahead = signersAhead(signerId);
+        if (!ahead.isEmpty()) {
+            throw DocGenService.ahe(notYourTurnMessage(ahead));
+        }
+    }
+
+    /** Dura: the standard consent wording, used when a template sets none. No dashes. */
+    @TestVisible
+    private static final String DEFAULT_CONSENT_TEXT =
+        'I agree to sign this document electronically. I understand that my typed name constitutes my legal ' +
+        'electronic signature, and I consent to conducting this transaction electronically.';
+
+    private static Map<Id, String> consentTextCache = new Map<Id, String>();
+
+    /**
+     * Dura: the consent statement for a request: its template's Signing_Consent_Text__c,
+     * else the standard wording. Read in SYSTEM_MODE (the guest has no template access).
+     */
+    @TestVisible
+    private static String consentTextFor(Id requestId) {
+        if (requestId == null) {
+            return DEFAULT_CONSENT_TEXT;
+        }
+        if (consentTextCache.containsKey(requestId)) {
+            return consentTextCache.get(requestId);
+        }
+        String text = DEFAULT_CONSENT_TEXT;
+        try {
+            DocGenFlsGuard.guestAssertAccessible(
+                DocGen_Signature_Request__c.sObjectType,
+                new Set<String>{ 'Template__c' }
+            );
+            DocGenFlsGuard.guestAssertAccessible(
+                DocGen_Template__c.sObjectType,
+                new Set<String>{ 'Signing_Consent_Text__c' }
+            );
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            List<DocGen_Signature_Request__c> reqs = [
+                SELECT Template__r.Signing_Consent_Text__c
+                FROM DocGen_Signature_Request__c
+                WHERE Id = :requestId
+                WITH SYSTEM_MODE
+                LIMIT 1
+            ];
+            if (
+                !reqs.isEmpty() &&
+                reqs[0].Template__r != null &&
+                String.isNotBlank(reqs[0].Template__r.Signing_Consent_Text__c)
+            ) {
+                text = reqs[0].Template__r.Signing_Consent_Text__c.trim();
+            }
+        } catch (Exception e) {
+            text = DEFAULT_CONSENT_TEXT;
+        }
+        consentTextCache.put(requestId, text);
+        return text;
+    }
+
     /** One resolved brand payload is shared by every public signer state. */
     private static void applySigningBrand(SignatureInitResponse res, Id requestId) {
+        res.consentText = consentTextFor(requestId);
         DocGen_Settings__c settings = DocGen_Settings__c.getOrgDefaults();
         DocGen_Brand__c brand = DocGenBrandResolver.getBrand(DocGenBrandResolver.resolveBrandForRequest(requestId));
         res.brandName = brand != null && String.isNotBlank(brand.Company_Name__c)
@@ -1463,6 +1619,8 @@ public without sharing class DocGenSignatureController {
         }
 
         DocGen_Signer__c signer = signers[0];
+        // Dura: on a Sequential request, refuse until every earlier signer has signed.
+        assertSignerTurn(signer.Id);
         if (DocGenSignatureExpiry.isExpired(signer.Signature_Request__r.Expires_At__c, signer.CreatedDate)) {
             throw new AuraHandledException('This signature link has expired.');
         }
@@ -1518,6 +1676,8 @@ public without sharing class DocGenSignatureController {
         audit.IP_Address__c = resolveClientIp(ipAddress);
         audit.User_Agent__c = String.isNotBlank(userAgent) ? userAgent.left(255) : 'Unknown';
         audit.Consent_Captured__c = true;
+        // Dura: the exact consent wording this signer agreed to.
+        audit.Consent_Text__c = consentTextFor(signer.Signature_Request__c);
         audit.PIN_Verified_At__c = signer.PIN_Verified_At__c;
         // #verification — record how identity was checked, even when the PIN was skipped.
         audit.Verification_Method__c = signer.PIN_Verified_At__c != null ? 'Email PIN' : 'None';
@@ -1536,6 +1696,7 @@ public without sharing class DocGenSignatureController {
                 'IP_Address__c',
                 'User_Agent__c',
                 'Consent_Captured__c',
+                'Consent_Text__c',
                 'PIN_Verified_At__c'
             }
         );
@@ -2469,6 +2630,8 @@ public without sharing class DocGenSignatureController {
         }
 
         DocGen_Signer__c signer = signers[0];
+        // Dura: on a Sequential request, refuse until every earlier signer has signed.
+        assertSignerTurn(signer.Id);
         if (DocGenSignatureExpiry.isExpired(signer.Signature_Request__r.Expires_At__c, signer.CreatedDate)) {
             throw new AuraHandledException('This signature link has expired.');
         }
@@ -2818,6 +2981,108 @@ public without sharing class DocGenSignatureController {
      *
      * Returns { success, isComplete, remaining }.
      */
+    // Dura: largest drawn signature accepted (base64 PNG characters, about 500 KB of image).
+    private static final Integer MAX_SIGNATURE_PNG_BASE64 = 700000;
+
+    /**
+     * Dura: savePdfSignature plus the signature the signer DREW. Used by the page on the
+     * no-signature-box path (documents that sign through a {#Signatures} block): there the
+     * final PDF is rendered on the server, so the drawing is kept as a PNG file on the request
+     * and its Id stored on the signer (Signature_Image_CV_Id__c). The block shows it through
+     * the SignatureImageUrl row field. The typed name is still the signature of record; a
+     * missing or invalid drawing never blocks signing.
+     */
+    @RemoteAction
+    public static SavePdfSignatureResult savePdfSignatureDrawn(
+        String token,
+        String typedName,
+        Boolean consentGiven,
+        String ipAddress,
+        String userAgent,
+        String formFieldJson,
+        String signaturePngBase64
+    ) {
+        SavePdfSignatureResult result = savePdfSignature(
+            token,
+            typedName,
+            consentGiven,
+            ipAddress,
+            userAgent,
+            formFieldJson
+        );
+        if (result != null && result.success == true && String.isNotBlank(signaturePngBase64)) {
+            storeDrawnSignature(token, signaturePngBase64);
+        }
+        return result;
+    }
+
+    /** Dura: saves a drawn signature PNG on the request and records it on the signer. Never throws. */
+    @TestVisible
+    private static void storeDrawnSignature(String token, String pngBase64) {
+        try {
+            if (
+                !DocGenSignatureGuestSecurity.isValidTokenShape(token) ||
+                pngBase64.length() > MAX_SIGNATURE_PNG_BASE64 ||
+                !pngBase64.startsWith('iVBORw0KGgo')
+            ) {
+                return;
+            }
+            DocGenFlsGuard.guestAssertAccessible(
+                DocGen_Signer__c.sObjectType,
+                new Set<String>{ 'Signature_Request__c', 'Signer_Name__c', 'Status__c' }
+            );
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            List<DocGen_Signer__c> rows = [
+                SELECT Id, Signature_Request__c, Signer_Name__c, Status__c
+                FROM DocGen_Signer__c
+                WHERE Secure_Token__c = :token
+                WITH SYSTEM_MODE
+                LIMIT 1
+            ];
+            if (rows.isEmpty() || rows[0].Status__c != 'Signed') {
+                return;
+            }
+            DocGen_Signer__c signer = rows[0];
+            String who = String.isNotBlank(signer.Signer_Name__c) ? signer.Signer_Name__c : 'Signer';
+            ContentVersion cv = new ContentVersion(
+                Title = ('Signature - ' + who).left(255),
+                PathOnClient = 'signature.png',
+                VersionData = EncodingUtil.base64Decode(pngBase64)
+            );
+            DocGenFlsGuard.guestAssertCreateable(cv, new Set<String>{ 'Title', 'PathOnClient', 'VersionData' });
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            Database.insert(cv, AccessLevel.SYSTEM_MODE);
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            Id docId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id WITH SYSTEM_MODE]
+            .ContentDocumentId;
+            // Shared through the request like the viewing copies, so the finalizer (Automated
+            // Process) and the live view can draw it.
+            ContentDocumentLink link = new ContentDocumentLink(
+                ContentDocumentId = docId,
+                LinkedEntityId = signer.Signature_Request__c,
+                ShareType = 'V',
+                Visibility = 'AllUsers'
+            );
+            DocGenFlsGuard.guestAssertCreateable(
+                link,
+                new Set<String>{ 'ContentDocumentId', 'LinkedEntityId', 'ShareType', 'Visibility' }
+            );
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            Database.insert(link, AccessLevel.SYSTEM_MODE);
+            DocGen_Signer__c upd = new DocGen_Signer__c(Id = signer.Id, Signature_Image_CV_Id__c = cv.Id);
+            DocGenFlsGuard.guestAssertUpdateable(upd, new Set<String>{ 'Signature_Image_CV_Id__c' });
+            /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
+            Database.update(upd, false, AccessLevel.SYSTEM_MODE);
+        } catch (Exception e) {
+            DocGenErrorLogger.warn(
+                'DocGenSignatureController',
+                'Save drawn signature',
+                'The drawn signature could not be kept; the typed name stands: ' + e.getMessage()
+            );
+            DocGenErrorLogger.flush();
+        }
+    }
+
     @AuraEnabled
     @RemoteAction
     public static SavePdfSignatureResult savePdfSignature(
@@ -2890,6 +3155,8 @@ public without sharing class DocGenSignatureController {
         }
 
         DocGen_Signer__c signer = signers[0];
+        // Dura: on a Sequential request, refuse until every earlier signer has signed.
+        assertSignerTurn(signer.Id);
         if (DocGenSignatureExpiry.isExpired(signer.Signature_Request__r.Expires_At__c, signer.CreatedDate)) {
             throw new AuraHandledException('This signature link has expired.');
         }
@@ -2945,6 +3212,8 @@ public without sharing class DocGenSignatureController {
         audit.IP_Address__c = resolveClientIp(ipAddress);
         audit.User_Agent__c = String.isNotBlank(userAgent) ? userAgent.left(255) : 'Unknown';
         audit.Consent_Captured__c = true;
+        // Dura: the exact consent wording this signer agreed to.
+        audit.Consent_Text__c = consentTextFor(signer.Signature_Request__c);
         audit.PIN_Verified_At__c = signer.PIN_Verified_At__c;
         // #verification — record how identity was checked, even when the PIN was skipped.
         audit.Verification_Method__c = signer.PIN_Verified_At__c != null ? 'Email PIN' : 'None';
@@ -2963,6 +3232,7 @@ public without sharing class DocGenSignatureController {
                 'IP_Address__c',
                 'User_Agent__c',
                 'Consent_Captured__c',
+                'Consent_Text__c',
                 'PIN_Verified_At__c'
             }
         );
@@ -3131,6 +3401,8 @@ public without sharing class DocGenSignatureController {
         }
 
         DocGen_Signer__c signer = signers[0];
+        // Dura: on a Sequential request, refuse until every earlier signer has signed.
+        assertSignerTurn(signer.Id);
         if (String.isNotBlank(signer.Signature_Request__r.Original_Document_CV_Id__c) && !preparedPdfSave) {
             throw new AuraHandledException('Reopen this prepared PDF before completing your signature.');
         }
@@ -3188,6 +3460,8 @@ public without sharing class DocGenSignatureController {
         audit.IP_Address__c = resolveClientIp(ipAddress);
         audit.User_Agent__c = String.isNotBlank(userAgent) ? userAgent.left(255) : 'Unknown';
         audit.Consent_Captured__c = true;
+        // Dura: the exact consent wording this signer agreed to.
+        audit.Consent_Text__c = consentTextFor(signer.Signature_Request__c);
         audit.PIN_Verified_At__c = signer.PIN_Verified_At__c;
         // #verification — record how identity was checked, even when the PIN was skipped.
         audit.Verification_Method__c = signer.PIN_Verified_At__c != null ? 'Email PIN' : 'None';
@@ -3212,6 +3486,7 @@ public without sharing class DocGenSignatureController {
                 'IP_Address__c',
                 'User_Agent__c',
                 'Consent_Captured__c',
+                'Consent_Text__c',
                 'PIN_Verified_At__c',
                 'Document_Hash_SHA256__c'
             }
@@ -3623,13 +3898,14 @@ public without sharing class DocGenSignatureController {
                 'Signed_Date__c',
                 'IP_Address__c',
                 'Consent_Captured__c',
+                'Consent_Text__c',
                 'User_Agent__c',
                 'Signature_Request__c'
             }
         );
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
         List<DocGen_Signature_Audit__c> audits = [
-            SELECT Signer__c, Signed_Date__c, IP_Address__c, Consent_Captured__c, User_Agent__c
+            SELECT Signer__c, Signed_Date__c, IP_Address__c, Consent_Captured__c, Consent_Text__c, User_Agent__c
             FROM DocGen_Signature_Audit__c
             WHERE Signature_Request__c = :reqId
             WITH SYSTEM_MODE
@@ -3660,6 +3936,8 @@ public without sharing class DocGenSignatureController {
                         : null,
                     'ip' => a != null ? a.IP_Address__c : null,
                     'consent' => a != null ? a.Consent_Captured__c == true : false,
+                    // Dura: the wording this signer agreed to (blank on audits from before 1.2).
+                    'consentText' => a != null ? a.Consent_Text__c : null,
                     'userAgent' => a != null ? a.User_Agent__c : null,
                     'verified' => s.PIN_Verified_At__c != null,
                     'isMe' => s.Id == myId

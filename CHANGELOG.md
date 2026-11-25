@@ -1,6 +1,47 @@
+<!-- Modified by Dura Composites Ltd. -->
+
 # Changelog
 
-## Unreleased
+## DocGen releases
+
+DocGen is Dura Composites' fork of Portwood, packaged as the managed package `DocGen` (namespace `duracomp`). Each promoted version is listed here with its install link and tagged `docgen-vX.Y.Z` in git. Everything from **Unreleased (Portwood)** down is Portwood's own history before and alongside the fork. The full list of changes from Portwood, with pull requests, is in [.github/README.md](.github/README.md#changes-from-portwood).
+
+Install in a sandbox: `https://test.salesforce.com/packaging/installPackage.apexp?p0=<Id>`. In production, replace `test` with `login`.
+
+### DocGen 1.2.0: signing round 2
+
+Released 2026-11-20 · `04tQ500000CcYWPIA3` (build 1.2.0-3) · [install](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tQ500000CcYWPIA3) · [#16](https://github.com/DuraComposites/DocGen/pull/16)
+
+- **Signer inputs chosen per signer at send time:** `DocGenSigner.formFieldKeys` and **Assign Inputs Per Signer** on **DocGen: Create Signature Request**. **Get Template Signers** also returns the template's inputs. A writeback input goes to one signer only.
+- **Sequential signing waits its turn.** A later signer sees the document read-only; the server refuses their signature until it's their turn.
+- **One-step consent**, with wording per template (`Signing_Consent_Text__c`), recorded on each signer's audit and printed on the certificates.
+- **The final step shows the signer's answers ("Your information") with Change.**
+- **`{#Signatures}` blocks:** drawn signatures (`{SignatureImageUrl}`), a Sign here box on the signer's own line (`{SignHere}`), and live rows for later signers.
+- **Emails use the document's title;** reminders are grouped per request.
+- **Fixes:** a clear message when a template is sent from a record of the wrong object; the Generate picker hides templates with nothing to merge; Finalize Signature Image logs a bad token instead of failing the Flow; the signing page works on a phone.
+
+### DocGen 1.1.0: quote e-sign release 1b
+
+Released 2026-11-19 · `04tQ500000CZTEkIAP` (build 1.1.0-1) · [install](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tQ500000CZTEkIAP) · [#14](https://github.com/DuraComposites/DocGen/pull/14)
+
+- **Signer inputs:** a file upload type, and "at least one of" groups.
+- **Flow action DocGen: Get Template Signers:** a template's signer roles in order, and whether it has a `{#Signatures}` block.
+- **The signing badge** shows the brand's badge label or company name.
+- **App Builder labels:** "DocGen Signature Status" and "DocGen Signature Sender".
+
+### DocGen 1.0.0: first release
+
+Released 2026-11-15 · `04tQ500000CIv0vIAD` (build 1.0.0-3) · [install](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tQ500000CIv0vIAD) · [#12](https://github.com/DuraComposites/DocGen/pull/12), [#13](https://github.com/DuraComposites/DocGen/pull/13)
+
+Portwood v3.63.0, renamed DocGen and packaged in the `duracomp` namespace, with Dura's signing additions:
+
+- **Drawing approval:** attach PDFs from the record to a signature request. Signers open and confirm them, and can mark them up ("approved with comments").
+- **Signature Status card:** a timeline per request.
+- **Link expiry and reminder schedules** per template and per send.
+- **The signing page renders PDFs sharply** at the device's resolution.
+- **Public signing Site:** one command sets it up, with a drawing-approval demo.
+
+## Unreleased (Portwood)
 
 ### Added
 

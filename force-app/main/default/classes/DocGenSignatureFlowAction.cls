@@ -200,6 +200,12 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
             description='Optional (#412). Before (default) shows the attached documents ahead of the template; After shows them after it.'
         )
         global String attachedDocumentPosition;
+
+        @InvocableVariable(
+            label='Assign Inputs Per Signer'
+            description='Optional. True: each signer is asked only the template inputs listed in their Form Field Keys (blank = sign only). False or blank: every signer is asked every input, as before.'
+        )
+        global Boolean assignFieldsPerSigner;
     }
 
     global class Result {
@@ -291,6 +297,13 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
         // Build signer inputs — prefer the new Signer collection, fall back to legacy lists
         // buildSignerInputs throws on validation errors (blank names/emails, length mismatch)
         List<Map<String, Object>> signerInputs = buildSignerInputs(req);
+        // Dura: an input that writes back to the record can only be given to one signer.
+        if (req.assignFieldsPerSigner == true && req.templateId != null) {
+            DocGenFieldWritebackService.assertSingleOwnerForWriteback(
+                templateFormFieldsConfig(req.templateId),
+                signerInputs
+            );
+        }
         if (signerInputs.isEmpty()) {
             throw new DocGenException(
                 'At least one signer is required. Pass a Signers collection or Signer Names + Emails.'
@@ -439,6 +452,7 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
      * Builds signer input maps from either the new Signer collection or legacy parallel lists.
      * New Signer collection takes priority.
      */
+    @TestVisible
     private static List<Map<String, Object>> buildSignerInputs(Request req) {
         List<Map<String, Object>> inputs = new List<Map<String, Object>>();
 
@@ -454,14 +468,17 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
                         'Each signer must have an Email. Signer "' + s.name + '" is missing an email.'
                     );
                 }
-                inputs.add(
-                    new Map<String, Object>{
-                        'signerName' => s.name,
-                        'signerEmail' => s.email,
-                        'roleName' => String.isNotBlank(s.role) ? s.role : 'Signer',
-                        'contactId' => s.contactId
-                    }
-                );
+                Map<String, Object> input = new Map<String, Object>{
+                    'signerName' => s.name,
+                    'signerEmail' => s.email,
+                    'roleName' => String.isNotBlank(s.role) ? s.role : 'Signer',
+                    'contactId' => s.contactId
+                };
+                // Dura: per-signer inputs, only when the request asks for it.
+                if (req.assignFieldsPerSigner == true) {
+                    input.put('formFieldKeys', DocGenFieldWritebackService.normaliseAssignedKeys(s.formFieldKeys));
+                }
+                inputs.add(input);
             }
             return inputs;
         }
@@ -547,5 +564,19 @@ global with sharing class DocGenSignatureFlowAction { // NOPMD AvoidGlobalModifi
             options.reminderMode = DocGenSignatureReminderRules.MODE_EVERY;
             options.reminderEveryDays = req.reminderEveryDays;
         }
+    }
+
+    /** Dura: the template's signer-input config, for the send-time writeback check. */
+    private static String templateFormFieldsConfig(Id templateId) {
+        DocGenFlsGuard.assertAccessible(DocGen_Template__c.sObjectType, new Set<String>{ 'Form_Fields_Config__c' });
+        /* code-analyzer-suppress ApexFlsViolation */
+        List<DocGen_Template__c> rows = [
+            SELECT Form_Fields_Config__c
+            FROM DocGen_Template__c
+            WHERE Id = :templateId
+            WITH SYSTEM_MODE
+            LIMIT 1
+        ];
+        return rows.isEmpty() ? null : rows[0].Form_Fields_Config__c;
     }
 }
