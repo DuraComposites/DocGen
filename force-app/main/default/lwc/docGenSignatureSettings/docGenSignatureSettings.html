@@ -147,6 +147,40 @@
                     </div>
                 </div>
 
+                <!-- ===== MICROSOFT 365 (Dura) ===== -->
+                <div class="slds-section slds-is-open slds-m-top_medium">
+                    <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small">
+                        <span class="slds-text-title_caps">Send From Microsoft 365 (Optional)</span>
+                    </h3>
+                    <div class="slds-section__content slds-p-top_small">
+                        <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_x-small">
+                            Leave blank to send signature emails through Salesforce. When set, signature requests,
+                            reminders and revocations are sent from the Microsoft 365 mailbox of the person who created
+                            the request, and saved in their Sent Items. PIN codes, completion confirmations and notices
+                            to the sender still come from the address above.
+                        </p>
+                        <lightning-input
+                            label="Microsoft 365 Named Credential"
+                            value={graphNamedCredential}
+                            max-length="80"
+                            placeholder="e.g. Microsoft_Graph"
+                            onchange={handleGraphNamedCredentialChange}
+                            field-level-help="API name of a Named Credential for https://graph.microsoft.com. See the user guide article 'Send signature emails from Microsoft 365' for the set-up."
+                        >
+                        </lightning-input>
+                        <lightning-button
+                            label="Send a test from my mailbox"
+                            onclick={handleGraphTest}
+                            disabled={graphTestDisabled}
+                            class="slds-m-top_small"
+                        >
+                        </lightning-button>
+                        <template lwc:if={graphTestMessage}>
+                            <p class="slds-text-body_small slds-m-top_x-small">{graphTestMessage}</p>
+                        </template>
+                    </div>
+                </div>
+
                 <!-- Email branding moved to DocGen Command Hub → Email Templates (per-template
                      subject/body/branding + live preview). Org-wide fallback values are
                      preserved on save below but no longer edited here. -->

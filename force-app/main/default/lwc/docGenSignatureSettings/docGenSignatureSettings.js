@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 import { LightningElement, track, wire } from 'lwc';
 import getSettingsFresh from '@salesforce/apex/DocGenSetupController.getSettingsFresh';
 import saveSettings from '@salesforce/apex/DocGenSetupController.saveSettings';
@@ -9,6 +10,8 @@ import saveVerificationSettings from '@salesforce/apex/DocGenSetupController.sav
 import saveDeclineSettings from '@salesforce/apex/DocGenSetupController.saveDeclineSettings';
 import saveAttachmentLimits from '@salesforce/apex/DocGenSetupController.saveAttachmentLimits';
 import saveSignatureInputSettings from '@salesforce/apex/DocGenSetupController.saveSignatureInputSettings';
+import saveGraphMailSettings from '@salesforce/apex/DocGenSetupController.saveGraphMailSettings';
+import sendGraphTestEmail from '@salesforce/apex/DocGenSetupController.sendGraphTestEmail';
 
 export default class DocGenSignatureSettings extends LightningElement {
     @track isLoaded = false;
@@ -25,6 +28,12 @@ export default class DocGenSignatureSettings extends LightningElement {
     @track footerText = '';
     @track owaId = '';
     @track owaOptions = [];
+
+    // Dura: optional Microsoft 365 (Graph) route for signer emails.
+    @track graphNamedCredential = '';
+    @track savedGraphNamedCredential = '';
+    @track graphTestMessage = '';
+    @track graphTesting = false;
 
     // Reminders + link expiration
     @track reminderEnabled = false;
@@ -65,6 +74,8 @@ export default class DocGenSignatureSettings extends LightningElement {
             this.emailMessage = data.Signature_Email_Message__c || '';
             this.footerText = data.Signature_Email_Footer_Text__c || '';
             this.owaId = data.Signature_OWA_Id__c || '';
+            this.graphNamedCredential = data.Signature_Graph_Named_Credential__c || '';
+            this.savedGraphNamedCredential = this.graphNamedCredential;
             this.reminderEnabled = data.Signature_Reminder_Enabled__c === true;
             this.reminderHours = data.Signature_Reminder_Hours__c || 24;
             this.reminderSchedule = data.Signature_Reminder_Schedule__c || String(this.reminderHours);
@@ -105,6 +116,29 @@ export default class DocGenSignatureSettings extends LightningElement {
     }
     handleOwaChange(e) {
         this.owaId = e.detail.value;
+    }
+    handleGraphNamedCredentialChange(e) {
+        this.graphNamedCredential = e.target.value;
+        this.graphTestMessage = '';
+    }
+    // The test uses the SAVED setting, so it is only offered once the field matches it.
+    get graphTestDisabled() {
+        return (
+            this.graphTesting ||
+            !this.savedGraphNamedCredential ||
+            (this.graphNamedCredential || '').trim() !== this.savedGraphNamedCredential
+        );
+    }
+    async handleGraphTest() {
+        this.graphTesting = true;
+        this.graphTestMessage = 'Sending...';
+        try {
+            this.graphTestMessage = await sendGraphTestEmail();
+        } catch (err) {
+            this.graphTestMessage = this.errMsg(err);
+        } finally {
+            this.graphTesting = false;
+        }
     }
     handleReminderEnabledChange(e) {
         this.reminderEnabled = e.target.checked;
@@ -208,6 +242,9 @@ export default class DocGenSignatureSettings extends LightningElement {
                 maxTotalMb: parseInt(this.attachmentMaxTotalMb, 10) || null
             });
             await saveSignatureInputSettings({ typeOnly: this.typeOnly });
+            await saveGraphMailSettings({ namedCredential: this.graphNamedCredential });
+            this.graphNamedCredential = (this.graphNamedCredential || '').trim();
+            this.savedGraphNamedCredential = this.graphNamedCredential;
             this.saveSuccess = true;
             this.saveMessage =
                 'Settings saved successfully.' + (this.reminderEnabled ? ' Reminders scheduled hourly.' : '');

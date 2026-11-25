@@ -40,6 +40,7 @@ public with sharing class DocGenSetupController {
         result.put('Signature_Email_Message__c', s.Signature_Email_Message__c);
         result.put('Signature_Email_Footer_Text__c', s.Signature_Email_Footer_Text__c);
         result.put('Signature_OWA_Id__c', s.Signature_OWA_Id__c);
+        result.put('Signature_Graph_Named_Credential__c', s.Signature_Graph_Named_Credential__c);
         result.put('Signature_Reminder_Enabled__c', s.Signature_Reminder_Enabled__c);
         result.put('Signature_Reminder_Hours__c', s.Signature_Reminder_Hours__c);
         result.put('Signature_Reminder_Schedule__c', s.Signature_Reminder_Schedule__c);
@@ -62,6 +63,53 @@ public with sharing class DocGenSetupController {
         result.put('Signature_Attachment_Max_Total_MB__c', attachmentLimits.get('maxTotalMb'));
         result.put('Signature_Type_Only__c', s != null && s.Signature_Type_Only__c == true);
         return result;
+    }
+
+    /**
+     * Dura: saves the Microsoft 365 Named Credential name. Blank turns the Graph route
+     * off (signature emails go through Salesforce, as before).
+     */
+    @AuraEnabled
+    public static void saveGraphMailSettings(String namedCredential) {
+        if (
+            !FeatureManagement.checkPermission('DocGen_Admin_Access') &&
+            !Schema.sObjectType.DocGen_Settings__c.isUpdateable()
+        ) {
+            throw DocGenService.ahe('Insufficient privileges to modify DocGen settings.');
+        }
+        String value = String.isBlank(namedCredential) ? null : namedCredential.trim();
+        if (value != null && !DocGenGraphMail.isValidNamedCredentialName(value)) {
+            throw DocGenService.ahe(
+                'Enter the API name of the Named Credential (letters, numbers and underscores), not its label or URL.'
+            );
+        }
+        DocGen_Settings__c settings = DocGen_Settings__c.getOrgDefaults();
+        settings.Signature_Graph_Named_Credential__c = value;
+        Set<String> graphFields = new Set<String>{ 'Signature_Graph_Named_Credential__c' };
+        DocGenFlsGuard.assertCreateable(settings, graphFields);
+        DocGenFlsGuard.assertUpdateable(settings, graphFields);
+        try {
+            /* code-analyzer-suppress ApexFlsViolation */
+            Database.upsert(settings, AccessLevel.SYSTEM_MODE);
+        } catch (DmlException e) {
+            throw DocGenService.dmlAhe(e, DocGen_Settings__c.sObjectType);
+        }
+    }
+
+    /**
+     * Dura: sends a test email through Microsoft 365 from the running user's own mailbox
+     * to the same address. Proves the Named Credential, the user's access to it and the
+     * Exchange policy together. Returns a readable result.
+     */
+    @AuraEnabled
+    public static String sendGraphTestEmail() {
+        if (
+            !FeatureManagement.checkPermission('DocGen_Admin_Access') &&
+            !Schema.sObjectType.DocGen_Settings__c.isUpdateable()
+        ) {
+            throw DocGenService.ahe('Insufficient privileges to test DocGen email settings.');
+        }
+        return DocGenGraphMail.sendTestToSelf();
     }
 
     /** Saves the org-wide typed-signature restriction. Unchecked preserves Draw or Type. */
@@ -219,6 +267,34 @@ public with sharing class DocGenSetupController {
                 '/lightning/setup/OrgWideEmailAddresses/home'
             )
         );
+
+        // Dura: Microsoft 365 route, only reported when it is switched on.
+        String graphNc = DocGenGraphMail.namedCredential();
+        if (graphNc != null) {
+            Boolean ncOk = false;
+            try {
+                String devName = graphNc.contains('__') ? graphNc.substringAfter('__') : graphNc;
+                /* code-analyzer-suppress ApexFlsViolation */
+                ncOk = ![SELECT Id FROM NamedCredential WHERE DeveloperName = :devName WITH SYSTEM_MODE LIMIT 1]
+                    .isEmpty(); // NOPMD
+            } catch (Exception e) {
+                ncOk = false;
+            }
+            checks.add(
+                buildCheck(
+                    'Microsoft 365 sending',
+                    ncOk,
+                    ncOk
+                        ? 'Requests, reminders and revocations are sent from the Microsoft 365 mailbox of the request creator via Named Credential ' +
+                          graphNc +
+                          '. Use "Send a test from my mailbox" to check it end to end.'
+                        : 'Named Credential ' +
+                          graphNc +
+                          ' was not found. Create it, or clear the setting to send through Salesforce.',
+                    '/lightning/setup/NamedCredential/home'
+                )
+            );
+        }
 
         // 4. Guest user permission set check
         Boolean guestPermOk = false;
