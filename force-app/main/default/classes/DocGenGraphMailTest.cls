@@ -101,6 +101,13 @@ private class DocGenGraphMailTest {
         String recipients = JSON.serialize(message.get('toRecipients'));
         System.assert(recipients.contains('graph.signer@example.com'), 'to the signer: ' + recipients);
         System.assert(JSON.serialize(message.get('body')).contains('sign.example.com'), 'signing link in the body');
+        Map<String, Object> header = (Map<String, Object>) ((List<Object>) message.get('internetMessageHeaders'))[0];
+        System.assertEquals(DocGenGraphMail.SIGNATURE_HEADER, header.get('name'), 'marker header');
+        System.assertEquals(
+            DocGenEmailTemplateService.TYPE_REQUEST,
+            header.get('value'),
+            'header names the email type'
+        );
         String status = emailStatus(req.Id);
         System.assert(status.contains('graph.signer@example.com: Sent from ' + creatorEmail), status);
     }
@@ -301,8 +308,10 @@ private class DocGenGraphMailTest {
         System.assertEquals('', DocGenGraphMail.describeError(null), 'blank body');
         System.assertEquals(null, DocGenGraphMail.creatorMailbox(null), 'no request');
         String payload = DocGenGraphMail.buildPayload(
-            new DocGenGraphMail.Message('x@example.com', null, 'S', '<b>hi</b>')
+            new DocGenGraphMail.Message('x@example.com', null, 'S', '<b>hi</b>'),
+            null
         );
         System.assert(payload.contains('"name":"x@example.com"'), 'name defaults to the address: ' + payload);
+        System.assert(payload.contains('"value":"Signature"'), 'blank kind still marks the email: ' + payload);
     }
 }

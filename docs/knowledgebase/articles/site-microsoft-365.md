@@ -201,6 +201,26 @@ insert new PermissionSetAssignment(
 
 Use your permission set's API name. Without this, the first signer's email goes out but later signers' emails fail, and the request's **Email Status** says the credential couldn't be accessed.
 
+#### Email signature tools (Exclaimer, CodeTwo)
+
+Because these emails now leave through the sender's own mailbox, a server-side signature tool adds the sender's email signature under DocGen's branded email, outside its frame. Keep it if you like it there. To leave it off, exclude DocGen's emails by the header DocGen puts on every Microsoft 365 send:
+
+| Header               | Value                                                                                         |
+| -------------------- | --------------------------------------------------------------------------------------------- |
+| `X-DocGen-Signature` | `Signature_Request`, `Signature_Reminder`, `Signature_Revoked`, or `Test` for the test button |
+
+Don't exclude them by subject: subjects can be edited in DocGen's email templates, per brand and at send time, and an edit would quietly bring the signature back.
+
+**Exclaimer Cloud** sends mail to Exclaimer through an Exchange mail-flow rule it created, usually named _Identify messages to send to Exclaimer Cloud - Do not delete or rename_. Add an exception to that rule:
+
+1. Open the Exchange admin center at [admin.exchange.microsoft.com](https://admin.exchange.microsoft.com) and go to **Mail flow → Rules**.
+2. Open the Exclaimer rule and click **Edit rule conditions**. Don't rename it, change its other settings, or delete it.
+3. Under **Except if**, choose **The message headers… includes any of these words**. Header name: `X-DocGen-Signature`. Words: add all four values from the table (`Signature_Request`, `Signature_Reminder`, `Signature_Revoked`, `Test`).
+4. Save. Allow up to 30 minutes for the change to apply.
+5. Check it with **Send a test from my mailbox**: the test should arrive without your signature.
+
+The same exception works for any other tool that is fed by an Exchange mail-flow rule. Tools with their own rule editor (for example, CodeTwo) usually offer a "message header contains" exclusion: use the same header.
+
 #### Routine jobs
 
 ##### A new salesperson starts

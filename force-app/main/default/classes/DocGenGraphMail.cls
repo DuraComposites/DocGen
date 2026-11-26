@@ -139,7 +139,7 @@ public without sharing class DocGenGraphMail {
             '<p>This test was sent by DocGen through Microsoft Graph from your own mailbox. ' +
             'If it is in your Inbox and your Sent Items, signature emails will be sent the same way.</p>'
         );
-        Result r = post(nc, mailbox, m);
+        Result r = post(nc, mailbox, m, 'Test');
         if (r.success) {
             return 'Sent. Check the Inbox and Sent Items of ' + mailbox + '.';
         }
@@ -192,7 +192,7 @@ public without sharing class DocGenGraphMail {
                     overflow.add(m);
                     continue;
                 }
-                Result r = post(namedCredential, mailbox, m);
+                Result r = post(namedCredential, mailbox, m, operation);
                 if (r.success) {
                     statusParts.add(m.toAddress + ': Sent from ' + mailbox + ' via Microsoft 365');
                 } else if (r.retryable && attempt < MAX_ATTEMPTS) {
@@ -266,8 +266,16 @@ public without sharing class DocGenGraphMail {
         public String detail;
     }
 
+    /**
+     * Custom header on every Microsoft 365 send, so a tenant can recognise DocGen's
+     * signature emails whatever their subject, e.g. an Exchange mail-flow rule exception
+     * that keeps them away from a signature tool (Exclaimer, CodeTwo). Value: the email
+     * type (Signature_Request, Signature_Reminder, Signature_Revoked) or Test.
+     */
+    public static final String SIGNATURE_HEADER = 'X-DocGen-Signature';
+
     @TestVisible
-    private static String buildPayload(Message m) {
+    private static String buildPayload(Message m, String kind) {
         Map<String, Object> recipient = new Map<String, Object>{
             'emailAddress' => new Map<String, Object>{
                 'address' => m.toAddress,
@@ -277,12 +285,18 @@ public without sharing class DocGenGraphMail {
         Map<String, Object> message = new Map<String, Object>{
             'subject' => m.subject,
             'body' => new Map<String, Object>{ 'contentType' => 'HTML', 'content' => m.htmlBody },
-            'toRecipients' => new List<Object>{ recipient }
+            'toRecipients' => new List<Object>{ recipient },
+            'internetMessageHeaders' => new List<Object>{
+                new Map<String, Object>{
+                    'name' => SIGNATURE_HEADER,
+                    'value' => String.isBlank(kind) ? 'Signature' : kind
+                }
+            }
         };
         return JSON.serialize(new Map<String, Object>{ 'message' => message, 'saveToSentItems' => true });
     }
 
-    private static Result post(String nc, String mailbox, Message m) {
+    private static Result post(String nc, String mailbox, Message m, String kind) {
         Result r = new Result();
         try {
             HttpRequest req = new HttpRequest();
@@ -290,7 +304,7 @@ public without sharing class DocGenGraphMail {
             req.setMethod('POST');
             req.setHeader('Content-Type', 'application/json');
             req.setTimeout(30000);
-            req.setBody(buildPayload(m));
+            req.setBody(buildPayload(m, kind));
             HttpResponse res = new Http().send(req);
             Integer code = res.getStatusCode();
             if (code == 202 || code == 200) {
