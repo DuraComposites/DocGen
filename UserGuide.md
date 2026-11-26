@@ -2682,15 +2682,19 @@ Because these emails now leave through the sender's own mailbox, a server-side s
 
 Don't exclude them by subject: subjects can be edited in DocGen's email templates, per brand and at send time, and an edit would quietly bring the signature back.
 
-**Exclaimer Cloud** sends mail to Exclaimer through an Exchange mail-flow rule it created, usually named _Identify messages to send to Exclaimer Cloud - Do not delete or rename_. Add an exception to that rule:
+**Exclaimer Cloud** sends mail to Exclaimer through an Exchange mail-flow rule it created, usually named _Identify messages to send to Exclaimer Cloud - Do not delete or rename_. Don't edit that rule. Its **Except if** list already uses both "message headers" exception types (an Exchange rule allows one of each), so you can't add DocGen's header there. One of its existing exceptions skips any message whose `X-ExclaimerHostedSignatures-MessageProcessed` header is `true`. So add a small rule of your own that sets that header on DocGen's emails, and run it first:
 
 1. Open the Exchange admin center at [admin.exchange.microsoft.com](https://admin.exchange.microsoft.com) and go to **Mail flow → Rules**.
-2. Open the Exclaimer rule and click **Edit rule conditions**. Don't rename it, change its other settings, or delete it.
-3. Under **Except if**, choose **The message headers… includes any of these words**. Header name: `X-DocGen-Signature`. Words: add all four values from the table (`Signature_Request`, `Signature_Reminder`, `Signature_Revoked`, `Test`).
-4. Save. Allow up to 30 minutes for the change to apply.
-5. Check it with **Send a test from my mailbox**: the test should arrive without your signature.
+2. Click **+ Add a rule → Create a new rule** and name it `DocGen - skip Exclaimer signature`.
+3. **Apply this rule if:** **The message headers… includes any of these words**. Header name: `X-DocGen-Signature`. Words: add all four values from the table (`Signature_Request`, `Signature_Reminder`, `Signature_Revoked`, `Test`).
+4. **Do the following:** **Modify the message properties → set a message header**. Header: `X-ExclaimerHostedSignatures-MessageProcessed`. Value: `true`.
+5. Leave **Except if** empty and leave **Stop processing more rules** off. Save the rule and turn it on.
+6. In the rules list, move the new rule **above** the Exclaimer rule, so it runs first.
+7. Allow up to 30 minutes, then check with **Send a test from my mailbox**: the test should arrive without your signature.
 
-The same exception works for any other tool that is fed by an Exchange mail-flow rule. Tools with their own rule editor (for example, CodeTwo) usually offer a "message header contains" exclusion: use the same header.
+First check the Exclaimer rule's **Except if** list for the `X-ExclaimerHostedSignatures-MessageProcessed` matches `true` exception; Exclaimer adds it by default. If it isn't there and the "message headers" exception types are free, add `X-DocGen-Signature` (includes any of the four words) as an exception to the Exclaimer rule instead.
+
+Other tools fed by an Exchange mail-flow rule take the same approach: an exception on their rule if one is free, otherwise a rule that runs first and sets the header the tool already skips. Tools with their own rule editor (for example, CodeTwo) usually offer a "message header contains" exclusion: use `X-DocGen-Signature`.
 
 #### Routine jobs
 
