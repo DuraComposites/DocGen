@@ -2,9 +2,9 @@
     "schemaVersion": 1,
     "product": {
         "name": "DocGen",
-        "version": "1.2.0",
-        "packageId": "04tQ500000CcYWPIA3",
-        "packageAlias": "DocGen@1.2.0-3"
+        "version": "1.3.0",
+        "packageId": "04tQ500000CvOptIAF",
+        "packageAlias": "DocGen@1.3.0-3"
     },
     "home": {
         "image": "docs/images/userguide/v3.60/first-document-result.png",
