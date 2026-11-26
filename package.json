@@ -16,6 +16,7 @@
         "smoke": "node scripts/ui-smoke.mjs",
         "qa": "node scripts/qa/run-all.mjs",
         "qa:offline": "node scripts/qa/run-all.mjs --offline",
+        "package:build": "node scripts/dura/build-package.mjs",
         "org:setup": "./scripts/qa/setup-org.sh",
         "org:new": "./scripts/qa/setup-org.sh docgen-verify --create",
         "guide:build": "node scripts/knowledgebase/build.mjs",
