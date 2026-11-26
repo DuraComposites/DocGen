@@ -8,6 +8,15 @@ DocGen is Dura Composites' fork of Portwood, packaged as the managed package `Do
 
 Install in a sandbox: `https://test.salesforce.com/packaging/installPackage.apexp?p0=<Id>`. In production, replace `test` with `login`.
 
+### DocGen 1.3.0: Microsoft 365 sending, DocGen User can send
+
+Released 2026-11-26 · `04tQ500000CvOptIAF` (build 1.3.0-3) · [install](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tQ500000CvOptIAF) · [#17](https://github.com/DuraComposites/DocGen/pull/17), [#18](https://github.com/DuraComposites/DocGen/pull/18), [#19](https://github.com/DuraComposites/DocGen/pull/19), [#20](https://github.com/DuraComposites/DocGen/pull/20)
+
+- **Optional: signature emails from the sender's own Microsoft 365 mailbox.** Requests, reminders, later-signer and revoked emails go through Microsoft Graph and are saved in the sender's Sent Items. Off until an admin enters a Named Credential in **DocGen → Signatures** (new setting **Microsoft 365 Named Credential**). PIN, completion and sender notices still use the org-wide address. Failures are recorded on the request, never sent from noreply instead. Every Microsoft 365 email carries an `X-DocGen-Signature` header so signature tools such as Exclaimer can skip it. Set-up: [Send signature emails from Microsoft 365](UserGuide.md#site-microsoft-365).
+- **DocGen User can send signature requests** (create, resend, cancel) without DocGen Admin. Signing tokens and PIN hashes stay hidden from it. A test now checks the sending code against DocGen User.
+- **Template editor:** an HTML template whose saved body has its own `@page` shows the page fields correctly when opened.
+- Versions are now built only from merged code (`npm run package:build`).
+
 ### DocGen 1.2.0: signing round 2
 
 Released 2026-11-20 · `04tQ500000CcYWPIA3` (build 1.2.0-3) · [install](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tQ500000CcYWPIA3) · [#16](https://github.com/DuraComposites/DocGen/pull/16)
