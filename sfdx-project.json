@@ -4,12 +4,12 @@
       "path": "force-app",
       "default": true,
       "package": "DocGen",
-      "versionName": "1.2.0",
-      "versionNumber": "1.2.0.NEXT",
+      "versionName": "1.3.0",
+      "versionNumber": "1.3.0.NEXT",
       "ancestorVersion": "HIGHEST",
       "definitionFile": "config/build-def.json",
       "postInstallScript": "DocGenEmailTemplateInstall",
-      "versionDescription": "Turn any Salesforce record into a finished document: quotes, invoices, contracts, certificates, letters, statements and reports. Build your template in Word, Excel or PowerPoint, or design one in your browser, then drop in the fields you want and DocGen fills them in. Tables grow with your data, charts draw themselves, and images, barcodes and QR codes come along too. Send documents for signature, including drawings for approval and markup, and follow each request from sent to signed. Generate one from a record, thousands at once, or let a Flow do it automatically. Everything runs inside your own Salesforce org, with no external services and no data leaving the platform."
+      "versionDescription": "Turn any Salesforce record into a finished document: quotes, invoices, contracts, certificates, letters, statements and reports. Build your template in Word, Excel or PowerPoint, or design one in your browser, then drop in the fields you want and DocGen fills them in. Tables grow with your data, charts draw themselves, and images, barcodes and QR codes come along too. Send documents for signature, including drawings for approval and markup, and follow each request from sent to signed. Generate one from a record, thousands at once, or let a Flow do it automatically. Everything runs inside your own Salesforce org, with no external services required. If you choose, signature emails can be sent from each sender's own Microsoft 365 mailbox."
     },
     {
       "path": "agentforce-ext",
@@ -29,6 +29,8 @@
     "DocGen@1.1.0-1": "04tQ500000CZTEkIAP",
     "DocGen@1.2.0-1": "04tQ500000CbSUfIAN",
     "DocGen@1.2.0-2": "04tQ500000Cc7mLIAR",
-    "DocGen@1.2.0-3": "04tQ500000CcYWPIA3"
+    "DocGen@1.2.0-3": "04tQ500000CcYWPIA3",
+    "DocGen@1.3.0-1": "04tQ500000CsgY1IAJ",
+    "DocGen@1.3.0-2": "04tQ500000CvCdRIAV"
   }
 }

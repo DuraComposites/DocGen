@@ -177,9 +177,12 @@ public without sharing class DocGenSignatureEmailService {
         String owaId = (activeBrand != null && String.isNotBlank(activeBrand.OWA_Id__c))
             ? activeBrand.OWA_Id__c
             : (settings == null ? null : settings.Signature_OWA_Id__c);
+        // Dura: with a Microsoft 365 Named Credential set, these go out from the request
+        // creator's own mailbox through Graph (DocGenGraphMail) and need no OWA.
+        Boolean viaGraph = DocGenGraphMail.isEnabled();
         // OWA is required for signature emails — guest users cannot send without one,
         // and consistent branding requires all emails come from the same address.
-        if (String.isBlank(owaId)) {
+        if (!viaGraph && String.isBlank(owaId)) {
             String errMsg = 'Emails not sent — no Org-Wide Email Address configured. Set one in DocGen > Signatures settings.';
             System.debug(LoggingLevel.ERROR, 'DocGen: ' + errMsg);
             updateEmailStatus(requestId, errMsg);
@@ -244,6 +247,7 @@ public without sharing class DocGenSignatureEmailService {
         }
 
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
+        List<DocGenGraphMail.Message> graphMessages = new List<DocGenGraphMail.Message>();
         for (SignerEmail signer : signers) {
             Map<String, String> tokens = new Map<String, String>{
                 'SignerName' => signer.signerName,
@@ -265,6 +269,13 @@ public without sharing class DocGenSignatureEmailService {
             String subject = String.isNotBlank(subjectOverride)
                 ? DocGenEmailTemplateService.renderSubject(subjectOverride, tokens)
                 : rendered.subject;
+
+            if (viaGraph) {
+                graphMessages.add(
+                    new DocGenGraphMail.Message(signer.signerEmail, signer.signerName, subject, rendered.htmlBody)
+                );
+                continue;
+            }
 
             Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
             email.setSubject(subject);
@@ -292,6 +303,11 @@ public without sharing class DocGenSignatureEmailService {
             }
 
             emails.add(email);
+        }
+
+        if (viaGraph) {
+            DocGenGraphMail.send(requestId, graphMessages, templateType);
+            return;
         }
 
         if (!emails.isEmpty()) {
@@ -421,7 +437,8 @@ public without sharing class DocGenSignatureEmailService {
             String owaId = (activeBrand != null && String.isNotBlank(activeBrand.OWA_Id__c))
                 ? activeBrand.OWA_Id__c
                 : (settings == null ? null : settings.Signature_OWA_Id__c);
-            if (String.isBlank(owaId)) {
+            Boolean viaGraph = DocGenGraphMail.isEnabled();
+            if (!viaGraph && String.isBlank(owaId)) {
                 updateEmailStatus(requestId, 'Revocation emails not sent — no Org-Wide Email Address configured.');
                 return;
             }
@@ -440,6 +457,7 @@ public without sharing class DocGenSignatureEmailService {
             String documentTitle = DocGenSignatureService.documentTitleFor(req.Id);
 
             List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
+            List<DocGenGraphMail.Message> graphMessages = new List<DocGenGraphMail.Message>();
             for (DocGen_Signer__c signer : req.Signers__r) {
                 if (String.isBlank(signer.Signer_Email__c))
                     continue;
@@ -456,6 +474,17 @@ public without sharing class DocGenSignatureEmailService {
                     null,
                     brandId
                 );
+                if (viaGraph) {
+                    graphMessages.add(
+                        new DocGenGraphMail.Message(
+                            signer.Signer_Email__c,
+                            signer.Signer_Name__c,
+                            rendered.subject,
+                            rendered.htmlBody
+                        )
+                    );
+                    continue;
+                }
                 Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
                 email.setToAddresses(new List<String>{ signer.Signer_Email__c });
                 email.setSubject(rendered.subject);
@@ -469,8 +498,11 @@ public without sharing class DocGenSignatureEmailService {
                 }
                 emails.add(email);
             }
-            if (!emails.isEmpty())
+            if (viaGraph) {
+                DocGenGraphMail.send(requestId, graphMessages, DocGenEmailTemplateService.TYPE_REVOKED);
+            } else if (!emails.isEmpty()) {
                 Messaging.sendEmail(emails, false);
+            }
         } catch (Exception e) {
             System.debug(LoggingLevel.WARN, 'DocGen: signer revocation emails failed: ' + e.getMessage());
             logSignatureEmailFailure('sendSignerRevokedEmails', requestId, e);
