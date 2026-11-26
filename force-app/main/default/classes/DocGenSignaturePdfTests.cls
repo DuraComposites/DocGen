@@ -571,6 +571,7 @@ private class DocGenSignaturePdfTests {
         );
 
         Test.startTest();
+        DocGenSenderAccessCheck.start();
         List<DocGenSignatureSenderController.SignerResult> res = DocGenSignatureSenderController.createTemplateSnapshotRequest(
             templateId,
             acc.Id,
@@ -579,6 +580,7 @@ private class DocGenSignaturePdfTests {
             null
         );
         Test.stopTest();
+        DocGenSenderAccessCheck.assertDocGenUserCovers('createTemplateSnapshotRequest');
 
         System.assertEquals(1, res.size(), 'One signer result');
         System.assert(String.isNotBlank(res[0].signerUrl), 'Signer URL minted');

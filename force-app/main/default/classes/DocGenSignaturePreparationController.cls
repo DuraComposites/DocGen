@@ -328,7 +328,7 @@ global with sharing class DocGenSignaturePreparationController {
             sent,
             new Set<String>{
                 'Status__c',
-                'Secure_Token__c',
+                // Dura: Secure_Token__c / PIN_Hash__c are generated here and written in system mode; DocGen User has no FLS on them by design.
                 'Signing_Order__c',
                 'PDF_Internal_Preview__c',
                 'Expires_At__c',

@@ -773,12 +773,14 @@ private class DocGenSignatureTests {
         String signersJson = '[{"signerName":"Test Buyer","signerEmail":"buyer@test.com","roleName":"Buyer","contactId":""}]';
 
         Test.startTest();
+        DocGenSenderAccessCheck.start();
         List<DocGenSignatureSenderController.SignerResult> results = DocGenSignatureSenderController.createMultiSignerRequest(
             cv.ContentDocumentId,
             acc.Id,
             signersJson
         );
         Test.stopTest();
+        DocGenSenderAccessCheck.assertDocGenUserCovers('createMultiSignerRequest');
 
         System.assertEquals(1, results.size());
         System.assertEquals('Test Buyer', results[0].signerName);
@@ -809,8 +811,10 @@ private class DocGenSignatureTests {
         req.Status__c = 'Sent';
         Database.update(req, AccessLevel.SYSTEM_MODE);
         Test.startTest();
+        DocGenSenderAccessCheck.start();
         DocGenSignatureSenderController.resendSignatureRequest(req.Id);
         Test.stopTest();
+        DocGenSenderAccessCheck.assertDocGenUserCovers('resendSignatureRequest');
 
         DocGen_Signer__c signer = [
             SELECT Status__c
@@ -826,8 +830,10 @@ private class DocGenSignatureTests {
         DocGen_Signature_Request__c req = getTestRequest();
 
         Test.startTest();
+        DocGenSenderAccessCheck.start();
         DocGenSignatureSenderController.cancelSignatureRequest(req.Id);
         Test.stopTest();
+        DocGenSenderAccessCheck.assertDocGenUserCovers('cancelSignatureRequest');
 
         req = [SELECT Status__c FROM DocGen_Signature_Request__c WHERE Id = :req.Id];
         System.assertEquals('Cancelled', req.Status__c);
@@ -1460,6 +1466,7 @@ private class DocGenSignatureTests {
         insert cdl;
 
         Test.startTest();
+        DocGenSenderAccessCheck.start();
         String url = DocGenSignatureSenderController.createSignatureRequest(
             cv.ContentDocumentId,
             acc.Id,
@@ -1467,6 +1474,7 @@ private class DocGenSignatureTests {
             'legacy@test.com'
         );
         Test.stopTest();
+        DocGenSenderAccessCheck.assertDocGenUserCovers('createSignatureRequest');
         System.assert(String.isNotBlank(url));
     }
 

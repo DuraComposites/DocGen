@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 @IsTest
 private class DocGenUploadedPdfFeatureTest {
     private static final String PDF = EncodingUtil.base64Encode(
@@ -180,6 +181,7 @@ private class DocGenUploadedPdfFeatureTest {
     @IsTest
     static void sendCreatesCoordinateFieldsAndGatesSigningOrder() {
         Account record = account();
+        DocGenSenderAccessCheck.start();
         Map<String, Object> draft = draft(record.Id);
         Id requestId = (Id) draft.get('draftId');
         Map<String, Object> result = DocGenSignaturePreparationController.sendDraft(
@@ -188,6 +190,7 @@ private class DocGenUploadedPdfFeatureTest {
             0,
             preparation(draft)
         );
+        DocGenSenderAccessCheck.assertDocGenUserCovers('prepare and send an uploaded PDF');
         System.assertEquals('preview', result.get('delivery'));
         System.assertEquals(0, Limits.getEmailInvocations(), 'Internal preview must not send invitations');
         List<DocGen_Signer__c> people = signers(requestId);
