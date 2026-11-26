@@ -4992,23 +4992,27 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
         return this.editTemplateType === 'PDF';
     }
 
-    // v1.90 — page-layout fields are dead inputs when the HTML body owns @page.
-    // The engine ignores them and they only confuse authors, so hide them and
-    // show an explanatory banner in their place.
     /**
      * A Canvas body ALWAYS carries its own @page rule — the canvas serializes one on
-     * every save — so these fields are read by nothing. The editHtmlBodyOwnsPageRule
-     * flag does not cover it: that is only raised when a body is uploaded or pasted in
-     * this session, not when an existing template is opened, so a Canvas template
-     * showed live-looking Page Size / Orientation / Margins controls that changed
-     * nothing about the document.
+     * every save — so these fields are read by nothing and stay hidden.
+     *
+     * An HTML body with its own @page keeps the fields. Since #243 the renderer
+     * (DocGenService.hasExplicitPageOverride) lets Landscape / A4 / Legal replace the
+     * body's page size, and with one of those set a margin preset replaces its margins
+     * too; Portrait / Letter / Default defer to the body. Hiding the fields (v1.90)
+     * left an author no way to see or clear a stored override, so they stay visible
+     * with a note saying which values defer.
      */
     get showEditPageLayoutFields() {
-        return this.showPageOrientation && !this.editHtmlBodyOwnsPageRule && !this.isCanvasTemplate;
+        return this.showPageOrientation && !this.isCanvasTemplate;
     }
 
+    /**
+     * editHtmlBodyOwnsPageRule is set when a body is staged this session, and from
+     * the stored active body when the template opens (_detectStoredPageRule).
+     */
     get showEditHtmlOwnsPageBanner() {
-        return this.isEditTypeHtml && this.editHtmlBodyOwnsPageRule;
+        return this.showEditPageLayoutFields && this.isEditTypeHtml && this.editHtmlBodyOwnsPageRule;
     }
 
     /** Says where page setup actually lives for a Canvas template. */
@@ -5592,6 +5596,10 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
             }
 
             await this.loadVersions(row.Id);
+            if (row[F.Type] === 'HTML') {
+                // Not awaited: the modal should not wait on the body download.
+                this._detectStoredPageRule(row.Id);
+            }
             if (row[F.Type] === 'PDF') {
                 this.loadPdfAcroFormMapping();
             }
@@ -5845,6 +5853,29 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
         }
     }
 
+    /**
+     * Sets editHtmlBodyOwnsPageRule from the stored HTML of a template just opened.
+     * Reads the same body the renderer does: the active version's file, falling back
+     * to the template's loose body for records saved before versions existed.
+     * Leaves the page fields' values alone, unlike an upload: what is stored is what
+     * renders, and the note tells the author which values defer to the body.
+     */
+    async _detectStoredPageRule(templateId) {
+        try {
+            const activeVersion = (this.versions || []).find((version) => version.isActive);
+            let body = activeVersion ? await getVersionBody({ versionId: activeVersion.Id }) : null;
+            if (body == null) {
+                body = await getHtmlTemplateBody({ templateId });
+            }
+            // A body staged while this was loading, or another template opened, wins.
+            if (this.editTemplateId === templateId && this._lastUploadedHtmlText == null) {
+                this.editHtmlBodyOwnsPageRule = this.htmlContainsPageRule(body);
+            }
+        } catch (err) {
+            // Only the note depends on this; the fields show either way.
+        }
+    }
+
     _clearPageSetupIfNoExplicitSize() {
         if (this.editTemplatePageSize) {
             return;
@@ -5876,6 +5907,7 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
         }
         await this._loadBodyIntoEditor();
         const body = this._lastUploadedHtmlText || '';
+        this.editHtmlBodyOwnsPageRule = this.htmlContainsPageRule(body);
         if (!body.trim()) {
             return;
         }
@@ -7508,16 +7540,15 @@ export default class DocGenAdmin extends NavigationMixin(LightningElement) {
         }
         const imgMsg =
             totalImages > 0 ? ' (' + totalImages + ' image' + (totalImages === 1 ? '' : 's') + ' extracted)' : '';
-        // v1.90 — detect author-declared @page rule; if present, the engine suppresses
-        // its own size/margin and the template-level page fields are dead inputs. Hide
-        // them and clear in-memory values so a subsequent Save doesn't silently
-        // re-introduce conflicting values.
+        // v1.90 — detect author-declared @page rule. If present, clear in-memory page
+        // values (unless a size was chosen) so a subsequent Save defers to the body
+        // rather than silently overriding it; the note under the fields explains.
         this.editHtmlBodyOwnsPageRule = this.htmlContainsPageRule(rewritten);
         if (this.editHtmlBodyOwnsPageRule) {
             this._clearPageSetupIfNoExplicitSize();
         }
         const pageMsg = this.editHtmlBodyOwnsPageRule
-            ? ' Your HTML defines its own @page CSS — template page-layout fields cleared.'
+            ? ' Your HTML sets its own page with @page; leave Page Orientation / Size / Margins on Portrait / Letter / Default to use it.'
             : '';
         // #272 fidelity report — the linter's warnings ride the save response.
         // Advisory only: the body above is already stored.

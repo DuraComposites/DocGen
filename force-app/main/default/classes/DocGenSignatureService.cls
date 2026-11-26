@@ -574,7 +574,8 @@ public without sharing class DocGenSignatureService {
         if (requestId == null) {
             return null;
         }
-        DocGenFlsGuard.assertAccessible(DocGen_Signature_Request__c.sObjectType, new Set<String>{ 'Secure_Token__c' });
+        // Dura: Secure_Token__c is system-generated; only object read is checked, DocGen User has no FLS on it.
+        DocGenFlsGuard.assertAccessible(DocGen_Signature_Request__c.sObjectType, null);
         /* code-analyzer-suppress ApexFlsViolation, DatabaseOperationsMustUseWithSharing */
         List<DocGen_Signature_Request__c> reqs = [
             SELECT Secure_Token__c

@@ -1,3 +1,4 @@
+// Modified by Dura Composites Ltd.
 @IsTest
 private class DocGenControllerCoverageTest {
     @IsTest
@@ -355,6 +356,7 @@ private class DocGenControllerCoverageTest {
         String signersJson = '[{"signerName":"T","signerEmail":"t@t.com","roleName":"Buyer","contactId":""}]';
 
         Test.startTest();
+        DocGenSenderAccessCheck.start();
         try {
             DocGenSignatureSenderController.createTemplateSignerRequestWithTitle(
                 tmpl.Id,
@@ -367,6 +369,7 @@ private class DocGenControllerCoverageTest {
             // Some setup may not be complete — coverage exercise is the goal.
         }
         Test.stopTest();
+        DocGenSenderAccessCheck.assertDocGenUserCovers('createTemplateSignerRequestWithTitle');
     }
 
     @IsTest

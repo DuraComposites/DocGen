@@ -166,7 +166,7 @@ export async function runApexTests(org, classNames, { timeout = 3600000, coverag
     }
 }
 
-export { sf };
+export { sf, resolveSf };
 
 /**
  * Per-class coverage, read from the Tooling API after a run.

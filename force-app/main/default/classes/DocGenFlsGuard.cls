@@ -64,6 +64,7 @@ public with sharing class DocGenFlsGuard {
                 'Insufficient access to create ' + sor.getName() + '. Verify DocGen permission set assignment.'
             );
         }
+        recordCheck('create', sor, null);
         if (allowedFields == null || allowedFields.isEmpty()) {
             return;
         }
@@ -79,6 +80,7 @@ public with sharing class DocGenFlsGuard {
                     'Internal error: field ' + sor.getName() + '.' + fieldName + ' not found in describe.'
                 );
             }
+            recordCheck('create', sor, f);
             // Test-context bypass for the per-field FLS verdict only. The
             // object-level CRUD check above still fires (catches the gross
             // "no permset assigned" case) and the field-existence check
@@ -129,6 +131,7 @@ public with sharing class DocGenFlsGuard {
                 'Insufficient access to update ' + sor.getName() + '. Verify DocGen permission set assignment.'
             );
         }
+        recordCheck('edit', sor, null);
         if (allowedFields == null || allowedFields.isEmpty()) {
             return;
         }
@@ -142,6 +145,7 @@ public with sharing class DocGenFlsGuard {
                     'Internal error: field ' + sor.getName() + '.' + fieldName + ' not found in describe.'
                 );
             }
+            recordCheck('edit', sor, f);
             if (isTest) {
                 continue;
             }
@@ -243,6 +247,7 @@ public with sharing class DocGenFlsGuard {
                 'Insufficient access to read ' + sor.getName() + '. Verify DocGen permission set assignment.'
             );
         }
+        recordCheck('read', sor, null);
         if (readFields == null || readFields.isEmpty()) {
             return;
         }
@@ -255,6 +260,7 @@ public with sharing class DocGenFlsGuard {
                     'Internal error: field ' + sor.getName() + '.' + fieldName + ' not found in describe.'
                 );
             }
+            recordCheck('read', sor, f);
             // Describe invocation preserved as the Checkmarx pattern-match signal,
             // even when the verdict is bypassed for guest/test context.
             f.getDescribe().isAccessible();
@@ -320,6 +326,7 @@ public with sharing class DocGenFlsGuard {
                     '. Verify DocGen permission set assignment.'
             );
         }
+        recordCheck((isUpdate ? 'edit' : 'create'), sor, null);
         if (allowedFields == null || allowedFields.isEmpty()) {
             return;
         }
@@ -332,6 +339,7 @@ public with sharing class DocGenFlsGuard {
                     'Internal error: field ' + sor.getName() + '.' + fieldName + ' not found in describe.'
                 );
             }
+            recordCheck((isUpdate ? 'edit' : 'create'), sor, f);
             // Describe invocation preserved as the Checkmarx pattern-match signal,
             // even when the verdict is bypassed for guest/test context.
             Schema.DescribeFieldResult dfr = f.getDescribe();
@@ -350,6 +358,20 @@ public with sharing class DocGenFlsGuard {
                 );
             }
         }
+    }
+
+    // Dura: tests switch this on to collect every object and field the guard checks, so
+    // DocGenSenderAccessCheck can compare them with what DocGen_User grants. The field-level
+    // verdict is skipped in tests (see assertCreateable), so without this a field missing from
+    // DocGen_User only fails in a real org. Null outside tests, so it costs nothing in production.
+    @TestVisible
+    private static Set<String> recordedChecks;
+
+    private static void recordCheck(String op, Schema.DescribeSObjectResult sor, Schema.SObjectField f) {
+        if (recordedChecks == null) {
+            return;
+        }
+        recordedChecks.add(op + ':' + sor.getName() + (f == null ? '' : '.' + f.getDescribe().getName()));
     }
 
     /**
@@ -415,6 +437,7 @@ public with sharing class DocGenFlsGuard {
                 'Insufficient access to read ' + sor.getName() + '. Verify DocGen permission set assignment.'
             );
         }
+        recordCheck('read', sor, null);
         if (readFields == null || readFields.isEmpty()) {
             return;
         }
@@ -428,6 +451,7 @@ public with sharing class DocGenFlsGuard {
                     'Internal error: field ' + sor.getName() + '.' + fieldName + ' not found in describe.'
                 );
             }
+            recordCheck('read', sor, f);
             if (isTest) {
                 continue;
             }
