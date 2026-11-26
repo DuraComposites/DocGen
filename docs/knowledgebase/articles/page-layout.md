@@ -5,10 +5,12 @@ Set the paper, margins, repeated page content, and page background.
 #### Choose paper and margins
 
 - **Canvas:** Open **Page**. Choose the paper size, orientation, and margins there.
-- **HTML designer:** Use page setup and check any `@page` rules in imported HTML.
+- **HTML designer:** Use **Page Orientation**, **Page Size** and **Page Margins** in the template editor, or an `@page` rule in the HTML.
 - **Word:** Set page size and margins in Word, then check the generated PDF.
 
-Canvas and HTML can carry their own page rules. Changing a template record's paper setting may not replace a page rule already in its body.
+When the HTML has its own `@page` rule, the editor says so above the page fields. Leave them on **Portrait**, **Letter** and **Default** to use the HTML's page. **Landscape**, **A4** or **Legal** replaces the HTML's page size, and with one of those set, a **Page Margins** choice other than **Default** replaces its margins too.
+
+A Canvas template always sets its own page, so the editor hides these fields for it.
 
 #### Add a header or footer
 
