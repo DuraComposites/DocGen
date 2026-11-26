@@ -723,7 +723,7 @@ public with sharing class DocGenSignatureSenderController {
                 'Status__c',
                 'Signing_Order__c',
                 'Document_Title_Format__c',
-                'Secure_Token__c',
+                // Dura: Secure_Token__c / PIN_Hash__c are generated here and written in system mode; DocGen User has no FLS on them by design.
                 'Expires_At__c'
             }
         );
@@ -1851,7 +1851,7 @@ public with sharing class DocGenSignatureSenderController {
             'Status__c',
             'Signing_Order__c',
             'Document_Title_Format__c',
-            'Secure_Token__c',
+            // Dura: Secure_Token__c / PIN_Hash__c are generated here and written in system mode; DocGen User has no FLS on them by design.
             'Expires_At__c'
         };
         // Dura: expiry and reminders from the send, then the template, then the org
@@ -2151,7 +2151,7 @@ public with sharing class DocGenSignatureSenderController {
             'Status__c',
             'Signing_Order__c',
             'Document_Title_Format__c',
-            'Secure_Token__c',
+            // Dura: Secure_Token__c / PIN_Hash__c are generated here and written in system mode; DocGen User has no FLS on them by design.
             'Expires_At__c'
         };
         if (String.isNotBlank(frozenJson)) {
@@ -2286,7 +2286,7 @@ public with sharing class DocGenSignatureSenderController {
                 'Signer_Email__c',
                 'Source_Document_Id__c',
                 'Related_Record_Id__c',
-                'Secure_Token__c',
+                // Dura: Secure_Token__c / PIN_Hash__c are generated here and written in system mode; DocGen User has no FLS on them by design.
                 'Status__c',
                 'Expires_At__c'
             }
@@ -3048,7 +3048,7 @@ public with sharing class DocGenSignatureSenderController {
                 'Role_Name__c',
                 'Signer_Name__c',
                 'Signer_Email__c',
-                'Secure_Token__c',
+                // Dura: Secure_Token__c / PIN_Hash__c are generated here and written in system mode; DocGen User has no FLS on them by design.
                 'Status__c',
                 'Sort_Order__c',
                 'Contact__c',
@@ -3232,9 +3232,9 @@ public with sharing class DocGenSignatureSenderController {
         DocGenFlsGuard.assertUpdateable(
             signers,
             new Set<String>{
-                'Secure_Token__c',
+                // Dura: Secure_Token__c / PIN_Hash__c are generated here and written in system mode; DocGen User has no FLS on them by design.
                 'Status__c',
-                'PIN_Hash__c',
+                // Dura: Secure_Token__c / PIN_Hash__c are generated here and written in system mode; DocGen User has no FLS on them by design.
                 'PIN_Expires_At__c',
                 'PIN_Attempts__c',
                 'PIN_Verified_At__c'
@@ -3323,7 +3323,8 @@ public with sharing class DocGenSignatureSenderController {
         }
         if (!unsignedSigners.isEmpty()) {
             // v2.0.1 — per-field FLS enforcement (Checkmarx "FLS Update").
-            DocGenFlsGuard.assertUpdateable(unsignedSigners, new Set<String>{ 'Status__c', 'Secure_Token__c' });
+            // Dura: clearing Secure_Token__c is system-managed (see above); only Status__c is checked.
+            DocGenFlsGuard.assertUpdateable(unsignedSigners, new Set<String>{ 'Status__c' });
             /* code-analyzer-suppress ApexFlsViolation */
             Database.update(unsignedSigners, false, AccessLevel.SYSTEM_MODE);
         }
